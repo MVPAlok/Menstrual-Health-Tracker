@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   motion,
   useScroll,
@@ -83,6 +84,7 @@ function RevealOnScroll({
    ───────────────────────────────────────────── */
 
 export default function LandingPage() {
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activePhase, setActivePhase] = useState('follicular');
@@ -439,6 +441,7 @@ export default function LandingPage() {
         className="hidden sm:block bg-primary text-on-primary px-4 md:px-6 py-2 md:py-2.5 rounded-full font-bold text-xs md:text-sm tracking-wide shadow-lg shadow-primary/30"
         whileHover={{ scale: 1.05, boxShadow: '0 8px 30px rgba(165,53,86,0.4)' }}
         whileTap={{ scale: 0.95 }}
+        onClick={() => navigate('/welcome')}
       >
         Join Now
       </motion.button>
@@ -493,7 +496,10 @@ export default function LandingPage() {
           className="bg-primary text-on-primary w-full py-4 rounded-full font-bold text-sm tracking-wide shadow-lg shadow-primary/30"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => setMenuOpen(false)}
+          onClick={() => {
+            setMenuOpen(false);
+            navigate('/welcome');
+          }}
         >
           Join the Sanctuary
         </motion.button>
@@ -567,6 +573,7 @@ export default function LandingPage() {
         className="bg-primary text-on-primary px-6 py-3 md:px-10 md:py-5 rounded-full font-bold text-base md:text-lg border border-primary/50 w-full sm:w-auto"
         whileHover={{ scale: 1.05, boxShadow: '0 0 40px rgba(165,53,86,0.5)' }}
         whileTap={{ scale: 0.95 }}
+        onClick={() => navigate('/welcome')}
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       >
         Start Tracking
