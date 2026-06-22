@@ -22,15 +22,23 @@ const Tooltip: React.FC<{ text: string; children: React.ReactNode }> = ({ text, 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, onboarding, dailyLogs, logDay, logoutUser } = useApp();
-  const [activeTab, setActiveTab] = useState<'home' | 'calendar' | 'log' | 'insights' | 'profile'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'lab' | 'calendar' | 'log' | 'insights' | 'profile'>('home');
 
-  // Logs state
-  const [todayMood, setTodayMood] = useState('Balanced');
-  const [todaySymptoms, setTodaySymptoms] = useState<string[]>([]);
-  const [todaySleep, setTodaySleep] = useState(7);
-  const [todayEnergy, setTodayEnergy] = useState(7);
-  const [todayStress, setTodayStress] = useState(4);
-  const [logSuccess, setLogSuccess] = useState(false);
+  // Interactive Selected Day for Calendar
+  const todayStr = new Date().toISOString().split('T')[0];
+  const [selectedDateStr, setSelectedDateStr] = useState<string>(todayStr);
+
+  // Logging values (interactive state)
+  const [loggedMood, setLoggedMood] = useState<'Radiant' | 'Balanced' | 'Sensitive' | 'Low Energy' | 'Anxious'>('Balanced');
+  const [loggedSymptoms, setLoggedSymptoms] = useState<string[]>([]);
+  const [loggedSleep, setLoggedSleep] = useState<number>(7);
+  const [loggedEnergy, setLoggedEnergy] = useState<number>(7);
+  const [loggedStress, setLoggedStress] = useState<number>(3);
+  const [loggedHydration, setLoggedHydration] = useState<number>(4); // cups (1-8)
+  const [logSaved, setLogSaved] = useState<boolean>(false);
+
+  // Interactive Timeline state for Prediction Lab (+0, +3, +7, +14, +21)
+  const [selectedTimelineOffset, setSelectedTimelineOffset] = useState<number>(0);
 
   // Calculate cycle parameters
   const today = new Date();
@@ -39,48 +47,58 @@ export const Dashboard: React.FC = () => {
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   const currentCycleDay = (diffDays % onboarding.cycleLength) + 1;
 
-  // Determine current cycle phase
-  // 1 to periodLength -> Menstrual
-  // periodLength + 1 to ovulationDay - 3 -> Follicular
-  // ovulationDay - 2 to ovulationDay + 1 -> Ovulation
-  // ovulationDay + 2 to cycleLength -> Luteal
   const periodLength = onboarding.periodLength;
   const cycleLength = onboarding.cycleLength;
   const ovulationDay = cycleLength - 14;
   const fertilityStart = ovulationDay - 4;
   const fertilityEnd = ovulationDay + 1;
 
+  // Determine current cycle phase
   let currentPhase: 'menstrual' | 'follicular' | 'ovulation' | 'luteal' = 'follicular';
   let phaseTitle = 'Follicular Phase';
-  let phaseDesc = 'Rising estrogen enhances cognitive focus and physical energy.';
-  let phaseDaysLeft = 0;
   let phaseColor = '#e2d9f3'; // lavender default
 
   if (currentCycleDay <= periodLength) {
     currentPhase = 'menstrual';
     phaseTitle = 'Menstrual Phase';
-    phaseDesc = 'Introspection and restoration. Hormonal baseline is at its lowest.';
-    phaseDaysLeft = periodLength - currentCycleDay + 1;
     phaseColor = '#a53556'; // crimson
   } else if (currentCycleDay < ovulationDay - 2) {
     currentPhase = 'follicular';
     phaseTitle = 'Follicular Phase';
-    phaseDesc = 'Rising estrogen enhances cognitive focus and physical energy.';
-    phaseDaysLeft = (ovulationDay - 2) - currentCycleDay;
     phaseColor = '#e2d9f3'; // lavender
   } else if (currentCycleDay <= ovulationDay + 1) {
     currentPhase = 'ovulation';
     phaseTitle = 'Ovulation Phase';
-    phaseDesc = 'Estrogen peaks, triggering ovulation. Stamina and confidence are elevated.';
-    phaseDaysLeft = (ovulationDay + 1) - currentCycleDay + 1;
     phaseColor = '#ffdbdb'; // soft rose
   } else {
     currentPhase = 'luteal';
     phaseTitle = 'Luteal Phase';
-    phaseDesc = 'Progesterone dominates, moving energy inward. Ideal for detail tasks.';
-    phaseDaysLeft = cycleLength - currentCycleDay + 1;
     phaseColor = '#fccdc7'; // peach
   }
+
+  // Dynamic greeting based on cycle phase and time of day
+  const [greeting, setGreeting] = useState('Welcome back');
+  const [phaseTip, setPhaseTip] = useState('');
+
+  useEffect(() => {
+    const hrs = new Date().getHours();
+    let greetStr = 'Welcome back';
+    if (hrs < 12) greetStr = 'Good Morning';
+    else if (hrs < 18) greetStr = 'Good Afternoon';
+    else greetStr = 'Good Evening';
+    setGreeting(greetStr);
+
+    // Contextual Phase Message
+    if (currentPhase === 'menstrual') {
+      setPhaseTip('Your body is in a restoration phase. Prioritize light movement and high magnesium intake today.');
+    } else if (currentPhase === 'follicular') {
+      setPhaseTip('Your body is entering a high-energy window. Cognitive focus is expected to increase over the next 48 hours.');
+    } else if (currentPhase === 'ovulation') {
+      setPhaseTip('You are in your peak ovulation phase. Stamina, confidence, and metabolic output are fully optimized.');
+    } else {
+      setPhaseTip('Energy is gently turning inward. Grounding exercises and analytical tasks are highly favored today.');
+    }
+  }, [currentPhase]);
 
   // Days until next period
   const daysUntilNextPeriod = currentCycleDay <= periodLength
@@ -89,38 +107,53 @@ export const Dashboard: React.FC = () => {
 
   // Sync log state with today's log if it exists
   useEffect(() => {
-    const todayStr = today.toISOString().split('T')[0];
     if (dailyLogs[todayStr]) {
       const log = dailyLogs[todayStr];
-      setTodayMood(log.mood);
-      setTodaySymptoms(log.symptoms);
-      setTodaySleep(log.sleep);
-      setTodayEnergy(log.energy);
-      setTodayStress(log.stress);
+      setLoggedMood(log.mood as any);
+      setLoggedSymptoms(log.symptoms);
+      setLoggedSleep(log.sleep);
+      setLoggedEnergy(log.energy);
+      setLoggedStress(log.stress);
     }
   }, [dailyLogs]);
 
   // Handle logging form submission
-  const handleQuickLogSubmit = (e: React.FormEvent) => {
+  const handleLogSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     logDay({
-      mood: todayMood,
-      symptoms: todaySymptoms,
-      sleep: todaySleep,
-      energy: todayEnergy,
-      stress: todayStress,
+      mood: loggedMood,
+      symptoms: loggedSymptoms,
+      sleep: loggedSleep,
+      energy: loggedEnergy,
+      stress: loggedStress,
     });
-    setLogSuccess(true);
-    setTimeout(() => setLogSuccess(false), 3000);
+    setLogSaved(true);
+    setTimeout(() => setLogSaved(false), 3000);
   };
 
   const handleSymptomToggle = (symptom: string) => {
-    if (todaySymptoms.includes(symptom)) {
-      setTodaySymptoms(todaySymptoms.filter(s => s !== symptom));
+    if (loggedSymptoms.includes(symptom)) {
+      setLoggedSymptoms(loggedSymptoms.filter(s => s !== symptom));
     } else {
-      setTodaySymptoms([...todaySymptoms, symptom]);
+      setLoggedSymptoms([...loggedSymptoms, symptom]);
     }
   };
+
+  // Helper for rendering calendar cell indicators
+  const getDayIndicator = (cellDateStr: string) => {
+    const log = dailyLogs[cellDateStr];
+    if (!log) return null;
+    return (
+      <div className="flex gap-1 justify-center mt-1">
+        <span className={`w-1 h-1 rounded-full ${log.mood === 'Radiant' ? 'bg-[#ff7b9c]' : 'bg-[#ae9fc4]'}`} />
+        {log.symptoms.length > 0 && <span className="w-1 h-1 rounded-full bg-[#a53556]" />}
+        {log.sleep >= 8 && <span className="w-1 h-1 rounded-full bg-emerald-500" />}
+      </div>
+    );
+  };
+
+  // Right Panel Calendar Data Context
+  const selectedLog = dailyLogs[selectedDateStr];
 
   return (
     <div className="min-h-screen w-full bg-background pb-32 relative text-on-background selection:bg-primary/20">
@@ -129,7 +162,7 @@ export const Dashboard: React.FC = () => {
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-primary-container/5 to-transparent blur-[120px] pointer-events-none rounded-full" />
 
       {/* Main Header */}
-      <header className="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center border-b border-outline/5">
+      <header className="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center border-b border-outline/5 relative z-30">
         <div className="flex items-center gap-3">
           <span className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
             <span className="material-symbols-outlined text-[18px]">spa</span>
@@ -138,7 +171,7 @@ export const Dashboard: React.FC = () => {
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right hidden sm:block">
-            <span className="block text-xs font-bold text-secondary">Logged in as</span>
+            <span className="block text-xs font-bold text-secondary">Body Calibrated</span>
             <span className="text-sm font-bold text-primary">{user.name || 'Elena Ross'}</span>
           </div>
           <button
@@ -156,6 +189,8 @@ export const Dashboard: React.FC = () => {
       {/* TAB CONTENT VIEWS */}
       <main className="w-full max-w-7xl mx-auto px-6 pt-8">
         <AnimatePresence mode="wait">
+          
+          {/* ═══════════════ DASHBOARD HOME ═══════════════ */}
           {activeTab === 'home' && (
             <motion.div
               key="home-tab"
@@ -165,10 +200,8 @@ export const Dashboard: React.FC = () => {
               transition={{ duration: 0.5 }}
               className="flex flex-col gap-10"
             >
-              {/* ═══════════════ HERO SECTION ═══════════════ */}
+              {/* Living Intelligence Hero */}
               <div className="glass-card rounded-[2.5rem] p-8 md:p-12 border border-white/70 shadow-[0_24px_64px_rgba(165,53,86,0.06)] relative overflow-hidden flex flex-col lg:flex-row items-center gap-10">
-                
-                {/* Visual Glow behind Orb */}
                 <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center">
                   <div
                     className="w-80 h-80 rounded-full blur-[100px] opacity-20 transition-all duration-1000"
@@ -176,38 +209,74 @@ export const Dashboard: React.FC = () => {
                   />
                 </div>
 
-                {/* Left Side: Parameters / Diagnostics */}
+                {/* Dynamic Welcome Message */}
                 <div className="flex-1 flex flex-col gap-6 relative z-10 text-center lg:text-left">
                   <div>
-                    <span className="inline-block px-3 py-1 bg-white/70 border border-white/80 rounded-full text-xs font-extrabold uppercase tracking-widest text-primary mb-3">
-                      Cycle Diagnostic
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/70 border border-white/80 rounded-full text-xs font-extrabold uppercase tracking-widest text-primary mb-3">
+                      <span className="material-symbols-outlined text-[14px]">psychology</span>
+                      Intelligence Core
                     </span>
-                    <h2 className="font-headline-lg text-headline-lg text-primary leading-none mb-4">
-                      Day {currentCycleDay} <span className="text-secondary/50 font-normal">/ {cycleLength}</span>
+                    <h2 className="font-headline-lg text-3xl md:text-4xl text-primary font-extrabold mb-3">
+                      {greeting}, {user.name?.split(' ')[0] || 'Elena'}.
                     </h2>
-                    <p className="font-body-md text-secondary max-w-md">
-                      Currently navigating your <span className="font-bold text-primary">{phaseTitle}</span>. {phaseDesc}
+                    <p className="text-secondary font-medium leading-relaxed max-w-md">
+                      {phaseTip}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto lg:mx-0">
                     <div className="bg-white/40 border border-white/60 p-4 rounded-2xl">
-                      <span className="block text-[10px] font-bold text-secondary uppercase tracking-widest mb-0.5">Mood Trend</span>
-                      <span className="text-sm font-bold text-primary">Balanced Focus</span>
+                      <span className="block text-[10px] font-bold text-secondary uppercase tracking-widest mb-0.5">Focus State</span>
+                      <span className="text-sm font-bold text-primary">Estrogen Peak Flow</span>
                     </div>
                     <div className="bg-white/40 border border-white/60 p-4 rounded-2xl">
-                      <span className="block text-[10px] font-bold text-secondary uppercase tracking-widest mb-0.5">Energy Forecast</span>
-                      <span className="text-sm font-bold text-primary">Moderate Peak</span>
+                      <span className="block text-[10px] font-bold text-secondary uppercase tracking-widest mb-0.5">HRV Baseline</span>
+                      <span className="text-sm font-bold text-primary">Stable (64ms)</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Center: Premium Interactive Body Intelligence Orb */}
-                <div className="relative z-10 w-72 h-72 flex items-center justify-center">
+                {/* Central Living Orb Container */}
+                <div className="relative z-10 w-80 h-80 flex items-center justify-center select-none">
                   <BodyIntelligenceOrb phase={currentPhase} color={phaseColor} />
+                  
+                  {/* Orbiting Modules */}
+                  {[
+                    { label: 'Day', val: `${currentCycleDay}` },
+                    { label: 'Mood', val: loggedMood },
+                    { label: 'Sleep', val: `${loggedSleep}h` },
+                    { label: 'Energy', val: loggedEnergy >= 7 ? 'High' : 'Moderate' },
+                    { label: 'Stress', val: loggedStress <= 4 ? 'Low' : 'Mild' },
+                    { label: 'Accuracy', val: '98%' }
+                  ].map((mod, i) => (
+                    <motion.div
+                      key={mod.label}
+                      className="absolute glass px-3 py-1.5 rounded-full border border-white/50 text-[10px] font-bold text-primary shadow-sm flex items-center gap-1.5 whitespace-nowrap z-20"
+                      animate={{
+                        x: [
+                          Math.cos((i / 6) * 2 * Math.PI) * 135,
+                          Math.cos((i / 6) * 2 * Math.PI + Math.PI) * 135,
+                          Math.cos((i / 6) * 2 * Math.PI + 2 * Math.PI) * 135,
+                        ],
+                        y: [
+                          Math.sin((i / 6) * 2 * Math.PI) * 135,
+                          Math.sin((i / 6) * 2 * Math.PI + Math.PI) * 135,
+                          Math.sin((i / 6) * 2 * Math.PI + 2 * Math.PI) * 135,
+                        ],
+                      }}
+                      transition={{
+                        duration: 35,
+                        repeat: Infinity,
+                        ease: "linear"
+                      }}
+                    >
+                      <span className="text-secondary/70">{mod.label}</span>
+                      <span className="font-extrabold">{mod.val}</span>
+                    </motion.div>
+                  ))}
                 </div>
 
-                {/* Right Side: Prediction Indexes */}
+                {/* Right Side: Quick Diagnostic metrics */}
                 <div className="flex-1 flex flex-col gap-6 relative z-10 w-full lg:w-auto">
                   <div className="p-5 bg-white/50 border border-white/60 rounded-3xl flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
@@ -245,271 +314,325 @@ export const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* ═══════════════ SIX PRIMARY MODULES GRID ═══════════════ */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Connected Cycle Journey Segment */}
+              <div className="glass-card p-8 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-6">
+                <div>
+                  <h3 className="font-extrabold text-primary text-lg tracking-tight mb-1">Interactive Cycle Journey</h3>
+                  <p className="text-secondary text-xs">Visualize biological phase pathways and expected transitions</p>
+                </div>
                 
-                {/* Module 1: Cycle Overview */}
-                <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-primary text-sm uppercase tracking-widest">Cycle Overview</h3>
-                    <span className="material-symbols-outlined text-[20px] text-secondary">rotate_right</span>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <span className="text-xs font-bold text-secondary">Cycle Chronology:</span>
-                    {/* Visual phase line */}
-                    <div className="w-full h-2.5 bg-white/40 border border-white/80 rounded-full overflow-hidden flex">
-                      <div className="h-full bg-primary" style={{ width: `${(periodLength / cycleLength) * 100}%` }} />
-                      <div className="h-full bg-purple-300" style={{ width: `${((ovulationDay - periodLength - 2) / cycleLength) * 100}%` }} />
-                      <div className="h-full bg-pink-300" style={{ width: `${(4 / cycleLength) * 100}%` }} />
-                      <div className="h-full bg-amber-200" style={{ width: `${((cycleLength - ovulationDay - 2) / cycleLength) * 100}%` }} />
-                    </div>
-                    <div className="flex justify-between text-[9px] font-bold text-secondary mt-1">
-                      <span>Bleed</span>
-                      <span>Follicle</span>
-                      <span>Ovulate</span>
-                      <span>Luteal</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <div className="bg-white/40 p-2.5 rounded-2xl border border-white/80 flex items-center justify-between text-xs">
-                      <span className="font-bold text-secondary">Remaining Days in Phase</span>
-                      <span className="font-extrabold text-primary">{phaseDaysLeft} Days</span>
-                    </div>
-                    <div className="bg-white/40 p-2.5 rounded-2xl border border-white/80 flex items-center justify-between text-xs">
-                      <span className="font-bold text-secondary">Cycle Consistency</span>
-                      <span className="font-extrabold text-primary">High (±1.2d)</span>
-                    </div>
-                  </div>
+                <div className="relative py-8 px-4 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-2">
+                  <div className="absolute top-1/2 left-4 right-4 h-1 bg-white/50 rounded-full -translate-y-1/2 hidden md:block z-0" />
+                  
+                  {[
+                    { id: 'menstrual', label: 'Menstrual Phase', color: 'bg-[#a53556]', desc: 'Restoration & Reset', range: `Days 1-${periodLength}` },
+                    { id: 'follicular', label: 'Follicular Phase', color: 'bg-[#e2d9f3]', desc: 'Mental focus & energy rising', range: `Days ${periodLength + 1}-${ovulationDay - 3}` },
+                    { id: 'ovulation', label: 'Ovulation Phase', color: 'bg-[#ffdbdb]', desc: 'Peak fertility window', range: `Days ${ovulationDay - 2}-${ovulationDay + 1}` },
+                    { id: 'luteal', label: 'Luteal Phase', color: 'bg-[#fccdc7]', desc: 'Introspection & calm transition', range: `Days ${ovulationDay + 2}-${cycleLength}` },
+                  ].map((phaseItem) => {
+                    const isActive = currentPhase === phaseItem.id;
+                    return (
+                      <Tooltip key={phaseItem.id} text={`${phaseItem.desc} (${phaseItem.range})`}>
+                        <div className={`relative z-10 flex flex-col items-center p-4 rounded-2xl transition-all cursor-pointer ${isActive ? 'bg-white/80 border border-primary/20 scale-105 shadow-sm' : 'hover:bg-white/30'}`}>
+                          <div className={`w-6 h-6 rounded-full border-2 border-white flex items-center justify-center ${phaseItem.color} shadow-sm mb-2`}>
+                            {isActive && <div className="w-2.5 h-2.5 bg-white rounded-full" />}
+                          </div>
+                          <span className="font-bold text-xs text-primary">{phaseItem.label}</span>
+                          <span className="text-[10px] text-secondary mt-0.5">{phaseItem.range}</span>
+                        </div>
+                      </Tooltip>
+                    );
+                  })}
                 </div>
 
-                {/* Module 2: Prediction Engine */}
-                <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-primary text-sm uppercase tracking-widest">Prediction Engine</h3>
-                    <span className="material-symbols-outlined text-[20px] text-secondary">biotech</span>
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <div className="flex justify-between items-center border-b border-outline/5 pb-2">
-                      <span className="text-xs font-bold text-secondary">Next Period Start</span>
-                      <span className="text-xs font-extrabold text-primary">
-                        {new Date(lastPeriod.getTime() + cycleLength * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center border-b border-outline/5 pb-2">
-                      <span className="text-xs font-bold text-secondary">Ovulation Shift Window</span>
-                      <span className="text-xs font-extrabold text-purple-700">
-                        {new Date(lastPeriod.getTime() + (ovulationDay - 2) * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(lastPeriod.getTime() + (ovulationDay + 1) * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </span>
-                    </div>
+                <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center gap-3">
+                  <span className="material-symbols-outlined text-primary text-xl">auto_awesome</span>
+                  <span className="text-xs font-bold text-primary">
+                    Micro-Insight: You are {currentCycleDay <= ovulationDay ? `${ovulationDay - currentCycleDay} days away from peak ovulation` : 'moving towards hormonal recovery'}. Sleep quality and focus duration should peak soon.
+                  </span>
+                </div>
+              </div>
+
+              {/* Predictive Insight Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                  { title: 'Energy Rising', val: 'Estrogen spike projected in 48h. Stamina levels will peak.', icon: 'bolt', col: 'text-amber-500' },
+                  { title: 'Mood Stable', val: 'Neurotransmitter balance active. Cognitive resilience is high.', icon: 'spa', col: 'text-[#a53556]' },
+                  { title: 'Recovery Active', val: 'HRV calibration successful. Deep sleep cycle is stable.', icon: 'bedtime', col: 'text-purple-600' },
+                  { title: 'Cycle Adapting', val: 'Adaptive tracking synchronization active. Variance under 1.2d.', icon: 'rotate_right', col: 'text-emerald-600' }
+                ].map((item) => (
+                  <div key={item.title} className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-secondary">Fertility Horizon</span>
-                      <span className="text-xs font-extrabold text-emerald-700">Optimal Phase</span>
+                      <span className="font-black text-xs text-primary uppercase tracking-widest">{item.title}</span>
+                      <span className={`material-symbols-outlined text-[20px] ${item.col}`}>{item.icon}</span>
                     </div>
-                  </div>
-                </div>
-
-                {/* Module 3: Today's Insight */}
-                <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-primary text-sm uppercase tracking-widest">Today's Insight</h3>
-                    <span className="material-symbols-outlined text-[20px] text-secondary">lightbulb</span>
-                  </div>
-                  <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex flex-col gap-2">
-                    <p className="text-xs text-primary leading-relaxed font-bold">
-                      "Your cognitive focus is projected to increase over the next 48 hours. Rising estrogen encourages social clarity, making this a prime window for strategic tasks."
+                    <p className="text-secondary text-xs leading-relaxed font-bold">
+                      "{item.val}"
                     </p>
-                    <span className="text-[10px] text-secondary font-bold">Luna Diagnostics • Real-Time</span>
                   </div>
-                </div>
-
-                {/* Module 4: Quick Logging */}
-                <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4 md:col-span-2 lg:col-span-1">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-primary text-sm uppercase tracking-widest">Quick Log</h3>
-                    <span className="material-symbols-outlined text-[20px] text-secondary">edit_note</span>
-                  </div>
-                  <form onSubmit={handleQuickLogSubmit} className="flex flex-col gap-3">
-                    <div className="flex flex-wrap gap-1.5">
-                      {['Radiant', 'Balanced', 'Sensitive', 'Low Energy', 'Anxious'].map(m => (
-                        <button
-                          key={m}
-                          type="button"
-                          onClick={() => setTodayMood(m)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-                            todayMood === m
-                              ? 'bg-primary text-on-primary shadow-sm'
-                              : 'bg-white/50 border border-white text-secondary hover:bg-white'
-                          }`}
-                        >
-                          {m}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-secondary">Symptom Track:</span>
-                      <div className="flex gap-1.5">
-                        {['Cramps', 'Headache', 'Bloating'].map(s => {
-                          const isActive = todaySymptoms.includes(s);
-                          return (
-                            <button
-                              key={s}
-                              type="button"
-                              onClick={() => handleSymptomToggle(s)}
-                              className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border transition-all ${
-                                isActive
-                                  ? 'bg-primary/20 border-primary text-primary'
-                                  : 'bg-white/30 border-white/80 text-secondary'
-                              }`}
-                            >
-                              {s}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    <button
-                      type="submit"
-                      className="w-full py-2.5 bg-white hover:bg-slate-50 border border-outline/10 text-primary font-bold text-xs rounded-full shadow-sm flex items-center justify-center gap-1.5 transition-all mt-1"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">done</span>
-                      {logSuccess ? 'Metrics Saved' : 'Confirm Today\'s Metrics'}
-                    </button>
-                  </form>
-                </div>
-
-                {/* Module 5: Body Intelligence Correlation */}
-                <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4 md:col-span-1 lg:col-span-2">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-primary text-sm uppercase tracking-widest">Body Correlations</h3>
-                    <span className="material-symbols-outlined text-[20px] text-secondary">analytics</span>
-                  </div>
-                  <div className="h-28 relative flex items-end justify-between px-2 pt-4">
-                    {/* Simple Wave Correlation Graphics */}
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none" viewBox="0 0 100 100">
-                      {/* Energy wave */}
-                      <path
-                        d="M 0 60 Q 20 20, 40 40 T 80 30 T 100 50"
-                        fill="none"
-                        stroke="#a53556"
-                        strokeWidth="3"
-                        strokeOpacity="0.85"
-                      />
-                      {/* Sleep wave */}
-                      <path
-                        d="M 0 80 Q 25 50, 50 70 T 100 30"
-                        fill="none"
-                        stroke="#8a7fb9"
-                        strokeWidth="2"
-                        strokeOpacity="0.5"
-                        strokeDasharray="4 4"
-                      />
-                    </svg>
-
-                    <div className="flex justify-between w-full text-[9px] font-bold text-secondary/60 relative z-10">
-                      <span>Mon</span>
-                      <span>Tue</span>
-                      <span>Wed</span>
-                      <span>Thu</span>
-                      <span>Fri</span>
-                      <span>Sat</span>
-                      <span>Today</span>
-                    </div>
-                  </div>
-                  <div className="flex gap-4 justify-center text-[10px] font-bold text-secondary">
-                    <span className="flex items-center gap-1"><span className="w-3 h-0.5 bg-primary" /> Energy Peaks</span>
-                    <span className="flex items-center gap-1"><span className="w-3 h-0.5 border-t border-dashed border-[#8a7fb9]" /> Sleep Restorative Duration</span>
-                  </div>
-                </div>
-
-                {/* Module 6: Health Trends */}
-                <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4 md:col-span-1 lg:col-span-3">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-primary text-sm uppercase tracking-widest">Calibrated Shifts</h3>
-                    <span className="material-symbols-outlined text-[20px] text-secondary">query_stats</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="bg-white/40 p-4 rounded-2xl border border-white/60 flex flex-col gap-1">
-                      <span className="text-[10px] font-extrabold text-secondary uppercase tracking-wider">Cycle Continuity</span>
-                      <span className="text-xl font-bold text-primary">98.2%</span>
-                      <span className="text-[9px] text-emerald-700 font-bold">Stable variance over 90 days</span>
-                    </div>
-                    <div className="bg-white/40 p-4 rounded-2xl border border-white/60 flex flex-col gap-1">
-                      <span className="text-[10px] font-extrabold text-secondary uppercase tracking-wider">Sleep Efficiency</span>
-                      <span className="text-xl font-bold text-primary">7.8 hrs Avg</span>
-                      <span className="text-[9px] text-primary font-bold">Correlates to low stress phases</span>
-                    </div>
-                    <div className="bg-white/40 p-4 rounded-2xl border border-white/60 flex flex-col gap-1">
-                      <span className="text-[10px] font-extrabold text-secondary uppercase tracking-wider">Hormonal Resilience</span>
-                      <span className="text-xl font-bold text-primary">Optimal</span>
-                      <span className="text-[9px] text-emerald-700 font-bold">Estrogen parameters matched</span>
-                    </div>
-                  </div>
-                </div>
-
+                ))}
               </div>
             </motion.div>
           )}
 
-          {/* TAB CALENDAR VIEW */}
+          {/* ═══════════════ SIGNATURE: PREDICTION LAB ═══════════════ */}
+          {activeTab === 'lab' && (
+            <motion.div
+              key="lab-tab"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="flex flex-col gap-10"
+            >
+              {/* Hero Banner with large WebGL Prediction Orb */}
+              <div className="glass-card rounded-[2.5rem] p-8 md:p-12 border border-white/70 shadow-[0_24px_64px_rgba(165,53,86,0.06)] relative overflow-hidden flex flex-col lg:flex-row items-center gap-10">
+                <div className="absolute inset-0 z-0 bg-gradient-to-br from-primary/5 via-transparent to-purple-500/5 pointer-events-none" />
+                
+                {/* Left details */}
+                <div className="flex-1 flex flex-col gap-6 relative z-10 text-center lg:text-left">
+                  <div>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/70 border border-white/80 rounded-full text-xs font-extrabold uppercase tracking-widest text-primary mb-3">
+                      <span className="material-symbols-outlined text-[14px]">science</span>
+                      Signature Laboratory
+                    </span>
+                    <h2 className="font-headline-lg text-4xl text-primary font-black leading-tight mb-3">
+                      Prediction Lab
+                    </h2>
+                    <p className="text-secondary font-medium leading-relaxed max-w-md text-sm">
+                      Our signature adaptive engine forecasts future physiological states by analyzing continuous biometric logs.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Calibration Status</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-32 h-2 bg-white/60 border border-white/80 rounded-full overflow-hidden">
+                        <div className="h-full bg-primary w-[98%]" />
+                      </div>
+                      <span className="text-xs font-bold text-primary">98% Synchronized</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* High Fidelity WebGL Interactive Prediction Orb */}
+                <div className="relative z-10 w-80 h-80 flex items-center justify-center">
+                  <BodyIntelligenceOrb phase={currentPhase} color={phaseColor} />
+                  
+                  {/* Floating cards drift */}
+                  <motion.div
+                    className="absolute -right-6 top-8 glass p-3.5 rounded-2xl border border-white/60 shadow-lg text-left w-44"
+                    animate={{ y: [0, -10, 0] }}
+                    transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+                  >
+                    <span className="block text-[8px] font-bold text-primary uppercase mb-1">LH Hormone</span>
+                    <span className="block text-xs font-bold text-secondary">Surge expected in 3 days</span>
+                  </motion.div>
+                  
+                  <motion.div
+                    className="absolute -left-8 bottom-10 glass p-3.5 rounded-2xl border border-white/60 shadow-lg text-left w-44"
+                    animate={{ y: [0, 8, 0] }}
+                    transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+                  >
+                    <span className="block text-[8px] font-bold text-purple-600 uppercase mb-1">Rhythm Variance</span>
+                    <span className="block text-xs font-bold text-secondary">Cycle adapts dynamically</span>
+                  </motion.div>
+                </div>
+              </div>
+
+              {/* Forecast Interactive Timeline */}
+              <div className="glass-card p-8 rounded-[2.5rem] border border-white/60 shadow-sm flex flex-col gap-8">
+                <div>
+                  <h3 className="font-bold text-primary text-lg tracking-tight mb-1">Physiological Timeline Forecast</h3>
+                  <p className="text-secondary text-xs">Select a horizon node to project your future biometrics</p>
+                </div>
+
+                {/* Timeline nodes */}
+                <div className="flex justify-between items-center relative py-6 max-w-3xl mx-auto w-full">
+                  <div className="absolute top-1/2 left-0 right-0 h-1 bg-white/60 rounded-full -translate-y-1/2 z-0" />
+                  
+                  {[0, 3, 7, 14, 21].map((offset) => {
+                    const isActive = selectedTimelineOffset === offset;
+                    return (
+                      <button
+                        key={offset}
+                        onClick={() => setSelectedTimelineOffset(offset)}
+                        className={`relative z-10 w-12 h-12 rounded-full border-2 flex items-center justify-center font-bold text-xs transition-all ${
+                          isActive
+                            ? 'bg-primary border-primary text-on-primary shadow-lg scale-110'
+                            : 'bg-white border-white text-secondary hover:bg-slate-50'
+                        }`}
+                      >
+                        {offset === 0 ? 'Today' : `+${offset}d`}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Interactive Projections */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                  {[
+                    { type: 'Period Flow', status: selectedTimelineOffset === 0 ? 'Active bleeding' : selectedTimelineOffset < 5 ? 'Resting Phase' : selectedTimelineOffset < 20 ? 'Follicular Transition' : 'Next Cycle Starting', icon: 'water_drop', score: '98%' },
+                    { type: 'Ovulation', status: selectedTimelineOffset < 5 ? 'Developing follicle' : selectedTimelineOffset < 10 ? 'High fertility window' : 'Completed cycle shift', icon: 'wb_sunny', score: '95%' },
+                    { type: 'Mood Tendency', status: selectedTimelineOffset < 7 ? 'Radiant & Social' : 'Reflective & Grounded', icon: 'sentiment_satisfied', score: '92%' },
+                    { type: 'Physical Energy', status: selectedTimelineOffset < 7 ? 'High Peak Stamina' : 'Moderate Inward Flow', icon: 'bolt', score: '88%' },
+                    { type: 'Sleep Recovery', status: selectedTimelineOffset < 14 ? 'Optimal Rest Duration' : 'Slightly Fragmented REM', icon: 'bedtime', score: '94%' },
+                    { type: 'Stress Resilience', status: selectedTimelineOffset < 7 ? 'High Resilience' : 'Moderate Sensitivity', icon: 'spa', score: '90%' }
+                  ].map((pred) => (
+                    <div key={pred.type} className="bg-white/40 border border-white/60 p-5 rounded-2xl flex flex-col justify-between gap-3 shadow-inner">
+                      <div className="flex justify-between items-center">
+                        <span className="material-symbols-outlined text-primary text-lg">{pred.icon}</span>
+                        <span className="text-[9px] font-bold text-primary">{pred.score} Conf.</span>
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-bold text-secondary uppercase mb-0.5">{pred.type}</span>
+                        <span className="text-xs font-bold text-primary leading-tight">{pred.status}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center justify-between text-xs">
+                  <span className="font-bold text-primary flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-base">info</span>
+                    Predictions are dynamically updated using local Bayesian intelligence engines.
+                  </span>
+                  <span className="font-bold text-secondary text-[10px]">Adaptive Confidence Rate: 94.2%</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ═══════════════ CALENDAR TAB ═══════════════ */}
           {activeTab === 'calendar' && (
             <motion.div
               key="calendar-tab"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              className="glass-card rounded-[2.5rem] p-8 md:p-12 border border-white/70 max-w-4xl mx-auto shadow-sm"
+              className="flex flex-col gap-8"
             >
-              <h2 className="font-headline-md text-headline-md text-primary mb-3">Cycle Calendar</h2>
-              <p className="text-secondary font-body-md mb-8">
-                Interactive forecasting representing menstrual phases and fertility windows.
-              </p>
+              {/* Calendar Summary */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                {[
+                  { label: 'Current Phase', val: phaseTitle },
+                  { label: 'Next Period Forecast', val: daysUntilNextPeriod > 0 ? `In ${daysUntilNextPeriod} Days` : 'Period Commencing' },
+                  { label: 'Ovulation Forecast', val: currentCycleDay <= ovulationDay ? `In ${ovulationDay - currentCycleDay} Days` : 'Completed' },
+                  { label: 'Consistency Score', val: '98% (Stable)' },
+                  { label: 'Prediction Accuracy', val: '97% Calibrated' }
+                ].map((stat) => (
+                  <div key={stat.label} className="glass-card p-4 rounded-2xl border border-white/60 text-center flex flex-col justify-center">
+                    <span className="block text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">{stat.label}</span>
+                    <span className="text-xs md:text-sm font-bold text-primary">{stat.val}</span>
+                  </div>
+                ))}
+              </div>
 
-              {/* Render 3 consecutive cycles forecast */}
-              <div className="flex flex-col gap-8">
-                {[0, 1, 2].map((cycleIndex) => {
-                  const cycleStart = new Date(lastPeriod.getTime() + cycleIndex * cycleLength * 24 * 60 * 60 * 1000);
-                  
-                  return (
-                    <div key={cycleIndex} className="p-5 bg-white/40 border border-white/60 rounded-3xl shadow-sm">
-                      <h4 className="font-bold text-primary text-sm uppercase tracking-wider mb-4">
-                        Cycle {cycleIndex + 1} ({cycleStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })})
-                      </h4>
+              {/* Main Calendar View with Side Details */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left: 2 Cycles visual grids */}
+                <div className="lg:col-span-2 flex flex-col gap-6">
+                  {[0, 1].map((cycleIndex) => {
+                    const cycleStart = new Date(lastPeriod.getTime() + cycleIndex * cycleLength * 24 * 60 * 60 * 1000);
+                    return (
+                      <div key={cycleIndex} className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm">
+                        <h4 className="font-extrabold text-primary text-sm uppercase tracking-wider mb-4">
+                          Cycle Sequence {cycleIndex + 1} ({cycleStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })})
+                        </h4>
 
-                      {/* Display days list */}
-                      <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-                        {Array.from({ length: cycleLength }).map((_, dayIndex) => {
-                          const dayNum = dayIndex + 1;
-                          let dayBg = 'bg-white/30 text-secondary border border-transparent';
-                          let tooltipText = `Day ${dayNum}: Normal Day`;
+                        <div className="grid grid-cols-7 gap-2.5 text-center">
+                          {Array.from({ length: cycleLength }).map((_, dayIndex) => {
+                            const dayNum = dayIndex + 1;
+                            const targetDate = new Date(cycleStart.getTime() + dayIndex * 24 * 60 * 60 * 1000);
+                            const cellDateStr = targetDate.toISOString().split('T')[0];
+                            const isSelected = selectedDateStr === cellDateStr;
 
-                          if (dayNum <= periodLength) {
-                            dayBg = 'bg-primary text-on-primary shadow-sm shadow-primary/20';
-                            tooltipText = `Day ${dayNum}: Menstrual Flow`;
-                          } else if (dayNum >= fertilityStart && dayNum <= fertilityEnd) {
-                            dayBg = 'bg-emerald-100 border border-emerald-300 text-emerald-800 font-extrabold';
-                            tooltipText = `Day ${dayNum}: Peak Fertile Window`;
-                          } else if (dayNum === ovulationDay) {
-                            dayBg = 'bg-purple-100 border border-purple-300 text-purple-800 font-extrabold';
-                            tooltipText = `Day ${dayNum}: Ovulation Day`;
-                          }
+                            let cellStyle = 'bg-white/30 text-secondary border border-transparent';
+                            if (dayNum <= periodLength) {
+                              cellStyle = 'bg-primary/20 text-[#a53556] border border-primary/20';
+                            } else if (dayNum >= fertilityStart && dayNum <= fertilityEnd) {
+                              cellStyle = 'bg-emerald-100 border border-emerald-300 text-emerald-800 font-extrabold';
+                            } else if (dayNum === ovulationDay) {
+                              cellStyle = 'bg-purple-100 border border-purple-300 text-purple-800 font-extrabold';
+                            }
 
-                          return (
-                            <Tooltip key={dayNum} text={tooltipText}>
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs cursor-help transition-all hover:scale-110 ${dayBg}`}>
+                            return (
+                              <button
+                                key={dayNum}
+                                onClick={() => setSelectedDateStr(cellDateStr)}
+                                className={`w-10 h-10 md:w-11 md:h-11 rounded-full flex flex-col items-center justify-center text-xs font-bold relative transition-all ${cellStyle} ${
+                                  isSelected ? 'ring-2 ring-primary scale-110 shadow-sm bg-white' : 'hover:scale-105'
+                                }`}
+                              >
                                 {dayNum}
-                              </div>
-                            </Tooltip>
-                          );
-                        })}
+                                {getDayIndicator(cellDateStr)}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Right: Selected Day Intelligence Panel */}
+                <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-6">
+                  <div>
+                    <span className="block text-[10px] font-extrabold text-primary uppercase tracking-widest mb-1">Diagnostic Ledger</span>
+                    <h4 className="font-extrabold text-primary text-base">
+                      {new Date(selectedDateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                    </h4>
+                  </div>
+
+                  {selectedLog ? (
+                    <div className="flex flex-col gap-4">
+                      <div className="bg-white/50 border border-white/60 p-4 rounded-2xl flex flex-col gap-2">
+                        <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">Logged Signals</span>
+                        <div className="flex justify-between text-xs font-bold text-primary">
+                          <span>Mood: {selectedLog.mood}</span>
+                          <span>Sleep: {selectedLog.sleep}h</span>
+                        </div>
+                        <div className="flex justify-between text-xs font-bold text-primary">
+                          <span>Energy: {selectedLog.energy}/10</span>
+                          <span>Stress: {selectedLog.stress}/10</span>
+                        </div>
+                        {selectedLog.symptoms.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-1.5">
+                            {selectedLog.symptoms.map(s => (
+                              <span key={s} className="bg-primary/10 border border-primary/20 text-[9px] font-bold text-primary px-2 py-0.5 rounded-full">
+                                {s}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl">
+                        <span className="block text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1">AI Recommendation</span>
+                        <p className="text-xs text-emerald-800 leading-relaxed font-bold">
+                          "Historically, your focus peaking capacity occurs around this phase day. Recommended scheduling of complex tasks is advised."
+                        </p>
                       </div>
                     </div>
-                  );
-                })}
+                  ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center text-center py-10 gap-4">
+                      <span className="material-symbols-outlined text-[48px] text-secondary/30">analytics</span>
+                      <p className="text-secondary text-xs leading-relaxed">
+                        No telemetry logs registered for this date. Click below to register indicators.
+                      </p>
+                      <button
+                        onClick={() => setActiveTab('log')}
+                        className="px-5 py-2.5 bg-primary text-on-primary rounded-full text-xs font-bold shadow-sm"
+                      >
+                        Register Log
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}
 
-          {/* TAB LOG VIEW */}
+          {/* ═══════════════ TACTILE LOGGING ═══════════════ */}
           {activeTab === 'log' && (
             <motion.div
               key="log-tab"
@@ -520,35 +643,103 @@ export const Dashboard: React.FC = () => {
             >
               <h2 className="font-headline-md text-headline-md text-primary mb-2">Metrics Logger</h2>
               <p className="text-secondary font-body-md mb-8">
-                Daily calibration of sleep efficiency, physical fatigue, stress logs, and mood shifts.
+                Perform daily calibrations of sleep, stress, energy levels, and active cycle symptoms.
               </p>
 
-              <form onSubmit={handleQuickLogSubmit} className="flex flex-col gap-6">
+              <form onSubmit={handleLogSubmit} className="flex flex-col gap-8">
+                {/* Tactile Mood Selection */}
                 <div>
-                  <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-3 ml-1">Today's Focus Mood</label>
-                  <div className="flex flex-wrap gap-2">
-                    {['Radiant', 'Balanced', 'Sensitive', 'Low Energy', 'Anxious', 'Productive', 'Reflective'].map(m => (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => setTodayMood(m)}
-                        className={`px-4 py-2.5 rounded-full text-xs font-bold border transition-all ${
-                          todayMood === m
-                            ? 'bg-primary text-on-primary border-primary shadow-md'
-                            : 'bg-white/40 border-white text-secondary hover:bg-white'
-                        }`}
-                      >
-                        {m}
-                      </button>
-                    ))}
+                  <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-3.5 ml-1">Today's Focus Mood</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    {[
+                      { id: 'Radiant', emoji: '✨' },
+                      { id: 'Balanced', emoji: '🌿' },
+                      { id: 'Sensitive', emoji: '🤍' },
+                      { id: 'Low Energy', emoji: '🔋' },
+                      { id: 'Anxious', emoji: '🌪' }
+                    ].map(item => {
+                      const isActive = loggedMood === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setLoggedMood(item.id as any)}
+                          className={`p-4 rounded-2xl border flex flex-col items-center gap-1.5 transition-all text-xs font-bold ${
+                            isActive
+                              ? 'bg-primary text-on-primary border-primary shadow-md scale-105'
+                              : 'bg-white/40 border-white text-secondary hover:bg-white'
+                          }`}
+                        >
+                          <span className="text-xl">{item.emoji}</span>
+                          <span>{item.id}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
+                {/* Energy & Stress Tactiles */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">Energy Rate ({loggedEnergy}/10)</label>
+                    <input
+                      type="range"
+                      min={1}
+                      max={10}
+                      value={loggedEnergy}
+                      onChange={(e) => setLoggedEnergy(parseInt(e.target.value))}
+                      className="w-full accent-primary h-2 bg-white/60 rounded-full"
+                    />
+                    <div className="flex justify-between text-[10px] text-secondary font-bold mt-1.5">
+                      <span>Resting</span>
+                      <span>Moderate</span>
+                      <span>High Stamina</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">Stress Factor ({loggedStress}/10)</label>
+                    <input
+                      type="range"
+                      min={1}
+                      max={10}
+                      value={loggedStress}
+                      onChange={(e) => setLoggedStress(parseInt(e.target.value))}
+                      className="w-full accent-primary h-2 bg-white/60 rounded-full"
+                    />
+                    <div className="flex justify-between text-[10px] text-secondary font-bold mt-1.5">
+                      <span>Calm</span>
+                      <span>Manageable</span>
+                      <span>High Alert</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Interactive Sleep Ring Simulation */}
+                <div>
+                  <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-3 ml-1">Sleep Quality ({loggedSleep} hrs)</label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="range"
+                      min={4}
+                      max={12}
+                      step={0.5}
+                      value={loggedSleep}
+                      onChange={(e) => setLoggedSleep(parseFloat(e.target.value))}
+                      className="flex-1 accent-primary h-2 bg-white/60 rounded-full"
+                    />
+                    <div className="w-14 h-14 rounded-full border-2 border-primary flex items-center justify-center text-xs font-black text-primary bg-white/60">
+                      {loggedSleep}h
+                    </div>
+                  </div>
+                </div>
+
+                {/* Symptom Chips */}
                 <div>
                   <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-3 ml-1">Physical Symptoms</label>
                   <div className="flex flex-wrap gap-2">
-                    {['Cramps', 'Headache', 'Bloating', 'Fatigue', 'Backache', 'Acne Flare', 'Healthy Flow'].map(s => {
-                      const isActive = todaySymptoms.includes(s);
+                    {['Cramps', 'Headache', 'Bloating', 'Fatigue', 'Acne Flare', 'Healthy Flow'].map(s => {
+                      const isActive = loggedSymptoms.includes(s);
                       return (
                         <button
                           key={s}
@@ -567,40 +758,34 @@ export const Dashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div>
-                    <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">Sleep (1-10)</label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={10}
-                      value={todaySleep}
-                      onChange={(e) => setTodaySleep(parseInt(e.target.value) || 7)}
-                      className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-4 py-3 rounded-2xl text-on-surface text-sm focus:outline-none"
-                    />
+                {/* Hydration Tracker */}
+                <div>
+                  <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-3 ml-1">Hydration Intensity ({loggedHydration} / 8 cups)</label>
+                  <div className="flex gap-2">
+                    {Array.from({ length: 8 }).map((_, idx) => {
+                      const isActive = idx < loggedHydration;
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setLoggedHydration(idx + 1)}
+                          className={`w-9 h-10 border rounded-xl flex items-center justify-center transition-all ${
+                            isActive ? 'bg-[#ff7b9c]/10 border-primary text-primary' : 'bg-white/40 border-white text-secondary'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[18px]">water_drop</span>
+                        </button>
+                      );
+                    })}
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">Energy (1-10)</label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={10}
-                      value={todayEnergy}
-                      onChange={(e) => setTodayEnergy(parseInt(e.target.value) || 7)}
-                      className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-4 py-3 rounded-2xl text-on-surface text-sm focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">Stress (1-10)</label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={10}
-                      value={todayStress}
-                      onChange={(e) => setTodayStress(parseInt(e.target.value) || 4)}
-                      className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-4 py-3 rounded-2xl text-on-surface text-sm focus:outline-none"
-                    />
-                  </div>
+                </div>
+
+                {/* Living Summary Feedback Block */}
+                <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl">
+                  <span className="block text-[10px] font-bold text-primary uppercase mb-1">Today's signals indicate</span>
+                  <p className="text-xs font-bold text-secondary">
+                    {loggedMood} mood • {loggedSleep}h rest quality • {loggedEnergy >= 7 ? 'High energy capacity' : 'Slight energy rest'} • {loggedStress <= 4 ? 'Low baseline stress' : 'Mild alert triggers'} • {loggedHydration >= 6 ? 'Optimal hydration' : 'Need more water'}
+                  </p>
                 </div>
 
                 <motion.button
@@ -609,117 +794,190 @@ export const Dashboard: React.FC = () => {
                   whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(165,53,86,0.35)' }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {logSuccess ? 'Diagnostics Saved Successfully' : 'Commit Logger Signals'}
+                  {logSaved ? 'Diagnostics Saved Successfully' : 'Commit Logger Signals'}
                 </motion.button>
               </form>
             </motion.div>
           )}
 
-          {/* TAB INSIGHTS VIEW */}
+          {/* ═══════════════ VISUAL INSIGHTS ═══════════════ */}
           {activeTab === 'insights' && (
             <motion.div
               key="insights-tab"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              className="glass-card rounded-[2.5rem] p-8 md:p-12 border border-white/70 max-w-4xl mx-auto shadow-sm"
+              className="flex flex-col gap-10"
             >
-              <h2 className="font-headline-md text-headline-md text-primary mb-3">Biological Intelligence Reports</h2>
-              <p className="text-secondary font-body-md mb-8">
-                Analytical breakdown of your cycle indicators compiled by Luna Intelligence Core.
-              </p>
+              {/* Insight Summary Banner */}
+              <div>
+                <h2 className="font-headline-md text-headline-md text-primary font-black mb-1">Biological Insights Dashboard</h2>
+                <p className="text-secondary font-body-md">
+                  Curated telemetry correlations processed by Luna's deep pattern recognition engine.
+                </p>
+              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-5 bg-white/50 border border-white/60 rounded-3xl flex flex-col gap-3">
+              {/* Graphical Charts Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Mood Trends Area Chart */}
+                <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4">
                   <div className="flex justify-between items-center">
-                    <span className="px-2.5 py-1 bg-primary/10 border border-primary/20 text-[10px] font-extrabold uppercase text-primary rounded-full">
-                      Hormonal Calibration
-                    </span>
-                    <span className="text-[10px] text-secondary font-bold">Shift Report</span>
+                    <span className="font-bold text-primary text-xs uppercase tracking-widest">Mood Trends (Last 7 Days)</span>
+                    <span className="material-symbols-outlined text-primary text-base">sentiment_satisfied</span>
                   </div>
-                  <h4 className="font-bold text-primary text-base">Follicular Estrogen Phase</h4>
-                  <p className="text-xs text-secondary leading-relaxed">
-                    Estrogen levels are steadily rising, supporting serotonin synthesis. This is a vital phase for high physical resilience, cardiovascular stamina, and neural plasticity. Consider high-intensity workouts and complex cognitive assignments.
-                  </p>
+                  <div className="h-32 w-full pt-4 relative">
+                    <svg className="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="mood-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stopColor="#ff7b9c" stopOpacity="0.4" />
+                          <stop offset="100%" stopColor="#ff7b9c" stopOpacity="0.0" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M 0 30 Q 15 10, 30 18 T 60 25 T 90 12 L 100 12 L 100 40 L 0 40 Z" fill="url(#mood-grad)" />
+                      <path d="M 0 30 Q 15 10, 30 18 T 60 25 T 90 12 L 100 12" fill="none" stroke="#ff7b9c" strokeWidth="1.5" />
+                    </svg>
+                    <div className="flex justify-between text-[9px] text-secondary font-bold mt-2">
+                      <span>Mon</span>
+                      <span>Wed</span>
+                      <span>Fri</span>
+                      <span>Today</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="p-5 bg-white/50 border border-white/60 rounded-3xl flex flex-col gap-3">
+                {/* Energy Fluctuations Bar Chart */}
+                <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4">
                   <div className="flex justify-between items-center">
-                    <span className="px-2.5 py-1 bg-purple-100 border border-purple-200 text-[10px] font-extrabold uppercase text-purple-700 rounded-full">
-                      Sleep Recovery
-                    </span>
-                    <span className="text-[10px] text-secondary font-bold">Continuity Diagnostic</span>
+                    <span className="font-bold text-primary text-xs uppercase tracking-widest">Energy Fluctuations</span>
+                    <span className="material-symbols-outlined text-primary text-base">bolt</span>
                   </div>
-                  <h4 className="font-bold text-primary text-base">Deep Rest Correlation</h4>
-                  <p className="text-xs text-secondary leading-relaxed">
-                    Based on logged data, sleep efficiency increases by 14% during your follicular phase. As progesterone begins to build in your upcoming luteal phase, core temperature increases slightly, which may impact sleep onset. We recommend cooling your room 2 degrees.
-                  </p>
+                  <div className="h-32 w-full flex items-end justify-between px-2 pt-4">
+                    {[5, 6, 8, 4, 7, 8, 9].map((val, idx) => (
+                      <div key={idx} className="flex flex-col items-center gap-1.5 w-full">
+                        <div className="w-4 bg-primary/20 border border-primary/10 rounded-t-md relative overflow-hidden" style={{ height: `${val * 10}%` }}>
+                          <div className="absolute inset-0 bg-primary w-full" style={{ height: '100%', transform: `scaleY(${val/10})`, transformOrigin: 'bottom' }} />
+                        </div>
+                        <span className="text-[9px] text-secondary font-bold">D{idx+1}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+              </div>
+
+              {/* Correlations and Pattern Discovery */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[
+                  { text: 'Sleep quality increases by 15% during follicular days.', icon: 'bedtime', col: 'text-purple-600' },
+                  { text: 'Stress indicators drop by 22% during optimal hydration cycles.', icon: 'spa', col: 'text-[#a53556]' },
+                  { text: 'High activity levels correlate to stable luteal phase entry.', icon: 'directions_run', col: 'text-amber-500' }
+                ].map((pattern, idx) => (
+                  <div key={idx} className="bg-white/40 border border-white/60 p-5 rounded-2xl flex items-start gap-3 shadow-inner">
+                    <span className={`material-symbols-outlined ${pattern.col} text-lg`}>{pattern.icon}</span>
+                    <p className="text-xs text-secondary font-bold leading-normal">
+                      {pattern.text}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* AI Insight Card */}
+              <div className="glass-card p-8 rounded-[2rem] border border-white/60 shadow-sm bg-gradient-to-tr from-primary/5 via-transparent to-[#ae9fc4]/10">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="material-symbols-outlined text-primary text-xl animate-bounce">auto_awesome</span>
+                  <h4 className="font-extrabold text-primary text-sm uppercase tracking-wider">AI Pattern Discovery</h4>
+                </div>
+                <p className="text-secondary text-sm leading-relaxed mb-4">
+                  "Based on 90 days of tracking, your energy levels peak consistently between cycle days 12 and 15. We recommend scheduling major initiatives during this window and reducing caffeine intake during luteal phase days 21–25."
+                </p>
+                <div className="text-[10px] text-secondary font-bold uppercase">Luna Diagnostics Core • 98.4% Confidence</div>
               </div>
             </motion.div>
           )}
 
-          {/* TAB PROFILE VIEW */}
+          {/* ═══════════════ PROFILE & ACHIEVEMENTS ═══════════════ */}
           {activeTab === 'profile' && (
             <motion.div
               key="profile-tab"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              className="glass-card rounded-[2.5rem] p-8 md:p-12 border border-white/70 max-w-xl mx-auto shadow-sm text-center"
+              className="flex flex-col gap-10"
             >
-              <div className="flex justify-center mb-6">
-                <div className="w-24 h-24 rounded-full bg-white/60 border border-white/80 flex items-center justify-center text-primary shadow-inner">
-                  <span className="material-symbols-outlined text-[48px] text-primary">shield_person</span>
+              {/* Wellness Profile Center */}
+              <div className="glass-card rounded-[2.5rem] p-8 md:p-12 border border-white/70 max-w-2xl mx-auto shadow-sm text-center w-full">
+                <div className="flex justify-center mb-6">
+                  <div className="w-24 h-24 rounded-full bg-white/60 border border-white/80 flex items-center justify-center text-primary shadow-inner">
+                    <span className="material-symbols-outlined text-[48px] text-primary">shield_person</span>
+                  </div>
                 </div>
-              </div>
 
-              <h2 className="font-headline-md text-headline-md text-primary mb-2">{user.name || 'Elena Ross'}</h2>
-              <p className="text-secondary font-body-md mb-8">{user.email || 'elena@lunacare.com'}</p>
+                <h2 className="font-headline-md text-headline-md text-primary font-black mb-2">{user.name || 'Elena Ross'}</h2>
+                <p className="text-secondary font-body-md mb-8">{user.email || 'elena@lunacare.com'}</p>
 
-              <div className="p-5 bg-white/40 border border-white/60 rounded-3xl flex flex-col gap-3 text-left mb-8">
-                <span className="font-bold text-xs text-primary uppercase tracking-wider">Calibration Indexes</span>
-                <div className="flex justify-between border-b border-outline/5 pb-2 text-sm font-medium text-secondary">
-                  <span>Cycle Length Range</span>
-                  <span className="font-bold text-primary">{onboarding.cycleLength} Days</span>
+                {/* Metrics */}
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
+                  {[
+                    { label: 'Avg Cycle', val: '28 Days' },
+                    { label: 'Period Range', val: '5 Days' },
+                    { label: 'Logs Saved', val: `${Object.keys(dailyLogs).length}` },
+                    { label: 'Prediction Rate', val: '97%' },
+                    { label: 'Accuracy', val: '98%' }
+                  ].map((stat, idx) => (
+                    <div key={idx} className="bg-white/50 border border-white/60 p-3 rounded-2xl">
+                      <span className="block text-[8px] font-bold text-secondary uppercase tracking-widest mb-1">{stat.label}</span>
+                      <span className="text-xs font-bold text-primary">{stat.val}</span>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex justify-between border-b border-outline/5 pb-2 text-sm font-medium text-secondary">
-                  <span>Bleeding Period Range</span>
-                  <span className="font-bold text-primary">{onboarding.periodLength} Days</span>
-                </div>
-                <div className="flex justify-between text-sm font-medium text-secondary">
-                  <span>Baseline Calibration Date</span>
-                  <span className="font-bold text-primary">{onboarding.lastPeriodDate}</span>
-                </div>
-              </div>
 
-              <div className="flex flex-col gap-4">
-                <button
-                  onClick={() => navigate('/onboarding')}
-                  className="w-full py-3.5 border border-white bg-white/50 hover:bg-white rounded-full font-bold text-xs uppercase tracking-wider text-primary shadow-sm"
-                >
-                  Recalibrate Rhythm Core
-                </button>
-                <button
-                  onClick={() => {
-                    logoutUser();
-                    navigate('/landingpage');
-                  }}
-                  className="w-full py-3.5 bg-primary text-on-primary rounded-full font-bold text-xs uppercase tracking-wider shadow-md shadow-primary/20"
-                >
-                  Disconnect Sanctuary
-                </button>
+                {/* Achievements */}
+                <div className="text-left mb-8">
+                  <span className="block text-xs font-extrabold text-primary uppercase tracking-wider mb-4">Luna Calibration Medals</span>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: '30 Days Tracked', icon: 'verified' },
+                      { label: '90 Days Sync', icon: 'settings_backup_restore' },
+                      { label: 'Insight Master', icon: 'auto_awesome' }
+                    ].map((badge, idx) => (
+                      <div key={idx} className="bg-[#ff7b9c]/10 border border-primary/20 p-3 rounded-2xl flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary text-lg">{badge.icon}</span>
+                        <span className="text-[10px] font-bold text-primary leading-tight">{badge.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Calibration Controls */}
+                <div className="flex flex-col gap-4">
+                  <button
+                    onClick={() => navigate('/onboarding')}
+                    className="w-full py-3.5 border border-white bg-white/50 hover:bg-white rounded-full font-bold text-xs uppercase tracking-wider text-primary shadow-sm"
+                  >
+                    Recalibrate Rhythm Core
+                  </button>
+                  <button
+                    onClick={() => {
+                      logoutUser();
+                      navigate('/landingpage');
+                    }}
+                    className="w-full py-3.5 bg-primary text-on-primary rounded-full font-bold text-xs uppercase tracking-wider shadow-md shadow-primary/20"
+                  >
+                    Disconnect Sanctuary
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}
+
         </AnimatePresence>
       </main>
 
       {/* ═══════════════ BOTTOM NAV BAR ═══════════════ */}
-      <nav className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 w-[90%] max-w-md">
+      <nav className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 w-[95%] max-w-lg">
         <div className="glass shadow-[0_24px_50px_rgba(165,53,86,0.12)] border border-white/70 p-3 rounded-full flex justify-between items-center">
           {[
             { id: 'home', label: 'Home', icon: 'space_dashboard' },
+            { id: 'lab', label: 'Lab', icon: 'science' },
             { id: 'calendar', label: 'Calendar', icon: 'calendar_month' },
             { id: 'log', label: 'Log', icon: 'edit_note' },
             { id: 'insights', label: 'Insights', icon: 'insights' },
@@ -730,9 +988,9 @@ export const Dashboard: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex flex-col items-center justify-center rounded-full p-2.5 transition-all ${
+                className={`flex flex-col items-center justify-center rounded-full px-3 py-2 transition-all ${
                   isActive
-                    ? 'bg-primary text-on-primary scale-110 shadow-md shadow-primary/30'
+                    ? 'bg-primary text-on-primary scale-105 shadow-md shadow-primary/30'
                     : 'text-secondary/80 hover:text-primary hover:bg-white/40'
                 }`}
               >
@@ -766,7 +1024,7 @@ const BodyIntelligenceOrb: React.FC<{ phase: string; color: string }> = ({ phase
       gl_Position = vec4(a_position, 0.0, 1.0);
     }`;
 
-    // Fragment Shader - beautiful pulsing orb colored according to phase
+    // Fragment Shader - highly refined pulsing organic orb with breathing effects, noise waves, and particles
     const fs = `precision highp float;
     varying vec2 v_texCoord;
     uniform float u_time;
@@ -774,35 +1032,73 @@ const BodyIntelligenceOrb: React.FC<{ phase: string; color: string }> = ({ phase
     uniform vec2 u_mouse;
     uniform vec2 u_res;
 
+    // Simplex noise-like helper
+    vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+    vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+    vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+
+    float snoise(vec2 v) {
+        const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+        vec2 i  = floor(v + dot(v, C.yy) );
+        vec2 x0 = v -   i + dot(i, C.xx);
+        vec2 i1;
+        i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+        vec4 x12 = x0.xyxy + C.xxzz;
+        x12.xy -= i1;
+        i = mod289(i);
+        vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 )) + i.x + vec3(0.0, i1.x, 1.0 ));
+        vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+        m = m*m ;
+        m = m*m ;
+        vec3 x = 2.0 * fract(p * C.www) - 1.0;
+        vec3 h = abs(x) - 0.5;
+        vec3 ox = floor(x + 0.5);
+        vec3 a0 = x - ox;
+        m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+        vec3 g;
+        g.x  = a0.x  * x0.x  + h.x  * x0.y;
+        g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+        return 130.0 * dot(m, g);
+    }
+
     void main() {
       vec2 uv = v_texCoord;
       vec2 center = vec2(0.5, 0.5);
       float dist = distance(uv, center);
       
       // Heartbeat pulse calculation
-      float pulse = 1.0 + sin(u_time * 3.8) * 0.05;
+      float pulse = 1.0 + sin(u_time * 2.8) * 0.04;
       
-      // Distortion noise
-      float distortion = sin(uv.x * 12.0 + u_time) * cos(uv.y * 12.0 - u_time) * 0.04;
-      float orbRadius = 0.28 * pulse + distortion;
+      // Distortion noise for breathing
+      float n1 = snoise(uv * 3.5 + vec2(u_time * 0.3, -u_time * 0.1)) * 0.05;
+      float n2 = snoise(uv * 8.0 - vec2(u_time * 0.4, u_time * 0.2)) * 0.02;
+      
+      float orbRadius = 0.26 * pulse + n1 + n2;
       
       // Mouse interaction glow influence
       vec2 mouseNorm = u_mouse / u_res;
       float mouseDist = distance(uv, mouseNorm);
-      float hoverGlow = smoothstep(0.35, 0.0, mouseDist) * 0.05;
+      float hoverGlow = smoothstep(0.4, 0.0, mouseDist) * 0.08;
       
-      float edgeGlow = smoothstep(orbRadius + 0.08, orbRadius - 0.08, dist);
+      // Edge glow and fill glow
+      float edgeGlow = smoothstep(orbRadius + 0.1, orbRadius - 0.1, dist);
       float fillGlow = smoothstep(orbRadius, 0.0, dist);
       
+      // Core inner glow (particles)
+      float innerGlow = smoothstep(orbRadius * 0.6, 0.0, dist) * 0.25;
+      
       vec3 col = u_phase_color;
-      // Add dynamic internal colors
-      col += vec3(0.15, 0.08, 0.15) * sin(u_time * 0.8);
+      col += vec3(0.08, 0.04, 0.12) * sin(u_time * 0.5);
+      col += vec3(0.1, 0.02, 0.05) * innerGlow;
       
-      // Soft ambient background
-      vec3 finalCol = col * fillGlow + vec3(1.0, 1.0, 1.0) * (edgeGlow - fillGlow) * 0.3;
+      // Ambient particle light points inside the orb
+      float particleNoise = snoise(uv * 12.0 + vec2(0.0, u_time * 1.5));
+      float particles = smoothstep(0.7, 0.9, particleNoise) * fillGlow * 0.15;
+      
+      vec3 finalCol = col * fillGlow + vec3(1.0, 0.9, 0.95) * (edgeGlow - fillGlow) * 0.35;
       finalCol += u_phase_color * hoverGlow;
+      finalCol += vec3(1.0, 1.0, 1.0) * particles;
       
-      // Ambient shadow masking
       float alpha = edgeGlow;
       
       gl_FragColor = vec4(finalCol, alpha);

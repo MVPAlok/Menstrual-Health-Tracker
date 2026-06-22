@@ -87,17 +87,17 @@ export const OnboardingFlow: React.FC = () => {
       <div className="absolute inset-0 bg-white/30 backdrop-blur-[2px] z-0 pointer-events-none" />
 
       {/* Progress Header */}
-      <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-20 max-w-7xl mx-auto">
-        <span className="font-extrabold text-xl text-primary tracking-tight">LunaCare</span>
-        <div className="flex items-center gap-4">
-          <div className="w-48 h-1.5 bg-white/40 border border-white/60 rounded-full overflow-hidden relative">
+      <div className="absolute top-0 left-0 right-0 w-full p-6 md:p-8 flex flex-col sm:flex-row justify-between items-center z-20 max-w-7xl mx-auto gap-4">
+        <span className="font-extrabold text-xl text-primary tracking-tight w-full sm:w-auto text-left">LunaCare</span>
+        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+          <div className="flex-1 sm:flex-none sm:w-48 h-1.5 bg-white/40 border border-white/60 rounded-full overflow-hidden relative">
             <motion.div
               className="h-full bg-gradient-to-r from-primary to-primary-container"
               animate={{ width: `${(step / 8) * 100}%` }}
               transition={{ duration: 0.4 }}
             />
           </div>
-          <span className="text-xs font-bold text-primary">Step {step} of 8</span>
+          <span className="text-xs font-bold text-primary whitespace-nowrap">Step {step} of 8</span>
         </div>
       </div>
 
@@ -132,7 +132,7 @@ export const OnboardingFlow: React.FC = () => {
               </p>
               <motion.button
                 onClick={handleNext}
-                className="bg-primary text-on-primary px-10 py-4.5 rounded-full font-bold text-sm tracking-wide shadow-lg shadow-primary/30 border border-primary/20"
+                className="bg-primary text-on-primary px-10 py-4 rounded-full font-bold text-sm tracking-wide shadow-lg shadow-primary/30 border border-primary/20"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -727,7 +727,7 @@ export const OnboardingFlow: React.FC = () => {
               <div className="flex flex-col gap-4">
                 <motion.button
                   onClick={handleNext}
-                  className="w-full bg-primary text-on-primary py-4.5 rounded-full font-bold text-sm tracking-wide shadow-lg shadow-primary/30 border border-primary/20 flex items-center justify-center gap-2"
+                  className="w-full bg-primary text-on-primary py-4 rounded-full font-bold text-sm tracking-wide shadow-lg shadow-primary/30 border border-primary/20 flex items-center justify-center gap-2"
                   whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(165, 53, 86, 0.4)' }}
                   whileTap={{ scale: 0.98 }}
                 >
