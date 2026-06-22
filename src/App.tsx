@@ -10,6 +10,9 @@ function App() {
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       touchMultiplier: 2,
     })
+    
+    // Expose lenis instance globally for custom smooth scrolling
+    ;(window as any).lenis = lenis
 
     function raf(time: number) {
       lenis.raf(time)
@@ -19,6 +22,7 @@ function App() {
 
     return () => {
       lenis.destroy()
+      delete (window as any).lenis
     }
   }, [])
 

@@ -87,6 +87,22 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [activePhase, setActivePhase] = useState('follicular');
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>, targetId: string) => {
+    e.preventDefault();
+    const element = document.getElementById(targetId);
+    if (element) {
+      try {
+        if ((window as any).lenis) {
+          (window as any).lenis.scrollTo(element, { offset: -50, duration: 1.5 });
+        } else {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } catch (err) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  };
+
   /* Scroll progress for parallax */
   const { scrollY } = useScroll();
   const heroParallax = useTransform(scrollY, [0, 800], [0, -120]);
@@ -408,7 +424,8 @@ export default function LandingPage() {
         <motion.a
           key={item}
           className={`${i === 0 ? 'text-primary font-bold' : 'text-secondary hover:text-primary font-semibold'} text-xs tracking-widest uppercase transition-colors duration-300`}
-          href="#"
+          href={`#${item.toLowerCase()}`}
+          onClick={(e) => handleNavClick(e, item.toLowerCase())}
           whileHover={{ y: -2 }}
           transition={{ type: 'spring', stiffness: 300, damping: 20 }}
         >
@@ -460,10 +477,13 @@ export default function LandingPage() {
             <motion.a
               key={item}
               className={`${i === 0 ? 'text-primary' : 'text-secondary hover:text-primary'} font-bold text-base tracking-widest uppercase py-3 border-b border-primary/5 transition-colors`}
-              href="#"
+              href={`#${item.toLowerCase()}`}
               variants={menuItemVariants}
               custom={i}
-              onClick={() => setMenuOpen(false)}
+              onClick={(e) => {
+                setMenuOpen(false);
+                handleNavClick(e, item.toLowerCase());
+              }}
             >
               {item}
             </motion.a>
@@ -483,7 +503,7 @@ export default function LandingPage() {
 </motion.nav>
 
 {/* ═══════════════ HERO SECTION ═══════════════ */}
-<section className="fixed top-0 left-0 w-full h-screen flex items-center justify-center pt-24 overflow-hidden -z-10">
+<section className="fixed top-0 left-0 w-full h-screen flex items-center justify-center pt-24 overflow-hidden z-0">
   {/* Shader Background */}
   <div className="absolute inset-0 pointer-events-none" style={{ width: '100%', height: '100%' }}>
     <div className="absolute inset-0 w-full h-full" style={{ display: 'block' }}>
@@ -555,6 +575,7 @@ export default function LandingPage() {
         className="glass px-6 py-3 md:px-10 md:py-5 rounded-full font-bold text-base md:text-lg text-primary w-full sm:w-auto"
         whileHover={{ scale: 1.05, backgroundColor: 'rgba(255,255,255,0.9)', boxShadow: '0 8px 30px rgba(0,0,0,0.05)' }}
         whileTap={{ scale: 0.95 }}
+        onClick={(e) => handleNavClick(e, 'experience')}
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       >
         Explore Experience
@@ -592,7 +613,7 @@ export default function LandingPage() {
 <div className="relative z-10 bg-[#fffdfd] mt-[100vh] rounded-t-[3rem] md:rounded-t-[4rem] shadow-[0_-40px_80px_rgba(165,53,86,0.08)] border-t border-white/50" style={{ isolation: 'isolate' }}>
 
 {/* ═══════════════ SECTION 2: LIVING RHYTHM ═══════════════ */}
-<section className="py-section-gap relative min-h-screen flex flex-col items-center justify-center bg-[#fffdfd] overflow-hidden">
+<section id="rhythms" className="py-section-gap relative min-h-screen flex flex-col items-center justify-center bg-[#fffdfd] overflow-hidden">
   <RevealOnScroll className="text-center max-w-3xl mx-auto mb-20 px-container-padding-mobile">
     <h2 className="text-6xl md:text-7xl font-black mb-6 tracking-tighter text-on-background">The Living Rhythm</h2>
     <p className="text-xl text-secondary">A cinematic representation of your hormonal journey, mapped across 28 days of evolution.</p>
@@ -724,7 +745,7 @@ export default function LandingPage() {
 </section>
 
 {/* ═══════════════ SECTION 3: INVISIBLE SHIFTS ═══════════════ */}
-<section className="py-section-gap px-container-padding-mobile md:px-container-padding-desktop overflow-hidden bg-[#fffdfd]">
+<section id="science" className="py-section-gap px-container-padding-mobile md:px-container-padding-desktop overflow-hidden bg-[#fffdfd]">
   <div className="grid lg:grid-cols-2 gap-32 items-center max-w-7xl mx-auto">
     <motion.div
       initial="hidden"
@@ -799,7 +820,7 @@ export default function LandingPage() {
 </section>
 
 {/* ═══════════════ SECTION 4: NEURAL MAP ═══════════════ */}
-<section className="py-section-gap relative overflow-hidden bg-[#fff8fb]">
+<section id="neural-map" className="py-section-gap relative overflow-hidden bg-[#fff8fb]">
   <div className="px-container-padding-mobile md:px-container-padding-desktop max-w-full mx-auto">
     <RevealOnScroll className="text-center mb-16">
       <h2 className="text-6xl font-black tracking-tighter mb-6 text-on-background">The Neural Map</h2>
@@ -880,7 +901,7 @@ export default function LandingPage() {
 </section>
 
 {/* ═══════════════ SECTION 5: PREDICTION ENGINE ═══════════════ */}
-<section className="py-section-gap bg-on-background text-on-primary min-h-screen flex items-center justify-center relative overflow-hidden">
+<section id="insights" className="py-section-gap bg-on-background text-on-primary min-h-screen flex items-center justify-center relative overflow-hidden">
   <div className="absolute inset-0 bg-gradient-to-br from-primary/35 via-transparent to-tertiary/25 z-0"></div>
   <div className="absolute inset-0 sci-fi-grid opacity-25 pointer-events-none z-0"></div>
   <motion.div
@@ -992,7 +1013,7 @@ export default function LandingPage() {
 </section>
 
 {/* ═══════════════ SECTION 6: BODY INSIGHTS ═══════════════ */}
-<section className="py-section-gap relative bg-gradient-to-b from-[#fcf9f8] to-[#fff5f7] overflow-hidden" style={{ isolation: 'isolate', backgroundColor: '#fcf9f8' }}>
+<section id="body-communicating" className="py-section-gap relative bg-gradient-to-b from-[#fcf9f8] to-[#fff5f7] overflow-hidden" style={{ isolation: 'isolate', backgroundColor: '#fcf9f8' }}>
   <RevealOnScroll className="px-container-padding-mobile text-center mb-16">
     <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full glass border border-primary/10 text-primary font-bold text-xs tracking-[0.2em] mb-6">
       <motion.span className="material-symbols-outlined text-[16px]" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}>analytics</motion.span>
@@ -1116,7 +1137,7 @@ export default function LandingPage() {
 </section>
 
 {/* ═══════════════ SECTION 7: MOBILE EXPERIENCE ═══════════════ */}
-<section className="py-section-gap bg-[#fffdfd] overflow-hidden relative">
+<section id="experience" className="py-section-gap bg-[#fffdfd] overflow-hidden relative">
   {/* Ambient glows */}
   <div className="absolute top-1/2 left-0 -translate-y-1/2 w-full max-w-[800px] h-[800px] rounded-full pointer-events-none z-0 overflow-hidden md:overflow-visible">
     <motion.div className="absolute top-1/4 left-1/4 w-[300px] md:w-[400px] h-[300px] md:h-[400px] rounded-full bg-[#ff7b9c]/20 blur-[80px] md:blur-[100px] mix-blend-multiply" animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }} />
@@ -1367,7 +1388,7 @@ export default function LandingPage() {
 </section>
 
 {/* ═══════════════ SECTION 8: PERSONALIZED INTELLIGENCE ═══════════════ */}
-<section className="py-section-gap px-container-padding-mobile bg-[#fff5f7] overflow-hidden">
+<section id="listen-to-your-body" className="py-section-gap px-container-padding-mobile bg-[#fff5f7] overflow-hidden">
   <div className="max-w-7xl mx-auto text-center">
     <RevealOnScroll>
       <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full glass border border-primary/10 text-primary font-bold text-xs tracking-[0.2em] mb-6">
