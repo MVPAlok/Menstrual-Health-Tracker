@@ -1095,15 +1095,13 @@ const BodyIntelligenceOrb: React.FC<{ phase: string; color: string }> = ({ phase
       float particleNoise = snoise(uv * 12.0 + vec2(0.0, u_time * 1.5));
       float particles = smoothstep(0.7, 0.9, particleNoise) * fillGlow * 0.15;
       
-      // Use the phase color for the edge glow to prevent grey/muddy fringes
-      vec3 finalCol = col * fillGlow + u_phase_color * (edgeGlow - fillGlow) * 0.6;
+      vec3 finalCol = col * fillGlow + vec3(1.0, 0.9, 0.95) * (edgeGlow - fillGlow) * 0.35;
       finalCol += u_phase_color * hoverGlow;
       finalCol += vec3(1.0, 1.0, 1.0) * particles;
       
       float alpha = edgeGlow;
       
-      // Pre-multiply alpha to ensure vibrant blending against the white background
-      gl_FragColor = vec4(finalCol * alpha, alpha);
+      gl_FragColor = vec4(finalCol, alpha);
     }`;
 
     function compileShader(type: number, src: string): WebGLShader | null {

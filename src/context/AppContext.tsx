@@ -45,14 +45,8 @@ interface AppContextType {
   logDay: (log: Omit<DailyLog, 'date'>) => void;
 }
 
-const getDefaultDate = () => {
-  const d = new Date();
-  d.setDate(d.getDate() - 7);
-  return d.toISOString().split('T')[0];
-};
-
 const defaultOnboarding: OnboardingData = {
-  lastPeriodDate: getDefaultDate(),
+  lastPeriodDate: new Date().toISOString().split('T')[0],
   cycleLength: 28,
   periodLength: 5,
   healthGoals: [],
@@ -81,15 +75,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [onboarding, setOnboarding] = useState<OnboardingData>(() => {
     const saved = localStorage.getItem('lunacare_onboarding');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Force update to the 7-days-ago demo date if they haven't completed onboarding
-      if (!parsed.onboardingCompleted) {
-        parsed.lastPeriodDate = getDefaultDate();
-      }
-      return parsed;
-    }
-    return defaultOnboarding;
+    return saved ? JSON.parse(saved) : defaultOnboarding;
   });
 
   const [dailyLogs, setDailyLogs] = useState<Record<string, DailyLog>>(() => {
