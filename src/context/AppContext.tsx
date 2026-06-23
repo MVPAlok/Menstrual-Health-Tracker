@@ -81,7 +81,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [onboarding, setOnboarding] = useState<OnboardingData>(() => {
     const saved = localStorage.getItem('lunacare_onboarding');
-    return saved ? JSON.parse(saved) : defaultOnboarding;
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Force update to the 7-days-ago demo date if they haven't completed onboarding
+      if (!parsed.onboardingCompleted) {
+        parsed.lastPeriodDate = getDefaultDate();
+      }
+      return parsed;
+    }
+    return defaultOnboarding;
   });
 
   const [dailyLogs, setDailyLogs] = useState<Record<string, DailyLog>>(() => {
