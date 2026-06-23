@@ -45,8 +45,14 @@ interface AppContextType {
   logDay: (log: Omit<DailyLog, 'date'>) => void;
 }
 
+const getDefaultDate = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 7);
+  return d.toISOString().split('T')[0];
+};
+
 const defaultOnboarding: OnboardingData = {
-  lastPeriodDate: new Date().toISOString().split('T')[0],
+  lastPeriodDate: getDefaultDate(),
   cycleLength: 28,
   periodLength: 5,
   healthGoals: [],
