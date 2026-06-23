@@ -14,7 +14,7 @@ const AuthContainer: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-md relative z-10 glass-card p-8 md:p-10 rounded-[2.5rem] border border-white/70 shadow-[0_32px_80px_rgba(165,53,86,0.08)]"
+        className="w-full max-w-md relative z-10 glass-card p-5 sm:p-8 md:p-10 rounded-[2rem] sm:rounded-[2.5rem] border border-white/70 shadow-[0_32px_80px_rgba(165,53,86,0.08)]"
       >
         {children}
       </motion.div>
@@ -30,21 +30,21 @@ export const WelcomeScreen: React.FC = () => {
     <AuthContainer>
       <div className="text-center">
         {/* Animated Brand Orb */}
-        <div className="flex justify-center mb-8 relative">
+        <div className="flex justify-center mb-6 sm:mb-8 relative">
           <motion.div
-            className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary/60 to-primary-container/80 blur-[8px] absolute"
+            className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-primary/60 to-primary-container/80 blur-[8px] absolute"
             animate={{ scale: [1, 1.15, 1], rotate: 360 }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
           />
-          <div className="w-24 h-24 rounded-full bg-white/60 backdrop-blur-md border border-white/80 flex items-center justify-center relative z-10 shadow-inner">
-            <span className="material-symbols-outlined text-[42px] text-primary">spa</span>
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white/60 backdrop-blur-md border border-white/80 flex items-center justify-center relative z-10 shadow-inner">
+            <span className="material-symbols-outlined text-[36px] sm:text-[42px] text-primary">spa</span>
           </div>
         </div>
 
-        <h1 className="font-headline-lg text-headline-lg text-primary mb-3">
+        <h1 className="font-headline-lg text-2xl sm:text-headline-lg text-primary mb-3">
           Understand Your Rhythm.
         </h1>
-        <p className="font-body-md text-secondary mb-10 text-center leading-relaxed">
+        <p className="text-secondary text-xs sm:text-sm mb-6 sm:mb-10 text-center leading-relaxed">
           Create your personal cycle intelligence profile and begin understanding your body through data, patterns, and insights.
         </p>
 
@@ -94,44 +94,44 @@ export const LoginScreen: React.FC = () => {
 
   return (
     <AuthContainer>
-      <div className="mb-6 flex justify-between items-center">
+      <div className="mb-4 sm:mb-6 flex justify-between items-center">
         <button
           onClick={() => navigate('/welcome')}
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-white/40 border border-white/80 text-primary"
+          className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/40 border border-white/80 text-primary"
         >
-          <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+          <span className="material-symbols-outlined text-[18px] sm:text-[20px]">arrow_back</span>
         </button>
-        <span className="font-extrabold text-lg text-primary tracking-tight">LunaCare</span>
+        <span className="font-extrabold text-base sm:text-lg text-primary tracking-tight">LunaCare</span>
       </div>
 
-      <h2 className="font-headline-lg text-headline-lg text-primary mb-2">Welcome Back</h2>
-      <p className="text-secondary font-body-md mb-8">Sign in to sync your rhythm parameters.</p>
+      <h2 className="font-headline-lg text-2xl sm:text-headline-lg text-primary mb-1 sm:mb-2">Welcome Back</h2>
+      <p className="text-secondary text-xs sm:text-sm mb-5 sm:mb-8">Sign in to sync your rhythm parameters.</p>
 
       {error && (
-        <div className="bg-error-container text-on-error-container p-3 rounded-2xl mb-5 text-sm font-medium border border-error/10">
+        <div className="bg-error-container text-on-error-container p-2.5 sm:p-3 rounded-2xl mb-4 sm:mb-5 text-xs sm:text-sm font-medium border border-error/10">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-5">
         <div>
-          <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">Email Address</label>
+          <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 sm:mb-2 ml-1">Email Address</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-5 py-3.5 rounded-full text-on-surface text-sm transition-all focus:outline-none"
+            className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-4 py-2.5 sm:px-5 sm:py-3.5 rounded-full text-on-surface text-xs sm:text-sm transition-all focus:outline-none"
             placeholder="name@example.com"
           />
         </div>
 
         <div>
-          <div className="flex justify-between items-center mb-2 ml-1">
-            <label className="block text-xs font-bold text-primary tracking-wider uppercase">Password</label>
+          <div className="flex justify-between items-center mb-1.5 sm:mb-2 ml-1">
+            <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase">Password</label>
             <button
               type="button"
               onClick={() => navigate('/forgot-password')}
-              className="text-xs font-bold text-primary hover:underline"
+              className="text-[10px] sm:text-xs font-bold text-primary hover:underline"
             >
               Forgot?
             </button>
@@ -140,18 +140,18 @@ export const LoginScreen: React.FC = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-5 py-3.5 rounded-full text-on-surface text-sm transition-all focus:outline-none"
+            className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-4 py-2.5 sm:px-5 sm:py-3.5 rounded-full text-on-surface text-xs sm:text-sm transition-all focus:outline-none"
             placeholder="••••••••"
           />
         </div>
 
-        <div className="flex items-center justify-between mt-1 mb-2 ml-1">
-          <label className="flex items-center gap-2.5 cursor-pointer text-sm text-secondary font-medium select-none">
+        <div className="flex items-center justify-between mt-1 mb-1 sm:mb-2 ml-1">
+          <label className="flex items-center gap-2 cursor-pointer text-xs sm:text-sm text-secondary font-medium select-none">
             <input
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="w-4 h-4 rounded border-outline/30 text-primary focus:ring-primary/20 bg-white/50"
+              className="w-3.5 h-3.5 rounded border-outline/30 text-primary focus:ring-primary/20 bg-white/50"
             />
             Remember me
           </label>
@@ -159,7 +159,7 @@ export const LoginScreen: React.FC = () => {
 
         <motion.button
           type="submit"
-          className="w-full bg-primary text-on-primary py-4 rounded-full font-bold text-sm tracking-wide shadow-lg shadow-primary/30 border border-primary/20 mt-2"
+          className="w-full bg-primary text-on-primary py-3.5 sm:py-4 rounded-full font-bold text-xs sm:text-sm tracking-wide shadow-lg shadow-primary/30 border border-primary/20 mt-1 sm:mt-2"
           whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(165,53,86,0.35)' }}
           whileTap={{ scale: 0.98 }}
         >
@@ -168,16 +168,16 @@ export const LoginScreen: React.FC = () => {
       </form>
 
       {/* Social Login Separator */}
-      <div className="relative my-8 text-center">
+      <div className="relative my-5 sm:my-8 text-center">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-outline/10"></div>
         </div>
-        <span className="relative bg-transparent px-4 text-xs font-bold uppercase tracking-widest text-outline-variant">
+        <span className="relative bg-transparent px-3 text-[10px] font-bold uppercase tracking-widest text-outline-variant">
           Or continue with
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <motion.button
           onClick={() => {
             loginUser('Google Wellness', 'google@lunacare.com');
@@ -245,66 +245,66 @@ export const SignUpScreen: React.FC = () => {
 
   return (
     <AuthContainer>
-      <div className="mb-6 flex justify-between items-center">
+      <div className="mb-4 sm:mb-6 flex justify-between items-center">
         <button
           onClick={() => navigate('/welcome')}
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-white/40 border border-white/80 text-primary"
+          className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/40 border border-white/80 text-primary"
         >
-          <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+          <span className="material-symbols-outlined text-[18px] sm:text-[20px]">arrow_back</span>
         </button>
-        <span className="font-extrabold text-lg text-primary tracking-tight">LunaCare</span>
+        <span className="font-extrabold text-base sm:text-lg text-primary tracking-tight">LunaCare</span>
       </div>
 
-      <h2 className="font-headline-lg text-headline-lg text-primary mb-2">Create Sanctuary</h2>
-      <p className="text-secondary font-body-md mb-6">Begin your personal cycle intelligence profile.</p>
+      <h2 className="font-headline-lg text-2xl sm:text-headline-lg text-primary mb-1 sm:mb-2">Create Sanctuary</h2>
+      <p className="text-secondary text-xs sm:text-sm mb-4 sm:mb-6">Begin your personal cycle intelligence profile.</p>
 
       {error && (
-        <div className="bg-error-container text-on-error-container p-3 rounded-2xl mb-4 text-sm font-medium border border-error/10">
+        <div className="bg-error-container text-on-error-container p-2.5 sm:p-3 rounded-2xl mb-4 text-xs sm:text-sm font-medium border border-error/10">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4.5">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3.5 sm:gap-4.5">
         <div>
-          <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">Full Name</label>
+          <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">Full Name</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-5 py-3 rounded-full text-on-surface text-sm focus:outline-none transition-all"
+            className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-4 py-2.5 sm:px-5 sm:py-3 rounded-full text-on-surface text-xs sm:text-sm focus:outline-none transition-all"
             placeholder="Elena Ross"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">Email Address</label>
+          <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">Email Address</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-5 py-3 rounded-full text-on-surface text-sm focus:outline-none transition-all"
+            className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-4 py-2.5 sm:px-5 sm:py-3 rounded-full text-on-surface text-xs sm:text-sm focus:outline-none transition-all"
             placeholder="elena@example.com"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">Password</label>
+          <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">Password</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-5 py-3 rounded-full text-on-surface text-sm focus:outline-none transition-all"
+            className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-4 py-2.5 sm:px-5 sm:py-3 rounded-full text-on-surface text-xs sm:text-sm focus:outline-none transition-all"
             placeholder="••••••••"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">Confirm Password</label>
+          <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">Confirm Password</label>
           <input
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-5 py-3 rounded-full text-on-surface text-sm focus:outline-none transition-all"
+            className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-4 py-2.5 sm:px-5 sm:py-3 rounded-full text-on-surface text-xs sm:text-sm focus:outline-none transition-all"
             placeholder="••••••••"
           />
         </div>
@@ -468,29 +468,29 @@ export const VerificationScreen: React.FC = () => {
 
   return (
     <AuthContainer>
-      <div className="mb-6 flex justify-between items-center">
+      <div className="mb-4 sm:mb-6 flex justify-between items-center">
         <button
           onClick={() => navigate('/signup')}
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-white/40 border border-white/80 text-primary"
+          className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/40 border border-white/80 text-primary"
         >
-          <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+          <span className="material-symbols-outlined text-[18px] sm:text-[20px]">arrow_back</span>
         </button>
-        <span className="font-extrabold text-lg text-primary tracking-tight">LunaCare</span>
+        <span className="font-extrabold text-base sm:text-lg text-primary tracking-tight">LunaCare</span>
       </div>
 
-      <h2 className="font-headline-lg text-headline-lg text-primary mb-2">Verify Account</h2>
-      <p className="text-secondary font-body-md mb-8 leading-relaxed">
+      <h2 className="font-headline-lg text-2xl sm:text-headline-lg text-primary mb-1 sm:mb-2">Verify Account</h2>
+      <p className="text-secondary text-xs sm:text-sm mb-6 sm:mb-8 leading-relaxed">
         We sent a 6-digit synchronization key to <span className="font-bold text-primary">{user.email || 'your email'}</span>.
       </p>
 
       {error && (
-        <div className="bg-error-container text-on-error-container p-3 rounded-2xl mb-5 text-sm font-medium border border-error/10">
+        <div className="bg-error-container text-on-error-container p-2.5 sm:p-3 rounded-2xl mb-4 sm:mb-5 text-xs sm:text-sm font-medium border border-error/10">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleVerify} className="flex flex-col gap-6">
-        <div className="flex justify-between gap-2.5">
+      <form onSubmit={handleVerify} className="flex flex-col gap-5 sm:gap-6">
+        <div className="flex justify-between gap-1.5 xs:gap-2.5">
           {code.map((num, i) => (
             <input
               key={i}
@@ -502,7 +502,7 @@ export const VerificationScreen: React.FC = () => {
               value={num}
               onChange={(e) => handleChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
-              className="w-12 h-14 md:w-14 md:h-16 text-center text-xl font-bold bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 rounded-2xl text-on-surface focus:outline-none transition-all"
+              className="w-9 h-11 xs:w-12 xs:h-14 md:w-14 md:h-16 text-center text-lg sm:text-xl font-bold bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 rounded-2xl text-on-surface focus:outline-none transition-all"
             />
           ))}
         </div>

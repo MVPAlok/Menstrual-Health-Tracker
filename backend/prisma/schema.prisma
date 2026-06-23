@@ -1,0 +1,132 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// User Profile Table
+model User {
+  id                   String        @id @default(uuid())
+  email                String        @unique
+  passwordHash         String
+  name                 String
+  verificationToken    String?       // Used during OTP / email validation
+  isVerified           Boolean       @default(false)
+  resetToken           String?       // Used for forgot-password recovery
+  resetTokenExpiry     DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  
+  onboarding           Onboarding?
+  dailyLogs            DailyLog[]
+  partnerSyncInitiator PartnerSync[] @relation("UserInitiated")
+  partnerSyncReceiver  PartnerSync[] @relation("UserReceived")
+  notifications        Notification[]
+}
+
+// Onboarding Data Table (Matches OnboardingFlow steps)
+model Onboarding {
+  id                  String        @id @default(uuid())
+  userId              String        @unique
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastPeriodDate      String        // Format: YYYY-MM-DD
+  cycleLength         Int           @default(28) // 21 to 35
+  periodLength        Int           @default(5)  // 2 to 10
+  healthGoals         String[]      // e.g., ["Track Periods", "Understand Symptoms"]
+  sleepQuality        SleepType     @default(Restorative)
+  stressLevel         StressType    @default(Moderate)
+  activityLevel       ActivityType  @default(Active)
+  hydrationLevel      HydrationType @default(Average)
+  notifyPeriod        Boolean       @default(true)
+  notifyOvulation     Boolean       @default(true)
+  notifyInsights      Boolean       @default(true)
+  notifyWellnessTips  Boolean       @default(false)
+  onboardingCompleted Boolean       @default(false)
+  updatedAt           DateTime      @updatedAt
+}
+
+// Daily Telemetry Logs (Matches Dashboard.tsx metrics)
+model DailyLog {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date          String    // Format: YYYY-MM-DD
+  mood          Mood      @default(Balanced)
+  sleepHours    Float     @default(7.0) // Support decimals (e.g. 7.5 hrs)
+  energyRate    Int       @default(7)   // 1 to 10 scale
+  stressFactor  Int       @default(3)   // 1 to 10 scale
+  symptoms      String[]  // e.g., ["Cramps", "Bloating", "Headache"]
+  hydrationCups Int       @default(4)   // 1 to 8 cups
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([userId, date]) // Ensures a user can only have one diagnostic log per day
+}
+
+// Partner Real-Time Sharing
+model PartnerSync {
+  id              String      @id @default(uuid())
+  initiatorId     String
+  receiverId      String?
+  initiator       User        @relation("UserInitiated", fields: [initiatorId], references: [id], onDelete: Cascade)
+  receiver        User?       @relation("UserReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+  syncCode        String      @unique // Generated 6-digit code for quick pairing
+  status          SyncStatus  @default(PENDING)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+// Real-Time Notification Log
+model Notification {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String    // e.g., "PERIOD_REMINDER", "OVULATION_ALERT", "WELLNESS_TIP"
+  message     String
+  read        Boolean   @default(false)
+  triggerTime DateTime
+  createdAt   DateTime  @default(now())
+}
+
+// Enums
+enum Mood {
+  Radiant
+  Balanced
+  Sensitive
+  LowEnergy  @map("Low Energy")
+  Anxious
+}
+
+enum SleepType {
+  Restorative
+  Fragmented
+  Insufficient
+}
+
+enum StressType {
+  Low
+  Moderate
+  High
+}
+
+enum ActivityType {
+  Sedentary
+  Active
+  Athletic
+}
+
+enum HydrationType {
+  Optimal
+  Average
+  Low
+}
+
+enum SyncStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+}

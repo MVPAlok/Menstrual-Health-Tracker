@@ -43,6 +43,11 @@ Our visual identity is built on carefully curated tokens and styles to bring a p
 - **Routing**: `react-router-dom` for seamless SPA transitions.
 - **State Management**: Centralized React Context (`AppContext.tsx`).
 
+## ⚡ Real-Time Backend Integration
+
+To make this frontend fully functional in real-time, setup the Neon database, Prisma models, and Socket.io gateway:
+👉 **[Read the Backend Setup Guide (BACKEND_SETUP.md)](file:///c:/Users/sy753/Patternprinting.c/OneDrive/Documents/WEB%20Development/periods%20health%20tracker/BACKEND_SETUP.md)**
+
 ## 🚀 Getting Started
 
 To get a local copy up and running, follow these simple steps.

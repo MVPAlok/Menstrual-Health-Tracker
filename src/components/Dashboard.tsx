@@ -162,7 +162,7 @@ export const Dashboard: React.FC = () => {
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-primary-container/5 to-transparent blur-[120px] pointer-events-none rounded-full" />
 
       {/* Main Header */}
-      <header className="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center border-b border-outline/5 relative z-30">
+      <header className="w-full max-w-7xl mx-auto px-4 py-4 sm:px-6 sm:py-6 flex justify-between items-center border-b border-outline/5 relative z-30">
         <div className="flex items-center gap-3">
           <span className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
             <span className="material-symbols-outlined text-[18px]">spa</span>
@@ -187,7 +187,7 @@ export const Dashboard: React.FC = () => {
       </header>
 
       {/* TAB CONTENT VIEWS */}
-      <main className="w-full max-w-7xl mx-auto px-6 pt-8">
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8">
         <AnimatePresence mode="wait">
           
           {/* ═══════════════ DASHBOARD HOME ═══════════════ */}
@@ -201,7 +201,7 @@ export const Dashboard: React.FC = () => {
               className="flex flex-col gap-10"
             >
               {/* Living Intelligence Hero */}
-              <div className="glass-card rounded-[2.5rem] p-8 md:p-12 border border-white/70 shadow-[0_24px_64px_rgba(165,53,86,0.06)] relative overflow-hidden flex flex-col lg:flex-row items-center gap-10">
+              <div className="glass-card rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 md:p-12 border border-white/70 shadow-[0_24px_64px_rgba(165,53,86,0.06)] relative overflow-hidden flex flex-col lg:flex-row items-center gap-6 sm:gap-10">
                 <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center">
                   <div
                     className="w-80 h-80 rounded-full blur-[100px] opacity-20 transition-all duration-1000"
@@ -210,34 +210,34 @@ export const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Dynamic Welcome Message */}
-                <div className="flex-1 flex flex-col gap-6 relative z-10 text-center lg:text-left">
+                <div className="flex-1 flex flex-col gap-4 sm:gap-6 relative z-10 text-center lg:text-left">
                   <div>
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/70 border border-white/80 rounded-full text-xs font-extrabold uppercase tracking-widest text-primary mb-3">
                       <span className="material-symbols-outlined text-[14px]">psychology</span>
                       Intelligence Core
                     </span>
-                    <h2 className="font-headline-lg text-3xl md:text-4xl text-primary font-extrabold mb-3">
+                    <h2 className="font-headline-lg text-2xl sm:text-3xl md:text-4xl text-primary font-extrabold mb-3">
                       {greeting}, {user.name?.split(' ')[0] || 'Elena'}.
                     </h2>
-                    <p className="text-secondary font-medium leading-relaxed max-w-md">
+                    <p className="text-secondary font-medium leading-relaxed max-w-md text-xs sm:text-sm">
                       {phaseTip}
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto lg:mx-0">
-                    <div className="bg-white/40 border border-white/60 p-4 rounded-2xl">
-                      <span className="block text-[10px] font-bold text-secondary uppercase tracking-widest mb-0.5">Focus State</span>
-                      <span className="text-sm font-bold text-primary">Estrogen Peak Flow</span>
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-sm mx-auto lg:mx-0">
+                    <div className="bg-white/40 border border-white/60 p-3 sm:p-4 rounded-2xl">
+                      <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest mb-0.5">Focus State</span>
+                      <span className="text-xs sm:text-sm font-bold text-primary">Estrogen Peak Flow</span>
                     </div>
-                    <div className="bg-white/40 border border-white/60 p-4 rounded-2xl">
-                      <span className="block text-[10px] font-bold text-secondary uppercase tracking-widest mb-0.5">HRV Baseline</span>
-                      <span className="text-sm font-bold text-primary">Stable (64ms)</span>
+                    <div className="bg-white/40 border border-white/60 p-3 sm:p-4 rounded-2xl">
+                      <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest mb-0.5">HRV Baseline</span>
+                      <span className="text-xs sm:text-sm font-bold text-primary">Stable (64ms)</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Central Living Orb Container */}
-                <div className="relative z-10 w-80 h-80 flex items-center justify-center select-none">
+                <div className="relative z-10 w-80 h-80 flex items-center justify-center select-none scale-[0.75] xs:scale-90 sm:scale-100 my-[-30px] sm:my-0">
                   <BodyIntelligenceOrb phase={currentPhase} color={phaseColor} />
                   
                   {/* Orbiting Modules */}
@@ -277,52 +277,53 @@ export const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Right Side: Quick Diagnostic metrics */}
-                <div className="flex-1 flex flex-col gap-6 relative z-10 w-full lg:w-auto">
-                  <div className="p-5 bg-white/50 border border-white/60 rounded-3xl flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-                      <span className="material-symbols-outlined text-[24px]">calendar_today</span>
+                <div className="flex-1 flex flex-col gap-3 sm:gap-6 relative z-10 w-full lg:w-auto">
+                  <div className="p-4 sm:p-5 bg-white/50 border border-white/60 rounded-3xl flex items-center gap-3 sm:gap-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                      <span className="material-symbols-outlined text-[20px] sm:text-[24px]">calendar_today</span>
                     </div>
                     <div>
-                      <span className="block text-[10px] font-bold text-secondary uppercase tracking-widest">Next Cycle Commencement</span>
-                      <span className="text-base font-extrabold text-primary">
+                      <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest leading-normal">Next Cycle Commencement</span>
+                      <span className="text-sm sm:text-base font-extrabold text-primary">
                         {daysUntilNextPeriod > 0 ? `In ${daysUntilNextPeriod} Days` : 'Period Commencing Today'}
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-5 bg-white/50 border border-white/60 rounded-3xl flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-purple-100 border border-purple-200 flex items-center justify-center text-purple-700">
-                      <span className="material-symbols-outlined text-[24px]">wb_sunny</span>
+                  <div className="p-4 sm:p-5 bg-white/50 border border-white/60 rounded-3xl flex items-center gap-3 sm:gap-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-purple-100 border border-purple-200 flex items-center justify-center text-purple-700 shrink-0">
+                      <span className="material-symbols-outlined text-[20px] sm:text-[24px]">wb_sunny</span>
                     </div>
                     <div>
-                      <span className="block text-[10px] font-bold text-secondary uppercase tracking-widest">Est. Ovulation Date</span>
-                      <span className="text-base font-extrabold text-purple-700">
+                      <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest leading-normal">Est. Ovulation Date</span>
+                      <span className="text-sm sm:text-base font-extrabold text-purple-700">
                         {currentCycleDay <= ovulationDay ? `In ${ovulationDay - currentCycleDay} Days` : 'Ovulated'}
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-5 bg-white/50 border border-white/60 rounded-3xl flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700">
-                      <span className="material-symbols-outlined text-[24px]">check_circle</span>
+                  <div className="p-4 sm:p-5 bg-white/50 border border-white/60 rounded-3xl flex items-center gap-3 sm:gap-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 shrink-0">
+                      <span className="material-symbols-outlined text-[20px] sm:text-[24px]">check_circle</span>
                     </div>
                     <div>
-                      <span className="block text-[10px] font-bold text-secondary uppercase tracking-widest">Forecast Confidence</span>
-                      <span className="text-base font-extrabold text-emerald-700">92% Calibrated</span>
+                      <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest leading-normal">Forecast Confidence</span>
+                      <span className="text-sm sm:text-base font-extrabold text-emerald-700">92% Calibrated</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Connected Cycle Journey Segment */}
-              <div className="glass-card p-8 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-6">
+              <div className="glass-card p-5 sm:p-8 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-6">
                 <div>
                   <h3 className="font-extrabold text-primary text-lg tracking-tight mb-1">Interactive Cycle Journey</h3>
                   <p className="text-secondary text-xs">Visualize biological phase pathways and expected transitions</p>
                 </div>
                 
-                <div className="relative py-8 px-4 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-2">
+                <div className="relative py-6 sm:py-8 px-2 sm:px-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-2">
                   <div className="absolute top-1/2 left-4 right-4 h-1 bg-white/50 rounded-full -translate-y-1/2 hidden md:block z-0" />
+                  <div className="absolute left-[27px] top-6 bottom-6 w-1 bg-white/50 rounded-full md:hidden z-0" />
                   
                   {[
                     { id: 'menstrual', label: 'Menstrual Phase', color: 'bg-[#a53556]', desc: 'Restoration & Reset', range: `Days 1-${periodLength}` },
@@ -333,12 +334,14 @@ export const Dashboard: React.FC = () => {
                     const isActive = currentPhase === phaseItem.id;
                     return (
                       <Tooltip key={phaseItem.id} text={`${phaseItem.desc} (${phaseItem.range})`}>
-                        <div className={`relative z-10 flex flex-col items-center p-4 rounded-2xl transition-all cursor-pointer ${isActive ? 'bg-white/80 border border-primary/20 scale-105 shadow-sm' : 'hover:bg-white/30'}`}>
-                          <div className={`w-6 h-6 rounded-full border-2 border-white flex items-center justify-center ${phaseItem.color} shadow-sm mb-2`}>
+                        <div className={`relative z-10 flex flex-row md:flex-col items-center md:justify-center gap-4 md:gap-2 p-3 sm:p-4 rounded-2xl transition-all cursor-pointer w-full md:w-auto ${isActive ? 'bg-white/80 border border-primary/20 scale-[1.02] md:scale-105 shadow-sm' : 'hover:bg-white/30'}`}>
+                          <div className={`w-6 h-6 rounded-full border-2 border-white flex items-center justify-center ${phaseItem.color} shadow-sm shrink-0 md:mb-2`}>
                             {isActive && <div className="w-2.5 h-2.5 bg-white rounded-full" />}
                           </div>
-                          <span className="font-bold text-xs text-primary">{phaseItem.label}</span>
-                          <span className="text-[10px] text-secondary mt-0.5">{phaseItem.range}</span>
+                          <div className="flex flex-col items-start md:items-center">
+                            <span className="font-bold text-xs text-primary">{phaseItem.label}</span>
+                            <span className="text-[10px] text-secondary mt-0.5">{phaseItem.range}</span>
+                          </div>
                         </div>
                       </Tooltip>
                     );
@@ -385,20 +388,20 @@ export const Dashboard: React.FC = () => {
               className="flex flex-col gap-10"
             >
               {/* Hero Banner with large WebGL Prediction Orb */}
-              <div className="glass-card rounded-[2.5rem] p-8 md:p-12 border border-white/70 shadow-[0_24px_64px_rgba(165,53,86,0.06)] relative overflow-hidden flex flex-col lg:flex-row items-center gap-10">
+              <div className="glass-card rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 md:p-12 border border-white/70 shadow-[0_24px_64px_rgba(165,53,86,0.06)] relative overflow-hidden flex flex-col lg:flex-row items-center gap-6 sm:gap-10">
                 <div className="absolute inset-0 z-0 bg-gradient-to-br from-primary/5 via-transparent to-purple-500/5 pointer-events-none" />
                 
                 {/* Left details */}
-                <div className="flex-1 flex flex-col gap-6 relative z-10 text-center lg:text-left">
+                <div className="flex-1 flex flex-col gap-4 sm:gap-6 relative z-10 text-center lg:text-left">
                   <div>
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/70 border border-white/80 rounded-full text-xs font-extrabold uppercase tracking-widest text-primary mb-3">
                       <span className="material-symbols-outlined text-[14px]">science</span>
                       Signature Laboratory
                     </span>
-                    <h2 className="font-headline-lg text-4xl text-primary font-black leading-tight mb-3">
+                    <h2 className="font-headline-lg text-2xl sm:text-3xl md:text-4xl text-primary font-black leading-tight mb-3">
                       Prediction Lab
                     </h2>
-                    <p className="text-secondary font-medium leading-relaxed max-w-md text-sm">
+                    <p className="text-secondary font-medium leading-relaxed max-w-md text-xs sm:text-sm">
                       Our signature adaptive engine forecasts future physiological states by analyzing continuous biometric logs.
                     </p>
                   </div>
@@ -415,12 +418,12 @@ export const Dashboard: React.FC = () => {
                 </div>
 
                 {/* High Fidelity WebGL Interactive Prediction Orb */}
-                <div className="relative z-10 w-80 h-80 flex items-center justify-center">
+                <div className="relative z-10 w-80 h-80 flex items-center justify-center scale-[0.75] xs:scale-90 sm:scale-100 my-[-30px] sm:my-0">
                   <BodyIntelligenceOrb phase={currentPhase} color={phaseColor} />
                   
                   {/* Floating cards drift */}
                   <motion.div
-                    className="absolute -right-6 top-8 glass p-3.5 rounded-2xl border border-white/60 shadow-lg text-left w-44"
+                    className="absolute -right-6 top-8 glass p-3.5 rounded-2xl border border-white/60 shadow-lg text-left w-44 scale-[0.9] sm:scale-100"
                     animate={{ y: [0, -10, 0] }}
                     transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
                   >
@@ -429,7 +432,7 @@ export const Dashboard: React.FC = () => {
                   </motion.div>
                   
                   <motion.div
-                    className="absolute -left-8 bottom-10 glass p-3.5 rounded-2xl border border-white/60 shadow-lg text-left w-44"
+                    className="absolute -left-8 bottom-10 glass p-3.5 rounded-2xl border border-white/60 shadow-lg text-left w-44 scale-[0.9] sm:scale-100"
                     animate={{ y: [0, 8, 0] }}
                     transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
                   >
@@ -440,15 +443,15 @@ export const Dashboard: React.FC = () => {
               </div>
 
               {/* Forecast Interactive Timeline */}
-              <div className="glass-card p-8 rounded-[2.5rem] border border-white/60 shadow-sm flex flex-col gap-8">
+              <div className="glass-card p-5 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-white/60 shadow-sm flex flex-col gap-6 sm:gap-8">
                 <div>
                   <h3 className="font-bold text-primary text-lg tracking-tight mb-1">Physiological Timeline Forecast</h3>
                   <p className="text-secondary text-xs">Select a horizon node to project your future biometrics</p>
                 </div>
 
                 {/* Timeline nodes */}
-                <div className="flex justify-between items-center relative py-6 max-w-3xl mx-auto w-full">
-                  <div className="absolute top-1/2 left-0 right-0 h-1 bg-white/60 rounded-full -translate-y-1/2 z-0" />
+                <div className="flex justify-between items-center relative py-4 sm:py-6 max-w-3xl mx-auto w-full px-2">
+                  <div className="absolute top-1/2 left-2 right-2 h-1 bg-white/60 rounded-full -translate-y-1/2 z-0" />
                   
                   {[0, 3, 7, 14, 21].map((offset) => {
                     const isActive = selectedTimelineOffset === offset;
@@ -456,7 +459,7 @@ export const Dashboard: React.FC = () => {
                       <button
                         key={offset}
                         onClick={() => setSelectedTimelineOffset(offset)}
-                        className={`relative z-10 w-12 h-12 rounded-full border-2 flex items-center justify-center font-bold text-xs transition-all ${
+                        className={`relative z-10 w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 flex items-center justify-center font-bold text-[10px] sm:text-xs transition-all ${
                           isActive
                             ? 'bg-primary border-primary text-on-primary shadow-lg scale-110'
                             : 'bg-white border-white text-secondary hover:bg-slate-50'
@@ -469,7 +472,7 @@ export const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Interactive Projections */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
                   {[
                     { type: 'Period Flow', status: selectedTimelineOffset === 0 ? 'Active bleeding' : selectedTimelineOffset < 5 ? 'Resting Phase' : selectedTimelineOffset < 20 ? 'Follicular Transition' : 'Next Cycle Starting', icon: 'water_drop', score: '98%' },
                     { type: 'Ovulation', status: selectedTimelineOffset < 5 ? 'Developing follicle' : selectedTimelineOffset < 10 ? 'High fertility window' : 'Completed cycle shift', icon: 'wb_sunny', score: '95%' },
@@ -478,14 +481,14 @@ export const Dashboard: React.FC = () => {
                     { type: 'Sleep Recovery', status: selectedTimelineOffset < 14 ? 'Optimal Rest Duration' : 'Slightly Fragmented REM', icon: 'bedtime', score: '94%' },
                     { type: 'Stress Resilience', status: selectedTimelineOffset < 7 ? 'High Resilience' : 'Moderate Sensitivity', icon: 'spa', score: '90%' }
                   ].map((pred) => (
-                    <div key={pred.type} className="bg-white/40 border border-white/60 p-5 rounded-2xl flex flex-col justify-between gap-3 shadow-inner">
+                    <div key={pred.type} className="bg-white/40 border border-white/60 p-3 sm:p-5 rounded-2xl flex flex-col justify-between gap-3 shadow-inner">
                       <div className="flex justify-between items-center">
-                        <span className="material-symbols-outlined text-primary text-lg">{pred.icon}</span>
-                        <span className="text-[9px] font-bold text-primary">{pred.score} Conf.</span>
+                        <span className="material-symbols-outlined text-primary text-base sm:text-lg">{pred.icon}</span>
+                        <span className="text-[8px] sm:text-[9px] font-bold text-primary">{pred.score} Conf.</span>
                       </div>
                       <div>
-                        <span className="block text-[10px] font-bold text-secondary uppercase mb-0.5">{pred.type}</span>
-                        <span className="text-xs font-bold text-primary leading-tight">{pred.status}</span>
+                        <span className="block text-[8px] sm:text-[10px] font-bold text-secondary uppercase mb-0.5">{pred.type}</span>
+                        <span className="text-[11px] sm:text-xs font-bold text-primary leading-tight">{pred.status}</span>
                       </div>
                     </div>
                   ))}
@@ -512,7 +515,7 @@ export const Dashboard: React.FC = () => {
               className="flex flex-col gap-8"
             >
               {/* Calendar Summary */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
                 {[
                   { label: 'Current Phase', val: phaseTitle },
                   { label: 'Next Period Forecast', val: daysUntilNextPeriod > 0 ? `In ${daysUntilNextPeriod} Days` : 'Period Commencing' },
@@ -520,9 +523,9 @@ export const Dashboard: React.FC = () => {
                   { label: 'Consistency Score', val: '98% (Stable)' },
                   { label: 'Prediction Accuracy', val: '97% Calibrated' }
                 ].map((stat) => (
-                  <div key={stat.label} className="glass-card p-4 rounded-2xl border border-white/60 text-center flex flex-col justify-center">
-                    <span className="block text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">{stat.label}</span>
-                    <span className="text-xs md:text-sm font-bold text-primary">{stat.val}</span>
+                  <div key={stat.label} className="glass-card p-3 sm:p-4 rounded-2xl border border-white/60 text-center flex flex-col justify-center">
+                    <span className="block text-[8px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">{stat.label}</span>
+                    <span className="text-xs sm:text-sm font-bold text-primary">{stat.val}</span>
                   </div>
                 ))}
               </div>
@@ -534,12 +537,12 @@ export const Dashboard: React.FC = () => {
                   {[0, 1].map((cycleIndex) => {
                     const cycleStart = new Date(lastPeriod.getTime() + cycleIndex * cycleLength * 24 * 60 * 60 * 1000);
                     return (
-                      <div key={cycleIndex} className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm">
+                      <div key={cycleIndex} className="glass-card p-4 sm:p-6 rounded-[2rem] border border-white/60 shadow-sm">
                         <h4 className="font-extrabold text-primary text-sm uppercase tracking-wider mb-4">
                           Cycle Sequence {cycleIndex + 1} ({cycleStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })})
                         </h4>
 
-                        <div className="grid grid-cols-7 gap-2.5 text-center">
+                        <div className="grid grid-cols-7 gap-1 xs:gap-2.5 text-center">
                           {Array.from({ length: cycleLength }).map((_, dayIndex) => {
                             const dayNum = dayIndex + 1;
                             const targetDate = new Date(cycleStart.getTime() + dayIndex * 24 * 60 * 60 * 1000);
@@ -559,7 +562,7 @@ export const Dashboard: React.FC = () => {
                               <button
                                 key={dayNum}
                                 onClick={() => setSelectedDateStr(cellDateStr)}
-                                className={`w-10 h-10 md:w-11 md:h-11 rounded-full flex flex-col items-center justify-center text-xs font-bold relative transition-all ${cellStyle} ${
+                                className={`w-8 h-8 xs:w-9 xs:h-9 sm:w-11 sm:h-11 rounded-full flex flex-col items-center justify-center text-xs font-bold relative transition-all ${cellStyle} ${
                                   isSelected ? 'ring-2 ring-primary scale-110 shadow-sm bg-white' : 'hover:scale-105'
                                 }`}
                               >
@@ -639,18 +642,18 @@ export const Dashboard: React.FC = () => {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              className="glass-card rounded-[2.5rem] p-8 md:p-12 border border-white/70 max-w-2xl mx-auto shadow-sm"
+              className="glass-card rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 md:p-12 border border-white/70 max-w-2xl mx-auto shadow-sm"
             >
-              <h2 className="font-headline-md text-headline-md text-primary mb-2">Metrics Logger</h2>
-              <p className="text-secondary font-body-md mb-8">
+              <h2 className="font-headline-md text-2xl sm:text-3xl text-primary mb-2">Metrics Logger</h2>
+              <p className="text-secondary text-xs sm:text-sm mb-6 sm:mb-8">
                 Perform daily calibrations of sleep, stress, energy levels, and active cycle symptoms.
               </p>
 
-              <form onSubmit={handleLogSubmit} className="flex flex-col gap-8">
+              <form onSubmit={handleLogSubmit} className="flex flex-col gap-6 sm:gap-8">
                 {/* Tactile Mood Selection */}
                 <div>
-                  <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-3.5 ml-1">Today's Focus Mood</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-3 ml-1">Today's Focus Mood</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
                     {[
                       { id: 'Radiant', emoji: '✨' },
                       { id: 'Balanced', emoji: '🌿' },
@@ -664,7 +667,7 @@ export const Dashboard: React.FC = () => {
                           key={item.id}
                           type="button"
                           onClick={() => setLoggedMood(item.id as any)}
-                          className={`p-4 rounded-2xl border flex flex-col items-center gap-1.5 transition-all text-xs font-bold ${
+                          className={`p-2.5 sm:p-4 rounded-2xl border flex flex-col items-center gap-1 sm:gap-1.5 transition-all text-xs font-bold ${
                             isActive
                               ? 'bg-primary text-on-primary border-primary shadow-md scale-105'
                               : 'bg-white/40 border-white text-secondary hover:bg-white'
@@ -760,8 +763,8 @@ export const Dashboard: React.FC = () => {
 
                 {/* Hydration Tracker */}
                 <div>
-                  <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-3 ml-1">Hydration Intensity ({loggedHydration} / 8 cups)</label>
-                  <div className="flex gap-2">
+                  <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-3 ml-1">Hydration Intensity ({loggedHydration} / 8 cups)</label>
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center sm:justify-start">
                     {Array.from({ length: 8 }).map((_, idx) => {
                       const isActive = idx < loggedHydration;
                       return (
@@ -769,11 +772,11 @@ export const Dashboard: React.FC = () => {
                           key={idx}
                           type="button"
                           onClick={() => setLoggedHydration(idx + 1)}
-                          className={`w-9 h-10 border rounded-xl flex items-center justify-center transition-all ${
+                          className={`w-8 h-9 sm:w-9 sm:h-10 border rounded-xl flex items-center justify-center transition-all ${
                             isActive ? 'bg-[#ff7b9c]/10 border-primary text-primary' : 'bg-white/40 border-white text-secondary'
                           }`}
                         >
-                          <span className="material-symbols-outlined text-[18px]">water_drop</span>
+                          <span className="material-symbols-outlined text-[16px] sm:text-[18px]">water_drop</span>
                         </button>
                       );
                     })}
@@ -904,18 +907,18 @@ export const Dashboard: React.FC = () => {
               className="flex flex-col gap-10"
             >
               {/* Wellness Profile Center */}
-              <div className="glass-card rounded-[2.5rem] p-8 md:p-12 border border-white/70 max-w-2xl mx-auto shadow-sm text-center w-full">
+              <div className="glass-card rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 md:p-12 border border-white/70 max-w-2xl mx-auto shadow-sm text-center w-full">
                 <div className="flex justify-center mb-6">
-                  <div className="w-24 h-24 rounded-full bg-white/60 border border-white/80 flex items-center justify-center text-primary shadow-inner">
-                    <span className="material-symbols-outlined text-[48px] text-primary">shield_person</span>
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white/60 border border-white/80 flex items-center justify-center text-primary shadow-inner">
+                    <span className="material-symbols-outlined text-[36px] sm:text-[48px] text-primary">shield_person</span>
                   </div>
                 </div>
 
-                <h2 className="font-headline-md text-headline-md text-primary font-black mb-2">{user.name || 'Elena Ross'}</h2>
-                <p className="text-secondary font-body-md mb-8">{user.email || 'elena@lunacare.com'}</p>
+                <h2 className="font-headline-md text-xl sm:text-2xl text-primary font-black mb-1">{user.name || 'Elena Ross'}</h2>
+                <p className="text-secondary text-xs sm:text-sm mb-6 sm:mb-8">{user.email || 'elena@lunacare.com'}</p>
 
                 {/* Metrics */}
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 mb-6 sm:mb-8">
                   {[
                     { label: 'Avg Cycle', val: '28 Days' },
                     { label: 'Period Range', val: '5 Days' },
@@ -923,24 +926,24 @@ export const Dashboard: React.FC = () => {
                     { label: 'Prediction Rate', val: '97%' },
                     { label: 'Accuracy', val: '98%' }
                   ].map((stat, idx) => (
-                    <div key={idx} className="bg-white/50 border border-white/60 p-3 rounded-2xl">
-                      <span className="block text-[8px] font-bold text-secondary uppercase tracking-widest mb-1">{stat.label}</span>
-                      <span className="text-xs font-bold text-primary">{stat.val}</span>
+                    <div key={idx} className="bg-white/50 border border-white/60 p-2 sm:p-3 rounded-2xl">
+                      <span className="block text-[7.5px] sm:text-[8px] font-bold text-secondary uppercase tracking-widest mb-1">{stat.label}</span>
+                      <span className="text-xs sm:text-sm font-bold text-primary">{stat.val}</span>
                     </div>
                   ))}
                 </div>
 
                 {/* Achievements */}
-                <div className="text-left mb-8">
-                  <span className="block text-xs font-extrabold text-primary uppercase tracking-wider mb-4">Luna Calibration Medals</span>
-                  <div className="grid grid-cols-3 gap-3">
+                <div className="text-left mb-6 sm:mb-8">
+                  <span className="block text-xs font-extrabold text-primary uppercase tracking-wider mb-3 ml-1">Luna Calibration Medals</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     {[
                       { label: '30 Days Tracked', icon: 'verified' },
                       { label: '90 Days Sync', icon: 'settings_backup_restore' },
                       { label: 'Insight Master', icon: 'auto_awesome' }
                     ].map((badge, idx) => (
-                      <div key={idx} className="bg-[#ff7b9c]/10 border border-primary/20 p-3 rounded-2xl flex items-center gap-2">
-                        <span className="material-symbols-outlined text-primary text-lg">{badge.icon}</span>
+                      <div key={idx} className="bg-[#ff7b9c]/10 border border-primary/20 p-2.5 sm:p-3 rounded-2xl flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary text-base sm:text-lg shrink-0">{badge.icon}</span>
                         <span className="text-[10px] font-bold text-primary leading-tight">{badge.label}</span>
                       </div>
                     ))}
@@ -948,10 +951,10 @@ export const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Calibration Controls */}
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-3 sm:gap-4">
                   <button
                     onClick={() => navigate('/onboarding')}
-                    className="w-full py-3.5 border border-white bg-white/50 hover:bg-white rounded-full font-bold text-xs uppercase tracking-wider text-primary shadow-sm"
+                    className="w-full py-2.5 sm:py-3.5 border border-white bg-white/50 hover:bg-white rounded-full font-bold text-[10px] sm:text-xs uppercase tracking-wider text-primary shadow-sm"
                   >
                     Recalibrate Rhythm Core
                   </button>
@@ -960,7 +963,7 @@ export const Dashboard: React.FC = () => {
                       logoutUser();
                       navigate('/landingpage');
                     }}
-                    className="w-full py-3.5 bg-primary text-on-primary rounded-full font-bold text-xs uppercase tracking-wider shadow-md shadow-primary/20"
+                    className="w-full py-2.5 sm:py-3.5 bg-primary text-on-primary rounded-full font-bold text-[10px] sm:text-xs uppercase tracking-wider shadow-md shadow-primary/20"
                   >
                     Disconnect Sanctuary
                   </button>
@@ -973,8 +976,8 @@ export const Dashboard: React.FC = () => {
       </main>
 
       {/* ═══════════════ BOTTOM NAV BAR ═══════════════ */}
-      <nav className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 w-[95%] max-w-lg">
-        <div className="glass shadow-[0_24px_50px_rgba(165,53,86,0.12)] border border-white/70 p-3 rounded-full flex justify-between items-center">
+      <nav className="fixed bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-40 w-[95%] max-w-lg">
+        <div className="glass shadow-[0_24px_50px_rgba(165,53,86,0.12)] border border-white/70 p-1.5 sm:p-3 rounded-full flex justify-between items-center gap-1">
           {[
             { id: 'home', label: 'Home', icon: 'space_dashboard' },
             { id: 'lab', label: 'Lab', icon: 'science' },
@@ -988,14 +991,14 @@ export const Dashboard: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex flex-col items-center justify-center rounded-full px-3 py-2 transition-all ${
+                className={`flex flex-col items-center justify-center rounded-full px-1.5 py-1.5 sm:px-3 sm:py-2 transition-all flex-1 ${
                   isActive
                     ? 'bg-primary text-on-primary scale-105 shadow-md shadow-primary/30'
                     : 'text-secondary/80 hover:text-primary hover:bg-white/40'
                 }`}
               >
-                <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
-                <span className="text-[9px] font-bold mt-0.5">{tab.label}</span>
+                <span className="material-symbols-outlined text-[18px] sm:text-[20px]">{tab.icon}</span>
+                <span className="text-[7.5px] sm:text-[9px] font-bold mt-0.5 block truncate max-w-[48px] sm:max-w-none">{tab.label}</span>
               </button>
             );
           })}
