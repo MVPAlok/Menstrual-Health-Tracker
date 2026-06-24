@@ -18,12 +18,17 @@ export const OnboardingFlow: React.FC = () => {
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step < 8) {
       setStep(step + 1);
     } else {
-      updateOnboarding({ onboardingCompleted: true });
-      navigate('/dashboard');
+      try {
+        await updateOnboarding({ onboardingCompleted: true });
+        navigate('/dashboard');
+      } catch (err) {
+        console.error('Calibration failed', err);
+        navigate('/dashboard');
+      }
     }
   };
 

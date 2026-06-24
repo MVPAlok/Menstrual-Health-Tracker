@@ -2,17 +2,79 @@ import { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Lenis from 'lenis'
 import LandingPage from './LandingPage'
-import { AppProvider } from './context/AppContext'
+import { AppProvider, useApp } from './context/AppContext'
 import {
   WelcomeScreen,
   LoginScreen,
   SignUpScreen,
-  ForgotPasswordScreen,
-  VerificationScreen,
   SuccessScreen,
 } from './components/AuthFlow'
 import { OnboardingFlow } from './components/OnboardingFlow'
 import { Dashboard } from './components/Dashboard'
+
+function AppRoutes() {
+  const { user, onboarding } = useApp()
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={
+          user.isLoggedIn ? (
+            onboarding.onboardingCompleted ? <Navigate to="/dashboard" replace /> : <Navigate to="/onboarding" replace />
+          ) : (
+            <Navigate to="/landingpage" replace />
+          )
+        } />
+        <Route path="/landingpage" element={
+          user.isLoggedIn ? (
+            onboarding.onboardingCompleted ? <Navigate to="/dashboard" replace /> : <Navigate to="/onboarding" replace />
+          ) : (
+            <LandingPage />
+          )
+        } />
+        <Route path="/welcome" element={
+          user.isLoggedIn ? (
+            onboarding.onboardingCompleted ? <Navigate to="/dashboard" replace /> : <Navigate to="/onboarding" replace />
+          ) : (
+            <WelcomeScreen />
+          )
+        } />
+        <Route path="/login" element={
+          user.isLoggedIn ? (
+            onboarding.onboardingCompleted ? <Navigate to="/dashboard" replace /> : <Navigate to="/onboarding" replace />
+          ) : (
+            <LoginScreen />
+          )
+        } />
+        <Route path="/signup" element={
+          user.isLoggedIn ? (
+            onboarding.onboardingCompleted ? <Navigate to="/dashboard" replace /> : <Navigate to="/onboarding" replace />
+          ) : (
+            <SignUpScreen />
+          )
+        } />
+        <Route path="/auth-success" element={
+          user.isLoggedIn ? <SuccessScreen /> : <Navigate to="/welcome" replace />
+        } />
+        <Route path="/onboarding" element={
+          user.isLoggedIn ? (
+            onboarding.onboardingCompleted ? <Navigate to="/dashboard" replace /> : <OnboardingFlow />
+          ) : (
+            <Navigate to="/welcome" replace />
+          )
+        } />
+        <Route path="/dashboard" element={
+          user.isLoggedIn ? (
+            onboarding.onboardingCompleted ? <Dashboard /> : <Navigate to="/onboarding" replace />
+          ) : (
+            <Navigate to="/welcome" replace />
+          )
+        } />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
+  )
+}
 
 function App() {
   useEffect(() => {
@@ -39,20 +101,7 @@ function App() {
 
   return (
     <AppProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Navigate to="/landingpage" replace />} />
-          <Route path="/landingpage" element={<LandingPage />} />
-          <Route path="/welcome" element={<WelcomeScreen />} />
-          <Route path="/login" element={<LoginScreen />} />
-          <Route path="/signup" element={<SignUpScreen />} />
-          <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
-          <Route path="/verify" element={<VerificationScreen />} />
-          <Route path="/auth-success" element={<SuccessScreen />} />
-          <Route path="/onboarding" element={<OnboardingFlow />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Routes>
-      </Router>
+      <AppRoutes />
     </AppProvider>
   )
 }

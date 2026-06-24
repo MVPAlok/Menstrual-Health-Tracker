@@ -73,14 +73,17 @@ export const pair = async (req: AuthenticatedRequest, res: Response) => {
       },
       include: {
         initiator: {
-          select: { id: true, name: true, email: true }
+          select: { id: true, firstName: true, lastName: true }
         }
       }
     });
 
     return res.status(200).json({
       message: 'Successfully paired with partner.',
-      partner: updatedSync.initiator,
+      partner: {
+        id: updatedSync.initiator.id,
+        name: `${updatedSync.initiator.firstName} ${updatedSync.initiator.lastName}`
+      },
     });
   } catch (error) {
     return res.status(500).json({ error: 'Server error during partner pairing.' });
@@ -136,10 +139,10 @@ export const getPartnerStatus = async (req: AuthenticatedRequest, res: Response)
       },
       include: {
         initiator: {
-          select: { id: true, name: true, email: true }
+          select: { id: true, firstName: true, lastName: true }
         },
         receiver: {
-          select: { id: true, name: true, email: true }
+          select: { id: true, firstName: true, lastName: true }
         }
       }
     });
@@ -148,7 +151,16 @@ export const getPartnerStatus = async (req: AuthenticatedRequest, res: Response)
       return res.status(200).json({ paired: false });
     }
 
-    const partner = activeSync.initiatorId === userId ? activeSync.receiver : activeSync.initiator;
+    const rawPartner = activeSync.initiatorId === userId ? activeSync.receiver : activeSync.initiator;
+
+    if (!rawPartner) {
+      return res.status(200).json({ paired: false });
+    }
+
+    const partner = {
+      id: rawPartner.id,
+      name: `${rawPartner.firstName} ${rawPartner.lastName}`
+    };
 
     return res.status(200).json({
       paired: true,

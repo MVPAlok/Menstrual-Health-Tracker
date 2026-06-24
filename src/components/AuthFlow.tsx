@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BackgroundShader } from './BackgroundShader';
 import { useApp } from '../context/AppContext';
@@ -75,21 +75,33 @@ export const WelcomeScreen: React.FC = () => {
 export const LoginScreen: React.FC = () => {
   const navigate = useNavigate();
   const { loginUser } = useApp();
-  const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!firstName || !lastName || !password) {
       setError('Please fill in all fields.');
       return;
     }
-    // Simulate login
-    loginUser('Elena Ross', email);
-    // Directly routing to dashboard for returning users
-    navigate('/dashboard');
+    try {
+      setLoading(true);
+      setError('');
+      const res = await loginUser(firstName, lastName, password);
+      if (res.onboarding && res.onboarding.onboardingCompleted) {
+        navigate('/dashboard');
+      } else {
+        navigate('/onboarding');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please verify credentials.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -114,27 +126,32 @@ export const LoginScreen: React.FC = () => {
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-5">
-        <div>
-          <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 sm:mb-2 ml-1">Email Address</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-4 py-2.5 sm:px-5 sm:py-3.5 rounded-full text-on-surface text-xs sm:text-sm transition-all focus:outline-none"
-            placeholder="name@example.com"
-          />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 sm:mb-2 ml-1">First Name</label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-4 py-2.5 rounded-full text-on-surface text-xs sm:text-sm focus:outline-none transition-all"
+              placeholder="Elena"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 sm:mb-2 ml-1">Last Name</label>
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-4 py-2.5 rounded-full text-on-surface text-xs sm:text-sm focus:outline-none transition-all"
+              placeholder="Ross"
+            />
+          </div>
         </div>
 
         <div>
           <div className="flex justify-between items-center mb-1.5 sm:mb-2 ml-1">
             <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase">Password</label>
-            <button
-              type="button"
-              onClick={() => navigate('/forgot-password')}
-              className="text-[10px] sm:text-xs font-bold text-primary hover:underline"
-            >
-              Forgot?
-            </button>
           </div>
           <input
             type="password"
@@ -159,11 +176,12 @@ export const LoginScreen: React.FC = () => {
 
         <motion.button
           type="submit"
-          className="w-full bg-primary text-on-primary py-3.5 sm:py-4 rounded-full font-bold text-xs sm:text-sm tracking-wide shadow-lg shadow-primary/30 border border-primary/20 mt-1 sm:mt-2"
-          whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(165,53,86,0.35)' }}
-          whileTap={{ scale: 0.98 }}
+          disabled={loading}
+          className="w-full bg-primary text-on-primary py-3.5 sm:py-4 rounded-full font-bold text-xs sm:text-sm tracking-wide shadow-lg shadow-primary/30 border border-primary/20 mt-1 sm:mt-2 disabled:opacity-50"
+          whileHover={loading ? {} : { scale: 1.02, boxShadow: '0 8px 30px rgba(165,53,86,0.35)' }}
+          whileTap={loading ? {} : { scale: 0.98 }}
         >
-          Sign In
+          {loading ? 'Signing In...' : 'Sign In'}
         </motion.button>
       </form>
 
@@ -206,7 +224,7 @@ export const LoginScreen: React.FC = () => {
       <div className="mt-8 text-center text-sm text-secondary font-medium">
         Don't have an account?{' '}
         <button onClick={() => navigate('/signup')} className="text-primary font-bold hover:underline">
-          Sign up
+          Sign Up
         </button>
       </div>
     </AuthContainer>
@@ -216,17 +234,18 @@ export const LoginScreen: React.FC = () => {
 /* ═══════════════ SIGN UP SCREEN ═══════════════ */
 export const SignUpScreen: React.FC = () => {
   const navigate = useNavigate();
-  const { loginUser } = useApp();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const { registerUser } = useApp();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !password || !confirmPassword) {
+    if (!firstName || !lastName || !password || !confirmPassword) {
       setError('Please fill in all fields.');
       return;
     }
@@ -238,9 +257,17 @@ export const SignUpScreen: React.FC = () => {
       setError('Please accept the Terms of Service.');
       return;
     }
-    // Success: Mock user setup and route to success screen
-    loginUser(name, email);
-    navigate('/auth-success');
+    try {
+      setLoading(true);
+      setError('');
+      await registerUser(firstName, lastName, password);
+      // Auto-logged in, navigate directly to success screen
+      navigate('/auth-success');
+    } catch (err: any) {
+      setError(err.message || 'Registration failed.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -265,26 +292,27 @@ export const SignUpScreen: React.FC = () => {
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3.5 sm:gap-4.5">
-        <div>
-          <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">Full Name</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-4 py-2.5 sm:px-5 sm:py-3 rounded-full text-on-surface text-xs sm:text-sm focus:outline-none transition-all"
-            placeholder="Elena Ross"
-          />
-        </div>
-
-        <div>
-          <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">Email Address</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-4 py-2.5 sm:px-5 sm:py-3 rounded-full text-on-surface text-xs sm:text-sm focus:outline-none transition-all"
-            placeholder="elena@example.com"
-          />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">First Name</label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-4 py-2.5 sm:px-5 sm:py-3 rounded-full text-on-surface text-xs sm:text-sm focus:outline-none transition-all"
+              placeholder="Elena"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">Last Name</label>
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-4 py-2.5 sm:px-5 sm:py-3 rounded-full text-on-surface text-xs sm:text-sm focus:outline-none transition-all"
+              placeholder="Ross"
+            />
+          </div>
         </div>
 
         <div>
@@ -331,11 +359,12 @@ export const SignUpScreen: React.FC = () => {
 
         <motion.button
           type="submit"
-          className="w-full bg-primary text-on-primary py-4 rounded-full font-bold text-sm tracking-wide shadow-lg shadow-primary/30 border border-primary/20"
-          whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(165,53,86,0.35)' }}
-          whileTap={{ scale: 0.98 }}
+          disabled={loading}
+          className="w-full bg-primary text-on-primary py-4 rounded-full font-bold text-sm tracking-wide shadow-lg shadow-primary/30 border border-primary/20 disabled:opacity-50"
+          whileHover={loading ? {} : { scale: 1.02, boxShadow: '0 8px 30px rgba(165,53,86,0.35)' }}
+          whileTap={loading ? {} : { scale: 0.98 }}
         >
-          Create My Profile
+          {loading ? 'Creating Profile...' : 'Create My Profile'}
         </motion.button>
       </form>
 
@@ -343,184 +372,6 @@ export const SignUpScreen: React.FC = () => {
         Already have an account?{' '}
         <button onClick={() => navigate('/login')} className="text-primary font-bold hover:underline">
           Sign In
-        </button>
-      </div>
-    </AuthContainer>
-  );
-};
-
-/* ═══════════════ FORGOT PASSWORD SCREEN ═══════════════ */
-export const ForgotPasswordScreen: React.FC = () => {
-  const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [success, setSuccess] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    setSuccess(true);
-  };
-
-  return (
-    <AuthContainer>
-      <div className="mb-6 flex justify-between items-center">
-        <button
-          onClick={() => navigate('/login')}
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-white/40 border border-white/80 text-primary"
-        >
-          <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-        </button>
-        <span className="font-extrabold text-lg text-primary tracking-tight">LunaCare</span>
-      </div>
-
-      {!success ? (
-        <>
-          <h2 className="font-headline-lg text-headline-lg text-primary mb-2">Reset Shift</h2>
-          <p className="text-secondary font-body-md mb-8 leading-relaxed">
-            Enter your sanctuary email. We will dispatch a recovery signal to synchronize your account coordinates.
-          </p>
-
-          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-            <div>
-              <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">Email Address</label>
-              <input
-                type="email"
-                value={email}
-                required
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 px-5 py-3.5 rounded-full text-on-surface text-sm focus:outline-none transition-all"
-                placeholder="name@example.com"
-              />
-            </div>
-
-            <motion.button
-              type="submit"
-              className="w-full bg-primary text-on-primary py-4 rounded-full font-bold text-sm tracking-wide shadow-lg shadow-primary/30 border border-primary/20"
-              whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(165,53,86,0.35)' }}
-              whileTap={{ scale: 0.98 }}
-            >
-              Send Reset Link
-            </motion.button>
-          </form>
-        </>
-      ) : (
-        <div className="text-center py-4">
-          <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-              <span className="material-symbols-outlined text-[32px]">mark_email_read</span>
-            </div>
-          </div>
-          <h2 className="font-headline-md text-headline-md text-primary mb-3">Signal Dispatched</h2>
-          <p className="text-secondary font-body-md mb-8 leading-relaxed">
-            We have sent a verification key to <span className="font-bold text-primary">{email}</span>. Click the link inside to restore synchronization.
-          </p>
-          <motion.button
-            onClick={() => navigate('/login')}
-            className="w-full bg-primary text-on-primary py-4 rounded-full font-bold text-sm tracking-wide shadow-lg shadow-primary/30 border border-primary/20"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Back to Sign In
-          </motion.button>
-        </div>
-      )}
-    </AuthContainer>
-  );
-};
-
-/* ═══════════════ VERIFICATION SCREEN ═══════════════ */
-export const VerificationScreen: React.FC = () => {
-  const navigate = useNavigate();
-  const { user } = useApp();
-  const [code, setCode] = useState(['', '', '', '', '', '']);
-  const [error, setError] = useState('');
-
-  const handleChange = (index: number, val: string) => {
-    if (isNaN(Number(val))) return;
-    const newCode = [...code];
-    newCode[index] = val.substring(val.length - 1);
-    setCode(newCode);
-
-    // Auto-focus next field
-    if (val && index < 5) {
-      const nextInput = document.getElementById(`otp-${index + 1}`);
-      nextInput?.focus();
-    }
-  };
-
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !code[index] && index > 0) {
-      const prevInput = document.getElementById(`otp-${index - 1}`);
-      prevInput?.focus();
-    }
-  };
-
-  const handleVerify = (e: React.FormEvent) => {
-    e.preventDefault();
-    const fullCode = code.join('');
-    if (fullCode.length < 6) {
-      setError('Please enter all 6 digits.');
-      return;
-    }
-    // Simulate successful code verification
-    navigate('/auth-success');
-  };
-
-  return (
-    <AuthContainer>
-      <div className="mb-4 sm:mb-6 flex justify-between items-center">
-        <button
-          onClick={() => navigate('/signup')}
-          className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/40 border border-white/80 text-primary"
-        >
-          <span className="material-symbols-outlined text-[18px] sm:text-[20px]">arrow_back</span>
-        </button>
-        <span className="font-extrabold text-base sm:text-lg text-primary tracking-tight">LunaCare</span>
-      </div>
-
-      <h2 className="font-headline-lg text-2xl sm:text-headline-lg text-primary mb-1 sm:mb-2">Verify Account</h2>
-      <p className="text-secondary text-xs sm:text-sm mb-6 sm:mb-8 leading-relaxed">
-        We sent a 6-digit synchronization key to <span className="font-bold text-primary">{user.email || 'your email'}</span>.
-      </p>
-
-      {error && (
-        <div className="bg-error-container text-on-error-container p-2.5 sm:p-3 rounded-2xl mb-4 sm:mb-5 text-xs sm:text-sm font-medium border border-error/10">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleVerify} className="flex flex-col gap-5 sm:gap-6">
-        <div className="flex justify-between gap-1.5 xs:gap-2.5">
-          {code.map((num, i) => (
-            <input
-              key={i}
-              id={`otp-${i}`}
-              type="text"
-              pattern="[0-9]*"
-              inputMode="numeric"
-              maxLength={1}
-              value={num}
-              onChange={(e) => handleChange(i, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(i, e)}
-              className="w-9 h-11 xs:w-12 xs:h-14 md:w-14 md:h-16 text-center text-lg sm:text-xl font-bold bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 rounded-2xl text-on-surface focus:outline-none transition-all"
-            />
-          ))}
-        </div>
-
-        <motion.button
-          type="submit"
-          className="w-full bg-primary text-on-primary py-4 rounded-full font-bold text-sm tracking-wide shadow-lg shadow-primary/30 border border-primary/20 mt-4"
-          whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(165,53,86,0.35)' }}
-          whileTap={{ scale: 0.98 }}
-        >
-          Verify
-        </motion.button>
-      </form>
-
-      <div className="mt-8 text-center text-sm text-secondary font-medium">
-        Didn't receive the code?{' '}
-        <button onClick={() => setCode(['', '', '', '', '', ''])} className="text-primary font-bold hover:underline">
-          Resend Key
         </button>
       </div>
     </AuthContainer>

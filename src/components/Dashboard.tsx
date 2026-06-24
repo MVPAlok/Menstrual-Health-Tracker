@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../context/AppContext';
+import { api } from '../utils/api';
 
 // Simple tooltip component
 const Tooltip: React.FC<{ text: string; children: React.ReactNode }> = ({ text, children }) => {
@@ -21,7 +22,7 @@ const Tooltip: React.FC<{ text: string; children: React.ReactNode }> = ({ text, 
 /* ═══════════════ MAIN DASHBOARD SCREEN ═══════════════ */
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, onboarding, dailyLogs, logDay, logoutUser } = useApp();
+  const { user, onboarding, dailyLogs, logDay, logoutUser, partnerAction, partnerLogUpdate, triggerPartnerAction } = useApp();
   const [activeTab, setActiveTab] = useState<'home' | 'lab' | 'calendar' | 'log' | 'insights' | 'profile'>('home');
 
   // Interactive Selected Day for Calendar
@@ -35,10 +36,42 @@ export const Dashboard: React.FC = () => {
   const [loggedEnergy, setLoggedEnergy] = useState<number>(7);
   const [loggedStress, setLoggedStress] = useState<number>(3);
   const [loggedHydration, setLoggedHydration] = useState<number>(4); // cups (1-8)
+  const [loggedFlow, setLoggedFlow] = useState<'NONE' | 'SPOTTING' | 'LIGHT' | 'MEDIUM' | 'HEAVY'>('NONE');
   const [logSaved, setLogSaved] = useState<boolean>(false);
 
   // Interactive Timeline state for Prediction Lab (+0, +3, +7, +14, +21)
   const [selectedTimelineOffset, setSelectedTimelineOffset] = useState<number>(0);
+
+  // API states
+  const [forecast, setForecast] = useState<any>(null);
+  const [partnerStatus, setPartnerStatus] = useState<any>({ paired: false });
+  const [partnerCodeInput, setPartnerCodeInput] = useState('');
+  const [generatedCode, setGeneratedCode] = useState('');
+  const [partnerLoading, setPartnerLoading] = useState(false);
+  const [partnerError, setPartnerError] = useState('');
+  const [partnerSuccess, setPartnerSuccess] = useState('');
+
+  // Fetch forecast and partner status on mount
+  const fetchDashboardData = async () => {
+    try {
+      const fc = await api.predictions.getForecast();
+      setForecast(fc);
+    } catch (e) {
+      console.error('Failed to load predictions forecast:', e);
+    }
+    try {
+      const ps = await api.partner.status();
+      setPartnerStatus(ps);
+    } catch (e) {
+      console.error('Failed to load partner status:', e);
+    }
+  };
+
+  useEffect(() => {
+    if (user.isLoggedIn) {
+      fetchDashboardData();
+    }
+  }, [user.isLoggedIn, onboarding]);
 
   // Calculate cycle parameters
   const today = new Date();
@@ -52,6 +85,20 @@ export const Dashboard: React.FC = () => {
   const ovulationDay = cycleLength - 14;
   const fertilityStart = ovulationDay - 4;
   const fertilityEnd = ovulationDay + 1;
+
+  // Use forecast if loaded
+  const daysUntilNextPeriod = forecast ? forecast.daysRemaining : (currentCycleDay <= periodLength ? 0 : cycleLength - currentCycleDay + 1);
+  
+  const getDaysUntilOvulation = () => {
+    if (forecast) {
+      const peakDate = new Date(forecast.ovulationWindow.peak);
+      const diff = peakDate.getTime() - today.getTime();
+      const diffD = Math.ceil(diff / (1000 * 60 * 60 * 24));
+      return diffD >= 0 ? diffD : 0;
+    }
+    return ovulationDay - currentCycleDay;
+  };
+  const daysUntilOvulation = getDaysUntilOvulation();
 
   // Determine current cycle phase
   let currentPhase: 'menstrual' | 'follicular' | 'ovulation' | 'luteal' = 'follicular';
@@ -101,9 +148,7 @@ export const Dashboard: React.FC = () => {
   }, [currentPhase]);
 
   // Days until next period
-  const daysUntilNextPeriod = currentCycleDay <= periodLength
-    ? 0
-    : cycleLength - currentCycleDay + 1;
+  // Already computed as daysUntilNextPeriod above
 
   // Sync log state with today's log if it exists
   useEffect(() => {
@@ -114,21 +159,31 @@ export const Dashboard: React.FC = () => {
       setLoggedSleep(log.sleep);
       setLoggedEnergy(log.energy);
       setLoggedStress(log.stress);
+      setLoggedHydration(log.hydration || 4);
+      setLoggedFlow(log.flowType || 'NONE');
     }
   }, [dailyLogs]);
 
   // Handle logging form submission
-  const handleLogSubmit = (e: React.FormEvent) => {
+  const handleLogSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    logDay({
-      mood: loggedMood,
-      symptoms: loggedSymptoms,
-      sleep: loggedSleep,
-      energy: loggedEnergy,
-      stress: loggedStress,
-    });
-    setLogSaved(true);
-    setTimeout(() => setLogSaved(false), 3000);
+    try {
+      await logDay({
+        mood: loggedMood,
+        symptoms: loggedSymptoms,
+        sleep: loggedSleep,
+        energy: loggedEnergy,
+        stress: loggedStress,
+        hydration: loggedHydration,
+        flowType: loggedFlow,
+      });
+      setLogSaved(true);
+      setTimeout(() => setLogSaved(false), 3000);
+      const fc = await api.predictions.getForecast();
+      setForecast(fc);
+    } catch (err) {
+      console.error('Failed to save daily stats:', err);
+    }
   };
 
   const handleSymptomToggle = (symptom: string) => {
@@ -157,6 +212,44 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full bg-background pb-32 relative text-on-background selection:bg-primary/20">
+      {/* Real-time Toast Notifications */}
+      <AnimatePresence>
+        {partnerLogUpdate && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -50, scale: 0.9 }}
+            className="fixed top-6 right-6 z-50 glass-card border border-emerald-500/30 bg-white/95 p-4 rounded-2xl shadow-xl flex items-center gap-3 w-80"
+          >
+            <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-600 shrink-0">
+              <span className="material-symbols-outlined text-[18px]">sync</span>
+            </div>
+            <div>
+              <span className="block text-[9px] font-black text-emerald-800 uppercase tracking-widest leading-none mb-1">Partner Log Sync</span>
+              <span className="text-[11px] font-bold text-secondary">
+                {partnerLogUpdate.partnerId === partnerStatus?.partner?.id ? partnerStatus?.partner?.name : 'Partner'} updated their daily metrics.
+              </span>
+            </div>
+          </motion.div>
+        )}
+        {partnerAction && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -50, scale: 0.9 }}
+            className="fixed top-6 right-6 z-50 glass-card border border-primary/30 bg-white/95 p-4 rounded-2xl shadow-xl flex items-center gap-3 w-80"
+          >
+            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
+              <span className="material-symbols-outlined text-[18px]">favorite</span>
+            </div>
+            <div>
+              <span className="block text-[9px] font-black text-primary uppercase tracking-widest leading-none mb-1">Sanctuary Signal</span>
+              <span className="text-[11px] font-bold text-secondary">Your partner sent love: "{partnerAction.action}"</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Background elements */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-primary/5 to-transparent blur-[120px] pointer-events-none rounded-full" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-primary-container/5 to-transparent blur-[120px] pointer-events-none rounded-full" />
@@ -227,11 +320,11 @@ export const Dashboard: React.FC = () => {
                   <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-sm mx-auto lg:mx-0">
                     <div className="bg-white/40 border border-white/60 p-3 sm:p-4 rounded-2xl">
                       <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest mb-0.5">Focus State</span>
-                      <span className="text-xs sm:text-sm font-bold text-primary">Estrogen Peak Flow</span>
+                      <span className="text-xs sm:text-sm font-bold text-primary">{forecast ? forecast.focusState : 'Calibrating...'}</span>
                     </div>
                     <div className="bg-white/40 border border-white/60 p-3 sm:p-4 rounded-2xl">
                       <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest mb-0.5">HRV Baseline</span>
-                      <span className="text-xs sm:text-sm font-bold text-primary">Stable (64ms)</span>
+                      <span className="text-xs sm:text-sm font-bold text-primary">{forecast ? forecast.hrvBaseline : 'Calibrating...'}</span>
                     </div>
                   </div>
                 </div>
@@ -241,39 +334,43 @@ export const Dashboard: React.FC = () => {
                   <BodyIntelligenceOrb phase={currentPhase} color={phaseColor} />
                   
                   {/* Orbiting Modules */}
-                  {[
-                    { label: 'Day', val: `${currentCycleDay}` },
-                    { label: 'Mood', val: loggedMood },
-                    { label: 'Sleep', val: `${loggedSleep}h` },
-                    { label: 'Energy', val: loggedEnergy >= 7 ? 'High' : 'Moderate' },
-                    { label: 'Stress', val: loggedStress <= 4 ? 'Low' : 'Mild' },
-                    { label: 'Accuracy', val: '98%' }
-                  ].map((mod, i) => (
-                    <motion.div
-                      key={mod.label}
-                      className="absolute glass px-3 py-1.5 rounded-full border border-white/50 text-[10px] font-bold text-primary shadow-sm flex items-center gap-1.5 whitespace-nowrap z-20"
-                      animate={{
-                        x: [
-                          Math.cos((i / 6) * 2 * Math.PI) * 135,
-                          Math.cos((i / 6) * 2 * Math.PI + Math.PI) * 135,
-                          Math.cos((i / 6) * 2 * Math.PI + 2 * Math.PI) * 135,
-                        ],
-                        y: [
-                          Math.sin((i / 6) * 2 * Math.PI) * 135,
-                          Math.sin((i / 6) * 2 * Math.PI + Math.PI) * 135,
-                          Math.sin((i / 6) * 2 * Math.PI + 2 * Math.PI) * 135,
-                        ],
-                      }}
-                      transition={{
-                        duration: 35,
-                        repeat: Infinity,
-                        ease: "linear"
-                      }}
-                    >
-                      <span className="text-secondary/70">{mod.label}</span>
-                      <span className="font-extrabold">{mod.val}</span>
-                    </motion.div>
-                  ))}
+                  {(() => {
+                    const todayLog = dailyLogs[todayStr];
+                    const modules = [
+                      { label: 'Day', val: `${currentCycleDay}` },
+                      { label: 'Mood', val: todayLog ? todayLog.mood : '--' },
+                      { label: 'Sleep', val: todayLog ? `${todayLog.sleep}h` : '--h' },
+                      { label: 'Energy', val: todayLog ? (todayLog.energy >= 7 ? 'High' : 'Moderate') : '--' },
+                      { label: 'Stress', val: todayLog ? (todayLog.stress <= 4 ? 'Low' : 'Mild') : '--' },
+                      { label: 'Accuracy', val: forecast ? `${forecast.accuracyRate}%` : '50%' }
+                    ];
+                    return modules.map((mod, i) => (
+                      <motion.div
+                        key={mod.label}
+                        className="absolute glass px-3 py-1.5 rounded-full border border-white/50 text-[10px] font-bold text-primary shadow-sm flex items-center gap-1.5 whitespace-nowrap z-20"
+                        animate={{
+                          x: [
+                            Math.cos((i / 6) * 2 * Math.PI) * 135,
+                            Math.cos((i / 6) * 2 * Math.PI + Math.PI) * 135,
+                            Math.cos((i / 6) * 2 * Math.PI + 2 * Math.PI) * 135,
+                          ],
+                          y: [
+                            Math.sin((i / 6) * 2 * Math.PI) * 135,
+                            Math.sin((i / 6) * 2 * Math.PI + Math.PI) * 135,
+                            Math.sin((i / 6) * 2 * Math.PI + 2 * Math.PI) * 135,
+                          ],
+                        }}
+                        transition={{
+                          duration: 35,
+                          repeat: Infinity,
+                          ease: "linear"
+                        }}
+                      >
+                        <span className="text-secondary/70">{mod.label}</span>
+                        <span className="font-extrabold">{mod.val}</span>
+                      </motion.div>
+                    ));
+                  })()}
                 </div>
 
                 {/* Right Side: Quick Diagnostic metrics */}
@@ -297,7 +394,7 @@ export const Dashboard: React.FC = () => {
                     <div>
                       <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest leading-normal">Est. Ovulation Date</span>
                       <span className="text-sm sm:text-base font-extrabold text-purple-700">
-                        {currentCycleDay <= ovulationDay ? `In ${ovulationDay - currentCycleDay} Days` : 'Ovulated'}
+                        {daysUntilOvulation > 0 ? `In ${daysUntilOvulation} Days` : 'Ovulated'}
                       </span>
                     </div>
                   </div>
@@ -308,7 +405,9 @@ export const Dashboard: React.FC = () => {
                     </div>
                     <div>
                       <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest leading-normal">Forecast Confidence</span>
-                      <span className="text-sm sm:text-base font-extrabold text-emerald-700">92% Calibrated</span>
+                      <span className="text-sm sm:text-base font-extrabold text-emerald-700">
+                        {forecast && forecast.totalLogsCount >= 1 ? `${forecast.confidenceRate}% Calibrated` : 'Baseline: 50%'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -356,21 +455,55 @@ export const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* Predictive Insight Cards */}
+              {/* Predictive Insight Cards / Hormone Levels */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { title: 'Energy Rising', val: 'Estrogen spike projected in 48h. Stamina levels will peak.', icon: 'bolt', col: 'text-amber-500' },
-                  { title: 'Mood Stable', val: 'Neurotransmitter balance active. Cognitive resilience is high.', icon: 'spa', col: 'text-[#a53556]' },
-                  { title: 'Recovery Active', val: 'HRV calibration successful. Deep sleep cycle is stable.', icon: 'bedtime', col: 'text-purple-600' },
-                  { title: 'Cycle Adapting', val: 'Adaptive tracking synchronization active. Variance under 1.2d.', icon: 'rotate_right', col: 'text-emerald-600' }
+                  {
+                    title: 'Estrogen Level',
+                    val: forecast ? `${forecast.hormones.estrogen}%` : 'Calibrating...',
+                    desc: forecast ? (forecast.hormones.estrogen >= 70 ? 'High follicular rise / peak flow' : 'Resting baseline cycle levels') : 'Initial learning phase active',
+                    icon: 'water_drop',
+                    col: 'text-[#ff7b9c]',
+                    pct: forecast ? forecast.hormones.estrogen : 50
+                  },
+                  {
+                    title: 'Progesterone Level',
+                    val: forecast ? `${forecast.hormones.progesterone}%` : 'Calibrating...',
+                    desc: forecast ? (forecast.hormones.progesterone >= 50 ? 'Luteal phase dominance' : 'Baseline pre-ovulation levels') : 'Initial learning phase active',
+                    icon: 'spa',
+                    col: 'text-purple-600',
+                    pct: forecast ? forecast.hormones.progesterone : 50
+                  },
+                  {
+                    title: 'LH Level',
+                    val: forecast ? `${forecast.hormones.lh}%` : 'Calibrating...',
+                    desc: forecast ? (forecast.hormones.lh >= 80 ? 'Ovulation surge active' : 'Stable follicular baseline') : 'Initial learning phase active',
+                    icon: 'bolt',
+                    col: 'text-amber-500',
+                    pct: forecast ? forecast.hormones.lh : 50
+                  },
+                  {
+                    title: 'FSH Level',
+                    val: forecast ? `${forecast.hormones.fsh}%` : 'Calibrating...',
+                    desc: forecast ? (forecast.hormones.fsh >= 40 ? 'Follicle stimulating active' : 'Stable post-ovulatory levels') : 'Initial learning phase active',
+                    icon: 'psychology',
+                    col: 'text-emerald-600',
+                    pct: forecast ? forecast.hormones.fsh : 50
+                  }
                 ].map((item) => (
                   <div key={item.title} className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-3">
                     <div className="flex justify-between items-center">
                       <span className="font-black text-xs text-primary uppercase tracking-widest">{item.title}</span>
                       <span className={`material-symbols-outlined text-[20px] ${item.col}`}>{item.icon}</span>
                     </div>
-                    <p className="text-secondary text-xs leading-relaxed font-bold">
-                      "{item.val}"
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-2xl font-black text-primary">{item.val}</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className={`h-full ${item.col.replace('text-', 'bg-')}`} style={{ width: `${item.pct}%` }} />
+                    </div>
+                    <p className="text-secondary text-[11px] leading-snug font-bold mt-1">
+                      {item.desc}
                     </p>
                   </div>
                 ))}
@@ -410,9 +543,11 @@ export const Dashboard: React.FC = () => {
                     <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Calibration Status</span>
                     <div className="flex items-center gap-2">
                       <div className="w-32 h-2 bg-white/60 border border-white/80 rounded-full overflow-hidden">
-                        <div className="h-full bg-primary w-[98%]" />
+                        <div className="h-full bg-primary" style={{ width: forecast ? `${forecast.accuracyRate}%` : '50%' }} />
                       </div>
-                      <span className="text-xs font-bold text-primary">98% Synchronized</span>
+                      <span className="text-xs font-bold text-primary">
+                        {forecast ? `${forecast.accuracyRate}% Synchronized` : 'Learning...'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -443,65 +578,83 @@ export const Dashboard: React.FC = () => {
               </div>
 
               {/* Forecast Interactive Timeline */}
-              <div className="glass-card p-5 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-white/60 shadow-sm flex flex-col gap-6 sm:gap-8">
-                <div>
-                  <h3 className="font-bold text-primary text-lg tracking-tight mb-1">Physiological Timeline Forecast</h3>
-                  <p className="text-secondary text-xs">Select a horizon node to project your future biometrics</p>
+              {(!forecast || forecast.totalLogsCount < 3) ? (
+                <div className="glass-card p-8 rounded-[2rem] border border-white/60 shadow-sm text-center py-16 flex flex-col items-center justify-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                    <span className="material-symbols-outlined text-[32px]">query_stats</span>
+                  </div>
+                  <h3 className="font-headline-md text-xl text-primary font-black">Collecting Baseline Data...</h3>
+                  <p className="text-secondary text-xs max-w-sm font-medium leading-relaxed">
+                    LunaCare requires at least 3 daily telemetry logs to establish baseline biometrics. Log daily signals to unlock predictions.
+                  </p>
+                  <button
+                    onClick={() => setActiveTab('log')}
+                    className="px-6 py-2.5 bg-primary text-on-primary rounded-full font-bold text-xs tracking-wider shadow-lg shadow-primary/20 hover:scale-103 transition-all"
+                  >
+                    Log Daily Signals
+                  </button>
                 </div>
+              ) : (
+                <div className="glass-card p-5 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-white/60 shadow-sm flex flex-col gap-6 sm:gap-8">
+                  <div>
+                    <h3 className="font-bold text-primary text-lg tracking-tight mb-1">Physiological Timeline Forecast</h3>
+                    <p className="text-secondary text-xs">Select a horizon node to project your future biometrics</p>
+                  </div>
 
-                {/* Timeline nodes */}
-                <div className="flex justify-between items-center relative py-4 sm:py-6 max-w-3xl mx-auto w-full px-2">
-                  <div className="absolute top-1/2 left-2 right-2 h-1 bg-white/60 rounded-full -translate-y-1/2 z-0" />
-                  
-                  {[0, 3, 7, 14, 21].map((offset) => {
-                    const isActive = selectedTimelineOffset === offset;
-                    return (
-                      <button
-                        key={offset}
-                        onClick={() => setSelectedTimelineOffset(offset)}
-                        className={`relative z-10 w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 flex items-center justify-center font-bold text-[10px] sm:text-xs transition-all ${
-                          isActive
-                            ? 'bg-primary border-primary text-on-primary shadow-lg scale-110'
-                            : 'bg-white border-white text-secondary hover:bg-slate-50'
-                        }`}
-                      >
-                        {offset === 0 ? 'Today' : `+${offset}d`}
-                      </button>
-                    );
-                  })}
-                </div>
+                  {/* Timeline nodes */}
+                  <div className="flex justify-between items-center relative py-4 sm:py-6 max-w-3xl mx-auto w-full px-2">
+                    <div className="absolute top-1/2 left-2 right-2 h-1 bg-white/60 rounded-full -translate-y-1/2 z-0" />
+                    
+                    {[0, 3, 7, 14, 21].map((offset) => {
+                      const isActive = selectedTimelineOffset === offset;
+                      return (
+                        <button
+                          key={offset}
+                          onClick={() => setSelectedTimelineOffset(offset)}
+                          className={`relative z-10 w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 flex items-center justify-center font-bold text-[10px] sm:text-xs transition-all ${
+                            isActive
+                              ? 'bg-primary border-primary text-on-primary shadow-lg scale-110'
+                              : 'bg-white border-white text-secondary hover:bg-slate-50'
+                          }`}
+                        >
+                          {offset === 0 ? 'Today' : `+${offset}d`}
+                        </button>
+                      );
+                    })}
+                  </div>
 
-                {/* Interactive Projections */}
-                <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-                  {[
-                    { type: 'Period Flow', status: selectedTimelineOffset === 0 ? 'Active bleeding' : selectedTimelineOffset < 5 ? 'Resting Phase' : selectedTimelineOffset < 20 ? 'Follicular Transition' : 'Next Cycle Starting', icon: 'water_drop', score: '98%' },
-                    { type: 'Ovulation', status: selectedTimelineOffset < 5 ? 'Developing follicle' : selectedTimelineOffset < 10 ? 'High fertility window' : 'Completed cycle shift', icon: 'wb_sunny', score: '95%' },
-                    { type: 'Mood Tendency', status: selectedTimelineOffset < 7 ? 'Radiant & Social' : 'Reflective & Grounded', icon: 'sentiment_satisfied', score: '92%' },
-                    { type: 'Physical Energy', status: selectedTimelineOffset < 7 ? 'High Peak Stamina' : 'Moderate Inward Flow', icon: 'bolt', score: '88%' },
-                    { type: 'Sleep Recovery', status: selectedTimelineOffset < 14 ? 'Optimal Rest Duration' : 'Slightly Fragmented REM', icon: 'bedtime', score: '94%' },
-                    { type: 'Stress Resilience', status: selectedTimelineOffset < 7 ? 'High Resilience' : 'Moderate Sensitivity', icon: 'spa', score: '90%' }
-                  ].map((pred) => (
-                    <div key={pred.type} className="bg-white/40 border border-white/60 p-3 sm:p-5 rounded-2xl flex flex-col justify-between gap-3 shadow-inner">
-                      <div className="flex justify-between items-center">
-                        <span className="material-symbols-outlined text-primary text-base sm:text-lg">{pred.icon}</span>
-                        <span className="text-[8px] sm:text-[9px] font-bold text-primary">{pred.score} Conf.</span>
+                  {/* Interactive Projections */}
+                  <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+                    {[
+                      { type: 'Period Flow', status: selectedTimelineOffset === 0 ? 'Active bleeding' : selectedTimelineOffset < 5 ? 'Resting Phase' : selectedTimelineOffset < 20 ? 'Follicular Transition' : 'Next Cycle Starting', icon: 'water_drop', score: `${forecast.accuracyRate}%` },
+                      { type: 'Ovulation', status: selectedTimelineOffset < 5 ? 'Developing follicle' : selectedTimelineOffset < 10 ? 'High fertility window' : 'Completed cycle shift', icon: 'wb_sunny', score: `${forecast.accuracyRate - 3}%` },
+                      { type: 'Mood Tendency', status: selectedTimelineOffset < 7 ? 'Radiant & Social' : 'Reflective & Grounded', icon: 'sentiment_satisfied', score: `${forecast.accuracyRate - 5}%` },
+                      { type: 'Physical Energy', status: selectedTimelineOffset < 7 ? 'High Peak Stamina' : 'Moderate Inward Flow', icon: 'bolt', score: `${forecast.accuracyRate - 7}%` },
+                      { type: 'Sleep Recovery', status: selectedTimelineOffset < 14 ? 'Optimal Rest Duration' : 'Slightly Fragmented REM', icon: 'bedtime', score: `${forecast.accuracyRate - 4}%` },
+                      { type: 'Stress Resilience', status: selectedTimelineOffset < 7 ? 'High Resilience' : 'Moderate Sensitivity', icon: 'spa', score: `${forecast.accuracyRate - 6}%` }
+                    ].map((pred) => (
+                      <div key={pred.type} className="bg-white/40 border border-white/60 p-3 sm:p-5 rounded-2xl flex flex-col justify-between gap-3 shadow-inner">
+                        <div className="flex justify-between items-center">
+                          <span className="material-symbols-outlined text-primary text-base sm:text-lg">{pred.icon}</span>
+                          <span className="text-[8px] sm:text-[9px] font-bold text-primary">{pred.score} Conf.</span>
+                        </div>
+                        <div>
+                          <span className="block text-[8px] sm:text-[10px] font-bold text-secondary uppercase mb-0.5">{pred.type}</span>
+                          <span className="text-[11px] sm:text-xs font-bold text-primary leading-tight">{pred.status}</span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="block text-[8px] sm:text-[10px] font-bold text-secondary uppercase mb-0.5">{pred.type}</span>
-                        <span className="text-[11px] sm:text-xs font-bold text-primary leading-tight">{pred.status}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
 
-                <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center justify-between text-xs">
-                  <span className="font-bold text-primary flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-base">info</span>
-                    Predictions are dynamically updated using local Bayesian intelligence engines.
-                  </span>
-                  <span className="font-bold text-secondary text-[10px]">Adaptive Confidence Rate: 94.2%</span>
+                  <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center justify-between text-xs">
+                    <span className="font-bold text-primary flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-base">info</span>
+                      Predictions are dynamically updated using local Bayesian intelligence engines.
+                    </span>
+                    <span className="font-bold text-secondary text-[10px]">Adaptive Confidence Rate: {forecast.confidenceRate}%</span>
+                  </div>
                 </div>
-              </div>
+              )}
             </motion.div>
           )}
 
@@ -519,9 +672,9 @@ export const Dashboard: React.FC = () => {
                 {[
                   { label: 'Current Phase', val: phaseTitle },
                   { label: 'Next Period Forecast', val: daysUntilNextPeriod > 0 ? `In ${daysUntilNextPeriod} Days` : 'Period Commencing' },
-                  { label: 'Ovulation Forecast', val: currentCycleDay <= ovulationDay ? `In ${ovulationDay - currentCycleDay} Days` : 'Completed' },
-                  { label: 'Consistency Score', val: '98% (Stable)' },
-                  { label: 'Prediction Accuracy', val: '97% Calibrated' }
+                  { label: 'Ovulation Forecast', val: daysUntilOvulation > 0 ? `In ${daysUntilOvulation} Days` : 'Completed' },
+                  { label: 'Consistency Score', val: forecast ? `${forecast.confidenceRate}%` : '50%' },
+                  { label: 'Prediction Accuracy', val: forecast ? `${forecast.accuracyRate}% Calibrated` : 'Learning...' }
                 ].map((stat) => (
                   <div key={stat.label} className="glass-card p-3 sm:p-4 rounded-2xl border border-white/60 text-center flex flex-col justify-center">
                     <span className="block text-[8px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">{stat.label}</span>
@@ -597,6 +750,10 @@ export const Dashboard: React.FC = () => {
                         <div className="flex justify-between text-xs font-bold text-primary">
                           <span>Energy: {selectedLog.energy}/10</span>
                           <span>Stress: {selectedLog.stress}/10</span>
+                        </div>
+                        <div className="flex justify-between text-xs font-bold text-primary">
+                          <span>Flow: {selectedLog.flowType || 'NONE'}</span>
+                          <span>Hydration: {selectedLog.hydration || 0} cups</span>
                         </div>
                         {selectedLog.symptoms.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -737,6 +894,37 @@ export const Dashboard: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Menstrual Flow Selector */}
+                <div>
+                  <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-3 ml-1">Menstrual Flow Intensity</label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {[
+                      { id: 'NONE', label: 'None', emoji: '⚪' },
+                      { id: 'SPOTTING', label: 'Spotting', emoji: '💧' },
+                      { id: 'LIGHT', label: 'Light', emoji: '🩸' },
+                      { id: 'MEDIUM', label: 'Medium', emoji: '🔥' },
+                      { id: 'HEAVY', label: 'Heavy', emoji: '🌊' }
+                    ].map(flow => {
+                      const isActive = loggedFlow === flow.id;
+                      return (
+                        <button
+                          key={flow.id}
+                          type="button"
+                          onClick={() => setLoggedFlow(flow.id as any)}
+                          className={`p-2 rounded-xl border flex flex-col items-center gap-1 transition-all text-[10px] font-bold ${
+                            isActive
+                              ? 'bg-primary text-on-primary border-primary shadow-sm scale-105'
+                              : 'bg-white/40 border-white text-secondary hover:bg-white'
+                          }`}
+                        >
+                          <span className="text-base">{flow.emoji}</span>
+                          <span>{flow.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* Symptom Chips */}
                 <div>
                   <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-3 ml-1">Physical Symptoms</label>
@@ -787,7 +975,7 @@ export const Dashboard: React.FC = () => {
                 <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl">
                   <span className="block text-[10px] font-bold text-primary uppercase mb-1">Today's signals indicate</span>
                   <p className="text-xs font-bold text-secondary">
-                    {loggedMood} mood • {loggedSleep}h rest quality • {loggedEnergy >= 7 ? 'High energy capacity' : 'Slight energy rest'} • {loggedStress <= 4 ? 'Low baseline stress' : 'Mild alert triggers'} • {loggedHydration >= 6 ? 'Optimal hydration' : 'Need more water'}
+                    {loggedMood} mood • {loggedSleep}h rest quality • {loggedEnergy >= 7 ? 'High energy capacity' : 'Slight energy rest'} • {loggedStress <= 4 ? 'Low baseline stress' : 'Mild alert triggers'} • {loggedHydration >= 6 ? 'Optimal hydration' : 'Need more water'} • Flow: {loggedFlow}
                   </p>
                 </div>
 
@@ -804,98 +992,170 @@ export const Dashboard: React.FC = () => {
           )}
 
           {/* ═══════════════ VISUAL INSIGHTS ═══════════════ */}
-          {activeTab === 'insights' && (
-            <motion.div
-              key="insights-tab"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              className="flex flex-col gap-10"
-            >
-              {/* Insight Summary Banner */}
-              <div>
-                <h2 className="font-headline-md text-headline-md text-primary font-black mb-1">Biological Insights Dashboard</h2>
-                <p className="text-secondary font-body-md">
-                  Curated telemetry correlations processed by Luna's deep pattern recognition engine.
-                </p>
-              </div>
+          {activeTab === 'insights' && (() => {
+            const getLast7DaysEnergy = () => {
+              const energyVals = [];
+              for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dStr = d.toISOString().split('T')[0];
+                const log = dailyLogs[dStr];
+                energyVals.push(log ? log.energy : 5); // default to 5 if not logged
+              }
+              return energyVals;
+            };
+            const last7DaysEnergy = getLast7DaysEnergy();
 
-              {/* Graphical Charts Section */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Mood Trends Area Chart */}
-                <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-primary text-xs uppercase tracking-widest">Mood Trends (Last 7 Days)</span>
-                    <span className="material-symbols-outlined text-primary text-base">sentiment_satisfied</span>
-                  </div>
-                  <div className="h-32 w-full pt-4 relative">
-                    <svg className="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
-                      <defs>
-                        <linearGradient id="mood-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                          <stop offset="0%" stopColor="#ff7b9c" stopOpacity="0.4" />
-                          <stop offset="100%" stopColor="#ff7b9c" stopOpacity="0.0" />
-                        </linearGradient>
-                      </defs>
-                      <path d="M 0 30 Q 15 10, 30 18 T 60 25 T 90 12 L 100 12 L 100 40 L 0 40 Z" fill="url(#mood-grad)" />
-                      <path d="M 0 30 Q 15 10, 30 18 T 60 25 T 90 12 L 100 12" fill="none" stroke="#ff7b9c" strokeWidth="1.5" />
-                    </svg>
-                    <div className="flex justify-between text-[9px] text-secondary font-bold mt-2">
-                      <span>Mon</span>
-                      <span>Wed</span>
-                      <span>Fri</span>
-                      <span>Today</span>
+            return (
+              <motion.div
+                key="insights-tab"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                className="flex flex-col gap-10"
+              >
+                {/* Insight Summary Banner */}
+                <div>
+                  <h2 className="font-headline-md text-headline-md text-primary font-black mb-1">Biological Insights Dashboard</h2>
+                  <p className="text-secondary font-body-md">
+                    Curated telemetry correlations processed by Luna's deep pattern recognition engine.
+                  </p>
+                </div>
+
+                {(!forecast || forecast.totalLogsCount < 3) ? (
+                  <div className="glass-card p-8 rounded-[2rem] border border-white/60 shadow-sm text-center py-16 flex flex-col items-center justify-center gap-4">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                      <span className="material-symbols-outlined text-[32px]">insights</span>
                     </div>
-                  </div>
-                </div>
-
-                {/* Energy Fluctuations Bar Chart */}
-                <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-primary text-xs uppercase tracking-widest">Energy Fluctuations</span>
-                    <span className="material-symbols-outlined text-primary text-base">bolt</span>
-                  </div>
-                  <div className="h-32 w-full flex items-end justify-between px-2 pt-4">
-                    {[5, 6, 8, 4, 7, 8, 9].map((val, idx) => (
-                      <div key={idx} className="flex flex-col items-center gap-1.5 w-full">
-                        <div className="w-4 bg-primary/20 border border-primary/10 rounded-t-md relative overflow-hidden" style={{ height: `${val * 10}%` }}>
-                          <div className="absolute inset-0 bg-primary w-full" style={{ height: '100%', transform: `scaleY(${val/10})`, transformOrigin: 'bottom' }} />
-                        </div>
-                        <span className="text-[9px] text-secondary font-bold">D{idx+1}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Correlations and Pattern Discovery */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[
-                  { text: 'Sleep quality increases by 15% during follicular days.', icon: 'bedtime', col: 'text-purple-600' },
-                  { text: 'Stress indicators drop by 22% during optimal hydration cycles.', icon: 'spa', col: 'text-[#a53556]' },
-                  { text: 'High activity levels correlate to stable luteal phase entry.', icon: 'directions_run', col: 'text-amber-500' }
-                ].map((pattern, idx) => (
-                  <div key={idx} className="bg-white/40 border border-white/60 p-5 rounded-2xl flex items-start gap-3 shadow-inner">
-                    <span className={`material-symbols-outlined ${pattern.col} text-lg`}>{pattern.icon}</span>
-                    <p className="text-xs text-secondary font-bold leading-normal">
-                      {pattern.text}
+                    <h3 className="font-headline-md text-xl text-primary font-black">Collecting Baseline Data...</h3>
+                    <p className="text-secondary text-xs max-w-sm font-medium leading-relaxed">
+                      Real-time biological insights and correlation graphs require historical logs to find patterns. Log daily signals to discover correlations.
                     </p>
+                    <button
+                      onClick={() => setActiveTab('log')}
+                      className="px-6 py-2.5 bg-primary text-on-primary rounded-full font-bold text-xs tracking-wider shadow-lg shadow-primary/20 hover:scale-103 transition-all"
+                    >
+                      Log Daily Signals
+                    </button>
                   </div>
-                ))}
-              </div>
+                ) : (
+                  <>
+                    {/* Graphical Charts Section */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {/* Mood Trends Area Chart */}
+                      <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-primary text-xs uppercase tracking-widest">Mood Trends (Last 7 Days)</span>
+                          <span className="material-symbols-outlined text-primary text-base">sentiment_satisfied</span>
+                        </div>
+                        <div className="h-32 w-full pt-4 relative">
+                          {(() => {
+                            const getLast7DaysMood = () => {
+                              const moodMap: Record<string, number> = {
+                                'Radiant': 5,
+                                'Balanced': 4,
+                                'Sensitive': 3,
+                                'Low Energy': 2,
+                                'Anxious': 1,
+                              };
+                              const moodVals = [];
+                              const dayLabels = [];
+                              for (let i = 6; i >= 0; i--) {
+                                const d = new Date();
+                                d.setDate(d.getDate() - i);
+                                const dStr = d.toISOString().split('T')[0];
+                                const log = dailyLogs[dStr];
+                                const val = log ? moodMap[log.mood] || 4 : 4;
+                                moodVals.push(val);
+                                dayLabels.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
+                              }
+                              return { moodVals, dayLabels };
+                            };
+                            const { moodVals, dayLabels } = getLast7DaysMood();
+                            const points = moodVals.map((val, idx) => {
+                              const x = idx * (100 / 6);
+                              const y = 40 - (val / 5) * 30; // mapping 1-5 to y range 10-34
+                              return { x, y };
+                            });
+                            const linePath = points.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ');
+                            const areaPath = `M 0 40 ${points.map(p => `L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ')} L 100 40 Z`;
+                            
+                            return (
+                              <>
+                                <svg className="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                  <defs>
+                                    <linearGradient id="mood-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                      <stop offset="0%" stopColor="#ff7b9c" stopOpacity="0.4" />
+                                      <stop offset="100%" stopColor="#ff7b9c" stopOpacity="0.0" />
+                                    </linearGradient>
+                                  </defs>
+                                  <path d={areaPath} fill="url(#mood-grad)" />
+                                  <path d={linePath} fill="none" stroke="#ff7b9c" strokeWidth="1.5" />
+                                </svg>
+                                <div className="flex justify-between text-[9px] text-secondary font-bold mt-2">
+                                  {dayLabels.map((lbl, idx) => (
+                                    <span key={idx}>{idx === 6 ? 'Today' : lbl}</span>
+                                  ))}
+                                </div>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      </div>
 
-              {/* AI Insight Card */}
-              <div className="glass-card p-8 rounded-[2rem] border border-white/60 shadow-sm bg-gradient-to-tr from-primary/5 via-transparent to-[#ae9fc4]/10">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="material-symbols-outlined text-primary text-xl animate-bounce">auto_awesome</span>
-                  <h4 className="font-extrabold text-primary text-sm uppercase tracking-wider">AI Pattern Discovery</h4>
-                </div>
-                <p className="text-secondary text-sm leading-relaxed mb-4">
-                  "Based on 90 days of tracking, your energy levels peak consistently between cycle days 12 and 15. We recommend scheduling major initiatives during this window and reducing caffeine intake during luteal phase days 21–25."
-                </p>
-                <div className="text-[10px] text-secondary font-bold uppercase">Luna Diagnostics Core • 98.4% Confidence</div>
-              </div>
-            </motion.div>
-          )}
+                      {/* Energy Fluctuations Bar Chart */}
+                      <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-primary text-xs uppercase tracking-widest">Energy Fluctuations</span>
+                          <span className="material-symbols-outlined text-primary text-base">bolt</span>
+                        </div>
+                        <div className="h-32 w-full flex items-end justify-between px-2 pt-4">
+                          {last7DaysEnergy.map((val, idx) => (
+                            <div key={idx} className="flex flex-col items-center gap-1.5 w-full">
+                              <div className="w-4 bg-primary/20 border border-primary/10 rounded-t-md relative overflow-hidden" style={{ height: `${val * 10}%` }}>
+                                <div className="absolute inset-0 bg-primary w-full" style={{ height: '100%', transform: `scaleY(${val/10})`, transformOrigin: 'bottom' }} />
+                              </div>
+                              <span className="text-[9px] text-secondary font-bold">D{idx+1}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Correlations and Pattern Discovery */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {[
+                        { text: forecast.insights.sleep || 'Sleep quality increases by 15% during follicular days.', icon: 'bedtime', col: 'text-purple-600' },
+                        { text: forecast.insights.stress || 'Stress indicators drop by 22% during optimal hydration cycles.', icon: 'spa', col: 'text-[#a53556]' },
+                        { text: forecast.insights.activity || 'High activity levels correlate to stable luteal phase entry.', icon: 'directions_run', col: 'text-amber-500' }
+                      ].map((pattern, idx) => (
+                        <div key={idx} className="bg-white/40 border border-white/60 p-5 rounded-2xl flex items-start gap-3 shadow-inner">
+                          <span className={`material-symbols-outlined ${pattern.col} text-lg`}>{pattern.icon}</span>
+                          <p className="text-xs text-secondary font-bold leading-normal">
+                            {pattern.text}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* AI Insight Card */}
+                    <div className="glass-card p-8 rounded-[2rem] border border-white/60 shadow-sm bg-gradient-to-tr from-primary/5 via-transparent to-[#ae9fc4]/10">
+                      <div className="flex items-center gap-2 mb-4">
+                        <span className="material-symbols-outlined text-primary text-xl animate-bounce">auto_awesome</span>
+                        <h4 className="font-extrabold text-primary text-sm uppercase tracking-wider">AI Pattern Discovery</h4>
+                      </div>
+                      <p className="text-secondary text-sm leading-relaxed mb-4">
+                        "{forecast.insights.aiPattern || 'Based on your logs, your energy levels peak consistently around your follicular phase...'}"
+                      </p>
+                      <div className="text-[10px] text-secondary font-bold uppercase">
+                        Luna Diagnostics Core • {forecast.confidenceRate}% Confidence
+                      </div>
+                    </div>
+                  </>
+                )}
+              </motion.div>
+            );
+          })()}
 
           {/* ═══════════════ PROFILE & ACHIEVEMENTS ═══════════════ */}
           {activeTab === 'profile' && (
@@ -920,11 +1180,14 @@ export const Dashboard: React.FC = () => {
                 {/* Metrics */}
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 mb-6 sm:mb-8">
                   {[
-                    { label: 'Avg Cycle', val: '28 Days' },
-                    { label: 'Period Range', val: '5 Days' },
-                    { label: 'Logs Saved', val: `${Object.keys(dailyLogs).length}` },
-                    { label: 'Prediction Rate', val: '97%' },
-                    { label: 'Accuracy', val: '98%' }
+                    {
+                      label: forecast && forecast.averageCycleLength ? 'Avg Cycle' : 'Current Cycle',
+                      val: forecast && forecast.averageCycleLength ? `${forecast.averageCycleLength} Days` : `${onboarding.cycleLength} Days`
+                    },
+                    { label: 'Period Range', val: `${onboarding.periodLength} Days` },
+                    { label: 'Logs Saved', val: `${forecast ? forecast.totalLogsCount : Object.keys(dailyLogs).length}` },
+                    { label: 'Prediction Rate', val: forecast ? `${forecast.confidenceRate}%` : '50%' },
+                    { label: 'Accuracy', val: forecast ? `${forecast.accuracyRate}%` : '50%' }
                   ].map((stat, idx) => (
                     <div key={idx} className="bg-white/50 border border-white/60 p-2 sm:p-3 rounded-2xl">
                       <span className="block text-[7.5px] sm:text-[8px] font-bold text-secondary uppercase tracking-widest mb-1">{stat.label}</span>
@@ -938,16 +1201,162 @@ export const Dashboard: React.FC = () => {
                   <span className="block text-xs font-extrabold text-primary uppercase tracking-wider mb-3 ml-1">Luna Calibration Medals</span>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     {[
-                      { label: '30 Days Tracked', icon: 'verified' },
-                      { label: '90 Days Sync', icon: 'settings_backup_restore' },
-                      { label: 'Insight Master', icon: 'auto_awesome' }
-                    ].map((badge, idx) => (
-                      <div key={idx} className="bg-[#ff7b9c]/10 border border-primary/20 p-2.5 sm:p-3 rounded-2xl flex items-center gap-2">
-                        <span className="material-symbols-outlined text-primary text-base sm:text-lg shrink-0">{badge.icon}</span>
-                        <span className="text-[10px] font-bold text-primary leading-tight">{badge.label}</span>
-                      </div>
-                    ))}
+                      { label: '7 Days Tracked (Bronze)', icon: 'workspace_premium', minLogs: 7 },
+                      { label: '14 Days Tracked (Silver)', icon: 'military_tech', minLogs: 14 },
+                      { label: '30 Days Tracked (Gold)', icon: 'stars', minLogs: 30 }
+                    ].map((badge, idx) => {
+                      const totalLogs = forecast ? forecast.totalLogsCount : 0;
+                      const isUnlocked = totalLogs >= badge.minLogs;
+                      return (
+                        <div 
+                          key={idx} 
+                          className={`p-2.5 sm:p-3 rounded-2xl flex items-center gap-2 border transition-all ${
+                            isUnlocked 
+                              ? 'bg-[#ff7b9c]/10 border-primary/20 text-primary' 
+                              : 'bg-slate-100 border-slate-200 text-slate-400 opacity-60'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-base sm:text-lg shrink-0">
+                            {isUnlocked ? badge.icon : 'lock'}
+                          </span>
+                          <div className="flex flex-col text-left">
+                            <span className="text-[10px] font-bold leading-tight">
+                              {badge.label}
+                            </span>
+                            <span className="text-[8px] font-medium leading-none mt-0.5">
+                              {isUnlocked ? 'Unlocked' : `Requires ${badge.minLogs} logs (current: ${totalLogs})`}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
+                </div>
+
+                {/* Partner Sync Section */}
+                <div className="text-left mb-6 sm:mb-8 border-t border-outline/10 pt-6">
+                  <span className="block text-xs font-extrabold text-primary uppercase tracking-wider mb-3 ml-1">Partner Sync Core</span>
+                  
+                  {partnerStatus.paired ? (
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl flex flex-col gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-600">
+                          <span className="material-symbols-outlined text-[22px]">favorite</span>
+                        </div>
+                        <div>
+                          <span className="block text-xs font-bold text-emerald-800">Connected Sanctuary Active</span>
+                          <span className="text-sm font-black text-emerald-950">{partnerStatus.partner.name}</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            triggerPartnerAction('Thinking of you! ❤️');
+                            setPartnerSuccess('Nudge sent to your partner!');
+                            setTimeout(() => setPartnerSuccess(''), 3000);
+                          }}
+                          className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold text-[10px] uppercase tracking-wider transition-all"
+                        >
+                          Send Love Nudge
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (!window.confirm('Are you sure you want to disconnect from your partner?')) return;
+                            try {
+                              setPartnerLoading(true);
+                              setPartnerError('');
+                              await api.partner.unlink();
+                              setPartnerStatus({ paired: false });
+                              setGeneratedCode('');
+                              setPartnerSuccess('Partner disconnected successfully.');
+                            } catch (err: any) {
+                              setPartnerError(err.message || 'Failed to disconnect partner.');
+                            } finally {
+                              setPartnerLoading(false);
+                            }
+                          }}
+                          className="px-4 py-2 border border-emerald-500/30 text-emerald-800 hover:bg-emerald-500/20 rounded-full font-bold text-[10px] uppercase tracking-wider transition-all"
+                        >
+                          Disconnect
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-white/40 border border-white/60 p-4 rounded-2xl flex flex-col gap-4">
+                      <p className="text-xs text-secondary leading-relaxed font-bold">
+                        Synchronize your cycles and wellness logs with a partner in real-time. Link your profiles to share biological insights.
+                      </p>
+                      
+                      {/* Generate Code Area */}
+                      <div className="flex flex-col gap-2">
+                        {generatedCode ? (
+                          <div className="bg-primary/5 border border-primary/20 p-3 rounded-xl text-center">
+                            <span className="block text-[8px] font-bold text-secondary uppercase tracking-widest mb-1">Your Connection Code</span>
+                            <span className="text-lg font-black text-primary tracking-widest">{generatedCode}</span>
+                            <span className="block text-[8px] text-secondary mt-1">Share this with your partner. Valid for 10 minutes.</span>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={async () => {
+                              try {
+                                setPartnerLoading(true);
+                                setPartnerError('');
+                                const res = await api.partner.getCode();
+                                setGeneratedCode(res.syncCode);
+                              } catch (err: any) {
+                                setPartnerError(err.message || 'Failed to generate code.');
+                              } finally {
+                                setPartnerLoading(false);
+                              }
+                            }}
+                            disabled={partnerLoading}
+                            className="w-full py-2 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 rounded-full font-bold text-[10px] uppercase tracking-wider transition-all"
+                          >
+                            {partnerLoading ? 'Generating...' : 'Generate Connection Code'}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Enter Code Area */}
+                      <form onSubmit={async (e) => {
+                        e.preventDefault();
+                        if (!partnerCodeInput) return;
+                        try {
+                          setPartnerLoading(true);
+                          setPartnerError('');
+                          setPartnerSuccess('');
+                          const res = await api.partner.pair(partnerCodeInput);
+                          setPartnerSuccess(res.message || 'Successfully paired with partner!');
+                          setPartnerCodeInput('');
+                          const ps = await api.partner.status();
+                          setPartnerStatus(ps);
+                        } catch (err: any) {
+                          setPartnerError(err.message || 'Failed to pair partner.');
+                        } finally {
+                          setPartnerLoading(false);
+                        }
+                      }} className="flex gap-2 mt-2">
+                        <input
+                          type="text"
+                          maxLength={6}
+                          value={partnerCodeInput}
+                          onChange={(e) => setPartnerCodeInput(e.target.value.toUpperCase())}
+                          placeholder="ENTER PARTNER CODE"
+                          className="flex-1 bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/10 px-4 py-2 rounded-full text-xs font-black tracking-widest text-center focus:outline-none"
+                        />
+                        <button
+                          type="submit"
+                          disabled={partnerLoading || !partnerCodeInput}
+                          className="px-4 py-2 bg-primary text-on-primary rounded-full font-bold text-[10px] uppercase tracking-wider disabled:opacity-50"
+                        >
+                          Link
+                        </button>
+                      </form>
+                    </div>
+                  )}
+
+                  {partnerError && <p className="text-[10px] text-red-600 font-bold mt-2 ml-1">{partnerError}</p>}
+                  {partnerSuccess && <p className="text-[10px] text-emerald-600 font-bold mt-2 ml-1">{partnerSuccess}</p>}
                 </div>
 
                 {/* Calibration Controls */}

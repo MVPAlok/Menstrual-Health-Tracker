@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import prisma from '../prisma';
-import { Mood } from '@prisma/client';
+import { Mood, MenstrualFlow } from '@prisma/client';
 
 export const getLogsRange = async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.userId;
@@ -36,6 +36,7 @@ export const getLogsRange = async (req: AuthenticatedRequest, res: Response) => 
       stress: log.stressFactor,
       symptoms: log.symptoms,
       hydration: log.hydrationCups,
+      flowType: log.flowType,
     }));
 
     return res.status(200).json(mappedLogs);
@@ -46,7 +47,7 @@ export const getLogsRange = async (req: AuthenticatedRequest, res: Response) => 
 
 export const saveLog = async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.userId;
-  const { date, mood, sleep, energy, stress, symptoms, hydration } = req.body;
+  const { date, mood, sleep, energy, stress, symptoms, hydration, flowType } = req.body;
 
   if (!userId) {
     return res.status(401).json({ error: 'Unauthorized.' });
@@ -65,6 +66,12 @@ export const saveLog = async (req: AuthenticatedRequest, res: Response) => {
       resolvedMood = mood as Mood;
     }
 
+    // Map flowType string to MenstrualFlow enum value safely
+    let resolvedFlow: MenstrualFlow = MenstrualFlow.NONE;
+    if (flowType && Object.values(MenstrualFlow).includes(flowType)) {
+      resolvedFlow = flowType as MenstrualFlow;
+    }
+
     const log = await prisma.dailyLog.upsert({
       where: {
         userId_date: {
@@ -79,6 +86,7 @@ export const saveLog = async (req: AuthenticatedRequest, res: Response) => {
         stressFactor: stress !== undefined ? Number(stress) : 3,
         symptoms: symptoms || [],
         hydrationCups: hydration !== undefined ? Number(hydration) : 4,
+        flowType: resolvedFlow,
       },
       create: {
         userId,
@@ -89,6 +97,7 @@ export const saveLog = async (req: AuthenticatedRequest, res: Response) => {
         stressFactor: stress !== undefined ? Number(stress) : 3,
         symptoms: symptoms || [],
         hydrationCups: hydration !== undefined ? Number(hydration) : 4,
+        flowType: resolvedFlow,
       },
     });
 
@@ -102,6 +111,7 @@ export const saveLog = async (req: AuthenticatedRequest, res: Response) => {
         stress: log.stressFactor,
         symptoms: log.symptoms,
         hydration: log.hydrationCups,
+        flowType: log.flowType,
       },
     });
   } catch (error) {

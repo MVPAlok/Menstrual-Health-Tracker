@@ -11,13 +11,9 @@ generator client {
 // User Profile Table
 model User {
   id                   String        @id @default(uuid())
-  email                String        @unique
+  firstName            String
+  lastName             String
   passwordHash         String
-  name                 String
-  verificationToken    String?       // Used during OTP / email validation
-  isVerified           Boolean       @default(false)
-  resetToken           String?       // Used for forgot-password recovery
-  resetTokenExpiry     DateTime?
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
   
@@ -26,6 +22,8 @@ model User {
   partnerSyncInitiator PartnerSync[] @relation("UserInitiated")
   partnerSyncReceiver  PartnerSync[] @relation("UserReceived")
   notifications        Notification[]
+
+  @@unique([firstName, lastName])
 }
 
 // Onboarding Data Table (Matches OnboardingFlow steps)
@@ -61,6 +59,7 @@ model DailyLog {
   stressFactor  Int       @default(3)   // 1 to 10 scale
   symptoms      String[]  // e.g., ["Cramps", "Bloating", "Headache"]
   hydrationCups Int       @default(4)   // 1 to 8 cups
+  flowType      MenstrualFlow @default(NONE)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -129,4 +128,12 @@ enum SyncStatus {
   PENDING
   ACCEPTED
   REVOKED
+}
+
+enum MenstrualFlow {
+  NONE
+  SPOTTING
+  LIGHT
+  MEDIUM
+  HEAVY
 }

@@ -1,13 +1,16 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { io, Socket } from 'socket.io-client';
+import { api, mapDbOnboardingToFrontend } from '../utils/api';
 
 export interface UserProfile {
+  id?: string;
   name: string;
   email: string;
   isLoggedIn: boolean;
 }
 
 export interface OnboardingData {
-  lastPeriodDate: string; // ISO string or YYYY-MM-DD
+  lastPeriodDate: string; // YYYY-MM-DD
   cycleLength: number; // 21 - 35
   periodLength: number; // 2 - 10
   healthGoals: string[];
@@ -29,20 +32,26 @@ export interface OnboardingData {
 export interface DailyLog {
   date: string; // YYYY-MM-DD
   mood: string; // 'Radiant' | 'Balanced' | 'Sensitive' | 'Low Energy' | 'Anxious'
-  symptoms: string[]; // ['Cramps', 'Headache', 'Bloating', etc.]
+  symptoms: string[];
   sleep: number; // 1 to 10
   energy: number; // 1 to 10
   stress: number; // 1 to 10
+  hydration?: number; // cups (1 to 8)
+  flowType?: 'NONE' | 'SPOTTING' | 'LIGHT' | 'MEDIUM' | 'HEAVY';
 }
 
 interface AppContextType {
   user: UserProfile;
   onboarding: OnboardingData;
   dailyLogs: Record<string, DailyLog>;
-  loginUser: (name: string, email: string) => void;
+  partnerAction: { partnerId: string; action: string } | null;
+  partnerLogUpdate: { partnerId: string; date: string; mood: string; symptoms: string[] } | null;
+  loginUser: (firstName: string, lastName: string, password: string) => Promise<any>;
+  registerUser: (firstName: string, lastName: string, password: string) => Promise<any>;
   logoutUser: () => void;
-  updateOnboarding: (data: Partial<OnboardingData>) => void;
-  logDay: (log: Omit<DailyLog, 'date'>) => void;
+  updateOnboarding: (data: Partial<OnboardingData>) => Promise<void>;
+  logDay: (log: Omit<DailyLog, 'date'>) => Promise<void>;
+  triggerPartnerAction: (action: string) => void;
 }
 
 const defaultOnboarding: OnboardingData = {
@@ -78,59 +87,201 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : defaultOnboarding;
   });
 
-  const [dailyLogs, setDailyLogs] = useState<Record<string, DailyLog>>(() => {
-    const saved = localStorage.getItem('lunacare_logs');
-    if (saved) return JSON.parse(saved);
-    // Seed some mock logs for standard dashboard visualization
-    const today = new Date();
-    const seed: Record<string, DailyLog> = {};
-    const moods = ['Radiant', 'Balanced', 'Sensitive', 'Balanced', 'Radiant', 'Sensitive', 'Low Energy'];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(today.getDate() - i);
-      const dateString = d.toISOString().split('T')[0];
-      seed[dateString] = {
-        date: dateString,
-        mood: moods[i % moods.length],
-        symptoms: i === 3 ? ['Cramps'] : i === 5 ? ['Bloating'] : [],
-        sleep: Math.floor(Math.random() * 3) + 6, // 6 to 9
-        energy: Math.floor(Math.random() * 4) + 5, // 5 to 8
-        stress: Math.floor(Math.random() * 3) + 3, // 3 to 5
-      };
+  const [dailyLogs, setDailyLogs] = useState<Record<string, DailyLog>>({});
+  const [partnerAction, setPartnerAction] = useState<{ partnerId: string; action: string } | null>(null);
+  const [partnerLogUpdate, setPartnerLogUpdate] = useState<{ partnerId: string; date: string; mood: string; symptoms: string[] } | null>(null);
+  
+  const socketRef = useRef<Socket | null>(null);
+
+  const fetchRecentLogs = async () => {
+    try {
+      const today = new Date();
+      const past30Days = new Date();
+      past30Days.setDate(today.getDate() - 30);
+      const startStr = past30Days.toISOString().split('T')[0];
+      const endStr = today.toISOString().split('T')[0];
+
+      const logs = await api.logs.getRange(startStr, endStr);
+      const mappedLogs: Record<string, DailyLog> = {};
+      logs.forEach((log: any) => {
+        mappedLogs[log.date] = {
+          date: log.date,
+          mood: log.mood,
+          symptoms: log.symptoms,
+          sleep: log.sleepHours,
+          energy: log.energyRate,
+          stress: log.stressFactor,
+          hydration: log.hydrationCups,
+          flowType: log.flowType || 'NONE',
+        };
+      });
+      setDailyLogs(mappedLogs);
+    } catch (err) {
+      console.error('Failed to fetch recent daily logs: ', err);
     }
-    return seed;
-  });
+  };
 
+  const connectSocket = (token: string) => {
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
+
+    const socket = io('http://localhost:5000', {
+      auth: { token }
+    });
+
+    socket.on('connect', () => {
+      console.log('📡 Live sync WebSockets active.');
+    });
+
+    socket.on('log:sync', (data: { date: string; log: any }) => {
+      setDailyLogs((prev) => ({
+        ...prev,
+        [data.date]: {
+          date: data.date,
+          mood: data.log.mood,
+          symptoms: data.log.symptoms,
+          sleep: data.log.sleep,
+          energy: data.log.energy,
+          stress: data.log.stress,
+          hydration: data.log.hydration,
+          flowType: data.log.flowType || 'NONE',
+        }
+      }));
+    });
+
+    socket.on('partner:log_update', (data: any) => {
+      setPartnerLogUpdate(data);
+      // Auto clear partner log update banner after 8s
+      setTimeout(() => setPartnerLogUpdate(null), 8000);
+    });
+
+    socket.on('partner:active_notification', (data: any) => {
+      setPartnerAction(data);
+      setTimeout(() => setPartnerAction(null), 4000);
+    });
+
+    socketRef.current = socket;
+  };
+
+  // Check token on mount
   useEffect(() => {
-    localStorage.setItem('lunacare_user', JSON.stringify(user));
-  }, [user]);
+    const token = localStorage.getItem('lunacare_token');
+    if (token && user.isLoggedIn) {
+      connectSocket(token);
+      api.onboarding.get()
+        .then((data) => {
+          if (data) {
+            setOnboarding(data);
+            localStorage.setItem('lunacare_onboarding', JSON.stringify(data));
+          }
+        })
+        .catch(() => {
+          // Token expired or invalid
+          logoutUser();
+        });
+      fetchRecentLogs();
+    }
+  }, []);
 
-  useEffect(() => {
-    localStorage.setItem('lunacare_onboarding', JSON.stringify(onboarding));
-  }, [onboarding]);
+  const loginUser = async (firstName: string, lastName: string, password: string) => {
+    const res = await api.auth.login({ firstName, lastName, password });
+    localStorage.setItem('lunacare_token', res.token);
+    localStorage.setItem('lunacare_user', JSON.stringify(res.user));
+    
+    setUser(res.user);
+    if (res.onboarding) {
+      const resolved = mapDbOnboardingToFrontend(res.onboarding);
+      if (resolved) {
+        setOnboarding(resolved);
+        localStorage.setItem('lunacare_onboarding', JSON.stringify(resolved));
+      }
+    }
+    
+    connectSocket(res.token);
+    // Fetch logs
+    const today = new Date();
+    const past30Days = new Date();
+    past30Days.setDate(today.getDate() - 30);
+    const startStr = past30Days.toISOString().split('T')[0];
+    const endStr = today.toISOString().split('T')[0];
+    const logs = await api.logs.getRange(startStr, endStr);
+    const mappedLogs: Record<string, DailyLog> = {};
+    logs.forEach((log: any) => {
+      mappedLogs[log.date] = {
+        date: log.date,
+        mood: log.mood,
+        symptoms: log.symptoms,
+        sleep: log.sleepHours,
+        energy: log.energyRate,
+        stress: log.stressFactor,
+        hydration: log.hydrationCups,
+        flowType: log.flowType || 'NONE',
+      };
+    });
+    setDailyLogs(mappedLogs);
+    return res;
+  };
 
-  useEffect(() => {
-    localStorage.setItem('lunacare_logs', JSON.stringify(dailyLogs));
-  }, [dailyLogs]);
-
-  const loginUser = (name: string, email: string) => {
-    setUser({ name, email, isLoggedIn: true });
+  const registerUser = async (firstName: string, lastName: string, password: string) => {
+    const res = await api.auth.register({ firstName, lastName, password });
+    localStorage.setItem('lunacare_token', res.token);
+    localStorage.setItem('lunacare_user', JSON.stringify(res.user));
+    
+    setUser(res.user);
+    if (res.onboarding) {
+      const resolved = mapDbOnboardingToFrontend(res.onboarding);
+      if (resolved) {
+        setOnboarding(resolved);
+        localStorage.setItem('lunacare_onboarding', JSON.stringify(resolved));
+      }
+    }
+    
+    connectSocket(res.token);
+    setDailyLogs({});
+    return res;
   };
 
   const logoutUser = () => {
     setUser({ name: '', email: '', isLoggedIn: false });
     setOnboarding(defaultOnboarding);
+    setDailyLogs({});
+    setPartnerAction(null);
+    setPartnerLogUpdate(null);
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+      socketRef.current = null;
+    }
+    localStorage.removeItem('lunacare_token');
     localStorage.removeItem('lunacare_user');
     localStorage.removeItem('lunacare_onboarding');
-    localStorage.removeItem('lunacare_logs');
   };
 
-  const updateOnboarding = (data: Partial<OnboardingData>) => {
-    setOnboarding((prev) => ({ ...prev, ...data }));
+  const updateOnboarding = async (data: Partial<OnboardingData>) => {
+    const updated = { ...onboarding, ...data };
+    const res = await api.onboarding.calibrate(updated);
+    setOnboarding(res.onboarding);
+    localStorage.setItem('lunacare_onboarding', JSON.stringify(res.onboarding));
   };
 
-  const logDay = (log: Omit<DailyLog, 'date'>) => {
+  const logDay = async (log: Omit<DailyLog, 'date'>) => {
     const todayStr = new Date().toISOString().split('T')[0];
+    
+    // Save to server
+    const dbPayload = {
+      date: todayStr,
+      mood: log.mood,
+      sleep: log.sleep,
+      energy: log.energy,
+      stress: log.stress,
+      symptoms: log.symptoms,
+      hydration: log.hydration || 4,
+      flowType: log.flowType || 'NONE',
+    };
+    
+    await api.logs.save(dbPayload);
+
+    // Update local state
     setDailyLogs((prev) => ({
       ...prev,
       [todayStr]: {
@@ -138,6 +289,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         date: todayStr,
       },
     }));
+
+    // Broadcast update via WebSockets
+    if (socketRef.current) {
+      socketRef.current.emit('log:save', dbPayload);
+    }
+  };
+
+  const triggerPartnerAction = (action: string) => {
+    if (socketRef.current) {
+      socketRef.current.emit('partner:active_action', { action });
+    }
   };
 
   return (
@@ -146,10 +308,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         user,
         onboarding,
         dailyLogs,
+        partnerAction,
+        partnerLogUpdate,
         loginUser,
+        registerUser,
         logoutUser,
         updateOnboarding,
         logDay,
+        triggerPartnerAction,
       }}
     >
       {children}
