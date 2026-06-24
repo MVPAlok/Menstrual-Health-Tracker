@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BackgroundShader } from './BackgroundShader';
 import { useApp } from '../context/AppContext';
@@ -198,7 +198,7 @@ export const LoginScreen: React.FC = () => {
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <motion.button
           onClick={() => {
-            loginUser('Google Wellness', 'google@lunacare.com');
+            loginUser('Google', 'Wellness', 'google_dummy_password');
             navigate('/dashboard');
           }}
           className="flex items-center justify-center gap-2 py-3 bg-white/50 border border-white hover:bg-white/80 rounded-full text-secondary font-bold text-xs tracking-wider"
@@ -210,7 +210,7 @@ export const LoginScreen: React.FC = () => {
         </motion.button>
         <motion.button
           onClick={() => {
-            loginUser('Apple Intelligence', 'apple@lunacare.com');
+            loginUser('Apple', 'Intelligence', 'apple_dummy_password');
             navigate('/dashboard');
           }}
           className="flex items-center justify-center gap-2 py-3 bg-white/50 border border-white hover:bg-white/80 rounded-full text-secondary font-bold text-xs tracking-wider"
