@@ -87,7 +87,6 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [heroVisible, setHeroVisible] = useState(true);
   const [activePhase, setActivePhase] = useState('follicular');
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>, targetId: string) => {
@@ -141,10 +140,7 @@ export default function LandingPage() {
 
   /* Navigation scroll effect */
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-      setHeroVisible(window.scrollY < window.innerHeight);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
@@ -513,10 +509,7 @@ export default function LandingPage() {
 </motion.nav>
 
 {/* ═══════════════ HERO SECTION ═══════════════ */}
-<section 
-  className="fixed top-0 left-0 w-full h-screen flex items-center justify-center pt-24 overflow-hidden z-0"
-  style={{ display: heroVisible ? 'flex' : 'none' }}
->
+<section className="fixed top-0 left-0 w-full h-screen flex items-center justify-center pt-24 overflow-hidden z-0">
   {/* Shader Background */}
   <div className="absolute inset-0 pointer-events-none" style={{ width: '100%', height: '100%' }}>
     <div className="absolute inset-0 w-full h-full" style={{ display: 'block' }}>
@@ -624,7 +617,7 @@ export default function LandingPage() {
 </section>
 
 {/* ═══════════════ CONTENT WRAPPER ═══════════════ */}
-<div className="relative z-10 w-screen overflow-x-hidden bg-[#fffdfd] mt-[100vh] rounded-t-[3rem] md:rounded-t-[4rem] shadow-[0_-40px_80px_rgba(165,53,86,0.08)] border-t border-white/50" style={{ isolation: 'isolate' }}>
+<div className="relative z-10 bg-[#fffdfd] mt-[100vh] rounded-t-[3rem] md:rounded-t-[4rem] shadow-[0_-40px_80px_rgba(165,53,86,0.08)] border-t border-white/50" style={{ isolation: 'isolate' }}>
 
 {/* ═══════════════ SECTION 2: LIVING RHYTHM ═══════════════ */}
 <section id="rhythms" className="py-section-gap relative min-h-screen flex flex-col items-center justify-center bg-[#fffdfd] overflow-hidden">
