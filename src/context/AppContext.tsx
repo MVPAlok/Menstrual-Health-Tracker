@@ -179,11 +179,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             localStorage.setItem('lunacare_onboarding', JSON.stringify(data));
           }
         })
-        .catch(() => {
+        .catch((err) => {
           // Token expired or invalid
-          logoutUser();
+          if (err.status === 401) {
+            logoutUser();
+          }
         });
       fetchRecentLogs();
+    } else if (!token && user.isLoggedIn) {
+      logoutUser();
     }
   }, []);
 

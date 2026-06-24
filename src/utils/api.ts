@@ -22,7 +22,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.error || `HTTP error! status: ${response.status}`);
+    const error: any = new Error(data.error || `HTTP error! status: ${response.status}`);
+    error.status = response.status;
+    throw error;
   }
 
   return data as T;

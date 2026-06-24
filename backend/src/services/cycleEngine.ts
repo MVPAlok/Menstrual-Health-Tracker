@@ -136,7 +136,9 @@ export const calculatePredictions = async (userId: string, offsetDays: number = 
       date: true,
       sleepHours: true,
       hydrationCups: true,
-      stressFactor: true
+      stressFactor: true,
+      energyRate: true,
+      symptoms: true
     }
   });
 
@@ -203,8 +205,63 @@ export const calculatePredictions = async (userId: string, offsetDays: number = 
     }
   }
 
-  // 4. Simulate hormone parameters dynamically based on cycleDay
-  const hormoneData = simulateHormones(currentCycleDay, baselineCycleLength, onboarding.periodLength);
+  // 4. Calibrate user health state from onboarding baselines and recent logs
+  const onboardingSleepMap = {
+    Restorative: 8.0,
+    Fragmented: 6.5,
+    Insufficient: 5.0
+  };
+  const onboardingStressMap = {
+    Low: 2,
+    Moderate: 5,
+    High: 8
+  };
+  const onboardingActivityMap = {
+    Sedentary: 2,
+    Active: 6,
+    Athletic: 9
+  };
+  const onboardingHydrationMap = {
+    Optimal: 9,
+    Average: 6,
+    Low: 4
+  };
+
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+
+  const recentLogs = await prisma.dailyLog.findMany({
+    where: {
+      userId,
+      date: { gte: sevenDaysAgoStr }
+    },
+    select: {
+      sleepHours: true,
+      stressFactor: true,
+      hydrationCups: true,
+      energyRate: true
+    }
+  });
+
+  const numLogs = recentLogs.length;
+  const baseSleep = onboardingSleepMap[onboarding.sleepQuality] || 7.0;
+  const baseStress = onboardingStressMap[onboarding.stressLevel] || 5.0;
+  const baseActivity = onboardingActivityMap[onboarding.activityLevel] || 5.0;
+  const baseHydration = onboardingHydrationMap[onboarding.hydrationLevel] || 6.0;
+
+  const avgSleep = numLogs > 0 ? recentLogs.reduce((acc, l) => acc + l.sleepHours, 0) / numLogs : baseSleep;
+  const avgStress = numLogs > 0 ? recentLogs.reduce((acc, l) => acc + l.stressFactor, 0) / numLogs : baseStress;
+  const avgHydration = numLogs > 0 ? recentLogs.reduce((acc, l) => acc + l.hydrationCups, 0) / numLogs : baseHydration;
+  const avgEnergy = numLogs > 0 ? recentLogs.reduce((acc, l) => acc + l.energyRate, 0) / numLogs : 6.0;
+
+  const hormoneData = simulateHormones(currentCycleDay, baselineCycleLength, onboarding.periodLength, {
+    avgSleep,
+    avgStress,
+    avgHydration,
+    avgEnergy,
+    baseActivity
+  });
 
   // 5. Calculate Real HRV Baseline from user logs (rolling past 30 days)
   let hrvBaseline = "Calibrating (3 logs required)";
@@ -250,8 +307,133 @@ export const calculatePredictions = async (userId: string, offsetDays: number = 
     insights: {
       sleep: sleepInsight,
       stress: stressInsight,
-      activity: "High activity levels correlate to stable luteal phase entry.",
-      aiPattern: `Based on your ${totalLogsCount} logged signals, your energy levels peak consistently around your follicular phase. We recommend scheduling major initiatives during this window and reducing caffeine intake during luteal phase days.`
+      activity: (() => {
+        let activityInsight = "High activity levels correlate to stable luteal phase entry.";
+        if (insightLogs.length > 0) {
+          const activityLevel = onboarding.activityLevel; // Athletic, Active, Sedentary
+          const highHydrationLogs = insightLogs.filter(l => l.hydrationCups >= 6);
+          const lowHydrationLogs = insightLogs.filter(l => l.hydrationCups < 6);
+          
+          const avgEnergyHighHydration = highHydrationLogs.length > 0
+            ? highHydrationLogs.reduce((sum, l) => sum + l.energyRate, 0) / highHydrationLogs.length
+            : 0;
+          const avgEnergyLowHydration = lowHydrationLogs.length > 0
+            ? lowHydrationLogs.reduce((sum, l) => sum + l.energyRate, 0) / lowHydrationLogs.length
+            : 0;
+            
+          if (highHydrationLogs.length >= 1 && lowHydrationLogs.length >= 1 && avgEnergyLowHydration > 0) {
+            const energyIncreasePct = Math.round(((avgEnergyHighHydration - avgEnergyLowHydration) / avgEnergyLowHydration) * 100);
+            if (energyIncreasePct > 0) {
+              activityInsight = `Your ${activityLevel} baseline shows a ${energyIncreasePct}% energy boost on days with optimal hydration.`;
+            } else if (energyIncreasePct < 0) {
+              activityInsight = `Your ${activityLevel} baseline shows highly stable energy levels across hydration fluctuations.`;
+            } else {
+              activityInsight = `Your ${activityLevel} activity baseline correlates with highly consistent energy outputs.`;
+            }
+          } else {
+            if (activityLevel === 'Athletic') {
+              activityInsight = "Athletic baseline profile requires higher metabolic support. Prioritize hydration during high energy peaks.";
+            } else if (activityLevel === 'Active') {
+              activityInsight = "Active baseline profile correlates with balanced metabolic recovery in luteal phase transition.";
+            } else {
+              activityInsight = "Sedentary profile: Adding light activity (15m walk) can boost follicular-phase energy by 15%.";
+            }
+          }
+        } else {
+          if (onboarding.activityLevel === 'Athletic') {
+            activityInsight = "Athletic baseline profile requires higher metabolic support. Prioritize hydration during high energy peaks.";
+          } else if (onboarding.activityLevel === 'Active') {
+            activityInsight = "Active baseline profile correlates with balanced metabolic recovery in luteal phase transition.";
+          } else {
+            activityInsight = "Sedentary profile: Adding light activity (15m walk) can boost follicular-phase energy by 15%.";
+          }
+        }
+        return activityInsight;
+      })(),
+      aiPattern: (() => {
+        let aiPattern = `Based on your onboarding preferences (focusing on ${onboarding.healthGoals.join(', ') || 'cycle tracking'}), we are calibrating your baseline. Start logging your symptoms and sleep daily to unlock full pattern analysis.`;
+        
+        if (totalLogsCount > 0 && insightLogs.length > 0) {
+          const symptomCounts: Record<string, number> = {};
+          let totalSymptomCount = 0;
+          for (const log of insightLogs) {
+            if (log.symptoms && Array.isArray(log.symptoms)) {
+              for (const sym of log.symptoms) {
+                symptomCounts[sym] = (symptomCounts[sym] || 0) + 1;
+                totalSymptomCount++;
+              }
+            }
+          }
+          const sortedSymptoms = Object.entries(symptomCounts).sort((a, b) => b[1] - a[1]);
+          const topSymptom = sortedSymptoms.length > 0 ? sortedSymptoms[0][0] : null;
+
+          const poorSleepLogs = insightLogs.filter(l => l.sleepHours < 7);
+          const goodSleepLogs = insightLogs.filter(l => l.sleepHours >= 7);
+          const avgStressPoorSleep = poorSleepLogs.length > 0 ? poorSleepLogs.reduce((sum, l) => sum + l.stressFactor, 0) / poorSleepLogs.length : 0;
+          const avgStressGoodSleep = goodSleepLogs.length > 0 ? goodSleepLogs.reduce((sum, l) => sum + l.stressFactor, 0) / goodSleepLogs.length : 0;
+
+          let follicularEnergySum = 0;
+          let follicularEnergyCount = 0;
+          let lutealEnergySum = 0;
+          let lutealEnergyCount = 0;
+          for (const log of insightLogs) {
+            const cycleDay = getCycleDay(log.date, lastKnownPeriodStart, baselineCycleLength);
+            const isFollicular = cycleDay > onboarding.periodLength && cycleDay < (baselineCycleLength - 14 - 2);
+            const isLuteal = cycleDay > (baselineCycleLength - 14 + 1);
+            
+            if (isFollicular) {
+              follicularEnergySum += log.energyRate;
+              follicularEnergyCount++;
+            } else if (isLuteal) {
+              lutealEnergySum += log.energyRate;
+              lutealEnergyCount++;
+            }
+          }
+          const avgFollicularEnergy = follicularEnergyCount > 0 ? follicularEnergySum / follicularEnergyCount : 0;
+          const avgLutealEnergy = lutealEnergyCount > 0 ? lutealEnergySum / lutealEnergyCount : 0;
+
+          let patternParts: string[] = [];
+          
+          if (topSymptom) {
+            patternParts.push(`Your most frequent signal is "${topSymptom}" (${symptomCounts[topSymptom]} logs).`);
+          }
+          
+          if (poorSleepLogs.length >= 1 && goodSleepLogs.length >= 1 && avgStressGoodSleep > 0) {
+            const stressDiff = avgStressPoorSleep - avgStressGoodSleep;
+            if (stressDiff > 0.5) {
+              const stressPct = Math.round((stressDiff / avgStressGoodSleep) * 100);
+              patternParts.push(`Logging shows your stress levels increase by ${stressPct}% on days with under 7 hours of sleep.`);
+            }
+          }
+          
+          if (follicularEnergyCount >= 1 && lutealEnergyCount >= 1) {
+            const energyDiff = avgFollicularEnergy - avgLutealEnergy;
+            if (Math.abs(energyDiff) > 0.5) {
+              if (energyDiff > 0.5) {
+                patternParts.push(`Your follicular phase energy (${avgFollicularEnergy.toFixed(1)}/10) is consistently higher than your luteal phase energy (${avgLutealEnergy.toFixed(1)}/10).`);
+              } else {
+                patternParts.push(`Surprisingly, your luteal phase energy (${avgLutealEnergy.toFixed(1)}/10) averages higher than your follicular phase (${avgFollicularEnergy.toFixed(1)}/10).`);
+              }
+            }
+          }
+          
+          let rec = "";
+          if (topSymptom === 'Cramps' || topSymptom === 'Fatigue') {
+            rec = `We recommend increasing hydration to 8+ cups and reducing high-intensity workouts during the pre-menstrual transition.`;
+          } else if (avgStressPoorSleep > 6) {
+            rec = `Prioritize wind-down routines; reducing screen time 1 hour before bed could mitigate the sleep-deprived stress spikes we see in your logs.`;
+          } else {
+            rec = `Schedule major tasks and collaborative work during your high-energy follicular window, and reserve luteal days for focused, individual deep work.`;
+          }
+          
+          if (patternParts.length > 0) {
+            aiPattern = `Based on your ${totalLogsCount} logged signals: ${patternParts.join(' ')} ${rec}`;
+          } else {
+            aiPattern = `Based on your ${totalLogsCount} logged signals: We are monitoring your energy and stress fluctuations across cycle phases. ${rec}`;
+          }
+        }
+        return aiPattern;
+      })()
     },
     hormones: {
       estrogen: hormoneData.estrogen,

@@ -3,6 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../context/AppContext';
 import { api } from '../utils/api';
+import { 
+  Sparkles, 
+  HeartHandshake, 
+  HeartPulse, 
+  BatteryLow, 
+  Brain, 
+  Circle, 
+  Droplets, 
+  Droplet, 
+  Activity, 
+  Waves, 
+  MoonStar, 
+  BrainCircuit, 
+  Zap, 
+  CheckCircle,
+  ShieldCheck
+} from 'lucide-react';
+
 
 // Simple tooltip component
 const Tooltip: React.FC<{ text: string; children: React.ReactNode }> = ({ text, children }) => {
@@ -838,221 +856,367 @@ export const Dashboard: React.FC = () => {
           )}
 
           {/* ═══════════════ TACTILE LOGGING ═══════════════ */}
-          {activeTab === 'log' && (
-            <motion.div
-              key="log-tab"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              className="glass-card rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 md:p-12 border border-white/70 max-w-2xl mx-auto shadow-sm"
-            >
-              <h2 className="font-headline-md text-2xl sm:text-3xl text-primary mb-2">Metrics Logger</h2>
-              <p className="text-secondary text-xs sm:text-sm mb-6 sm:mb-8">
-                Perform daily calibrations of sleep, stress, energy levels, and active cycle symptoms.
-              </p>
+          {activeTab === 'log' && (() => {
+            const moodDescriptions: Record<string, string> = {
+              Radiant: 'High energy, positive outlook & focused stamina.',
+              Balanced: 'Centered, calm, and emotionally stable.',
+              Sensitive: 'Emotionally open, intuitive, and responsive.',
+              'Low Energy': 'Resting state, slow baseline & reflective focus.',
+              Anxious: 'Alert, highly active nervous system & tension signals.'
+            };
 
-              <form onSubmit={handleLogSubmit} className="flex flex-col gap-6 sm:gap-8">
-                {/* Tactile Mood Selection */}
-                <div>
-                  <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-3 ml-1">Today's Focus Mood</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
-                    {[
-                      { id: 'Radiant', emoji: '✨' },
-                      { id: 'Balanced', emoji: '🌿' },
-                      { id: 'Sensitive', emoji: '🤍' },
-                      { id: 'Low Energy', emoji: '🔋' },
-                      { id: 'Anxious', emoji: '🌪' }
-                    ].map(item => {
-                      const isActive = loggedMood === item.id;
-                      return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => setLoggedMood(item.id as any)}
-                          className={`p-2.5 sm:p-4 rounded-2xl border flex flex-col items-center gap-1 sm:gap-1.5 transition-all text-xs font-bold ${
-                            isActive
-                              ? 'bg-primary text-on-primary border-primary shadow-md scale-105'
-                              : 'bg-white/40 border-white text-secondary hover:bg-white'
-                          }`}
-                        >
-                          <span className="text-xl">{item.emoji}</span>
-                          <span>{item.id}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Energy & Stress Tactiles */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">Energy Rate ({loggedEnergy}/10)</label>
-                    <input
-                      type="range"
-                      min={1}
-                      max={10}
-                      value={loggedEnergy}
-                      onChange={(e) => setLoggedEnergy(parseInt(e.target.value))}
-                      className="w-full accent-primary h-2 bg-white/60 rounded-full"
-                    />
-                    <div className="flex justify-between text-[10px] text-secondary font-bold mt-1.5">
-                      <span>Resting</span>
-                      <span>Moderate</span>
-                      <span>High Stamina</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">Stress Factor ({loggedStress}/10)</label>
-                    <input
-                      type="range"
-                      min={1}
-                      max={10}
-                      value={loggedStress}
-                      onChange={(e) => setLoggedStress(parseInt(e.target.value))}
-                      className="w-full accent-primary h-2 bg-white/60 rounded-full"
-                    />
-                    <div className="flex justify-between text-[10px] text-secondary font-bold mt-1.5">
-                      <span>Calm</span>
-                      <span>Manageable</span>
-                      <span>High Alert</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Interactive Sleep Ring Simulation */}
-                <div>
-                  <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-3 ml-1">Sleep Quality ({loggedSleep} hrs)</label>
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="range"
-                      min={4}
-                      max={12}
-                      step={0.5}
-                      value={loggedSleep}
-                      onChange={(e) => setLoggedSleep(parseFloat(e.target.value))}
-                      className="flex-1 accent-primary h-2 bg-white/60 rounded-full"
-                    />
-                    <div className="w-14 h-14 rounded-full border-2 border-primary flex items-center justify-center text-xs font-black text-primary bg-white/60">
-                      {loggedSleep}h
-                    </div>
-                  </div>
-                </div>
-
-                {/* Menstrual Flow Selector */}
-                <div>
-                  <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-3 ml-1">Menstrual Flow Intensity</label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {[
-                      { id: 'NONE', label: 'None', emoji: '⚪' },
-                      { id: 'SPOTTING', label: 'Spotting', emoji: '💧' },
-                      { id: 'LIGHT', label: 'Light', emoji: '🩸' },
-                      { id: 'MEDIUM', label: 'Medium', emoji: '🔥' },
-                      { id: 'HEAVY', label: 'Heavy', emoji: '🌊' }
-                    ].map(flow => {
-                      const isActive = loggedFlow === flow.id;
-                      return (
-                        <button
-                          key={flow.id}
-                          type="button"
-                          onClick={() => setLoggedFlow(flow.id as any)}
-                          className={`p-2 rounded-xl border flex flex-col items-center gap-1 transition-all text-[10px] font-bold ${
-                            isActive
-                              ? 'bg-primary text-on-primary border-primary shadow-sm scale-105'
-                              : 'bg-white/40 border-white text-secondary hover:bg-white'
-                          }`}
-                        >
-                          <span className="text-base">{flow.emoji}</span>
-                          <span>{flow.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Symptom Chips */}
-                <div>
-                  <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-3 ml-1">Physical Symptoms</label>
-                  <div className="flex flex-wrap gap-2">
-                    {['Cramps', 'Headache', 'Bloating', 'Fatigue', 'Acne Flare', 'Healthy Flow'].map(s => {
-                      const isActive = loggedSymptoms.includes(s);
-                      return (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => handleSymptomToggle(s)}
-                          className={`px-3.5 py-2 rounded-full text-xs font-bold border transition-all ${
-                            isActive
-                              ? 'bg-primary/20 border-primary text-primary'
-                              : 'bg-white/40 border-white text-secondary hover:bg-white'
-                          }`}
-                        >
-                          {s}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Hydration Tracker */}
-                <div>
-                  <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-3 ml-1">Hydration Intensity ({loggedHydration} / 8 cups)</label>
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center sm:justify-start">
-                    {Array.from({ length: 8 }).map((_, idx) => {
-                      const isActive = idx < loggedHydration;
-                      return (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setLoggedHydration(idx + 1)}
-                          className={`w-8 h-9 sm:w-9 sm:h-10 border rounded-xl flex items-center justify-center transition-all ${
-                            isActive ? 'bg-[#ff7b9c]/10 border-primary text-primary' : 'bg-white/40 border-white text-secondary'
-                          }`}
-                        >
-                          <span className="material-symbols-outlined text-[16px] sm:text-[18px]">water_drop</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* HRV Tracker */}
-                <div>
-                  <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">Heart Rate Variability ({loggedHrv} ms)</label>
-                  <input
-                    type="range"
-                    min={20}
-                    max={150}
-                    value={loggedHrv}
-                    onChange={(e) => setLoggedHrv(parseInt(e.target.value))}
-                    className="w-full accent-primary h-2 bg-white/60 rounded-full"
-                  />
-                  <div className="flex justify-between text-[10px] text-secondary font-bold mt-1.5">
-                    <span>Low (20ms)</span>
-                    <span>Average (75ms)</span>
-                    <span>High (150ms)</span>
-                  </div>
-                </div>
-
-                {/* Living Summary Feedback Block */}
-                <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl">
-                  <span className="block text-[10px] font-bold text-primary uppercase mb-1">Today's signals indicate</span>
-                  <p className="text-xs font-bold text-secondary">
-                    {loggedMood} mood • {loggedSleep}h rest quality • {loggedEnergy >= 7 ? 'High energy capacity' : 'Slight energy rest'} • {loggedStress <= 4 ? 'Low baseline stress' : 'Mild alert triggers'} • {loggedHydration >= 6 ? 'Optimal hydration' : 'Need more water'} • Flow: {loggedFlow} • HRV: {loggedHrv}ms
+            return (
+              <motion.div
+                key="log-tab"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                className="w-full max-w-5xl mx-auto flex flex-col gap-6 sm:gap-8"
+              >
+                <div className="flex flex-col gap-2 ml-1">
+                  <h2 className="text-3xl sm:text-4xl text-primary font-black uppercase tracking-wide">Metrics Logger</h2>
+                  <p className="text-secondary text-sm">
+                    Perform daily calibrations of sleep, stress, energy levels, and active cycle symptoms.
                   </p>
                 </div>
 
-                <motion.button
-                  type="submit"
-                  className="w-full bg-primary text-on-primary py-4 rounded-full font-bold text-sm tracking-wide shadow-lg shadow-primary/30 border border-primary/20 mt-4"
-                  whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(165,53,86,0.35)' }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  {logSaved ? 'Diagnostics Saved Successfully' : 'Commit Logger Signals'}
-                </motion.button>
-              </form>
-            </motion.div>
-          )}
+                <form onSubmit={handleLogSubmit} className="flex flex-col gap-6 sm:gap-8">
+                  {/* Top Section: Three cards in a row */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Mood Card */}
+                    <div className="bg-white/80 border border-white/80 p-6 rounded-[2rem] shadow-[0_8px_30px_rgba(165,53,86,0.04)] hover:shadow-[0_8px_30px_rgba(165,53,86,0.08)] hover:-translate-y-0.5 transition-all duration-300 min-h-[190px] flex flex-col justify-between">
+                      <div>
+                        <span className="block text-xs font-bold text-secondary uppercase tracking-widest mb-1">Focus Mood</span>
+                        <span className="text-xl font-black text-primary">{loggedMood}</span>
+                      </div>
+                      <div className="grid grid-cols-5 gap-2 my-2">
+                        {[
+                          { id: 'Radiant', label: 'Radiant', icon: Sparkles, color: 'text-amber-500' },
+                          { id: 'Balanced', label: 'Balanced', icon: HeartHandshake, color: 'text-emerald-500' },
+                          { id: 'Sensitive', label: 'Sensitive', icon: HeartPulse, color: 'text-rose-500' },
+                          { id: 'Low Energy', label: 'Low Energy', icon: BatteryLow, color: 'text-blue-500' },
+                          { id: 'Anxious', label: 'Anxious', icon: Brain, color: 'text-purple-500' }
+                        ].map(item => {
+                          const isActive = loggedMood === item.id;
+                          const Icon = item.icon;
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => setLoggedMood(item.id as any)}
+                              className={`p-2 py-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition-all duration-300 hover:scale-105 ${
+                                isActive
+                                  ? 'bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 text-primary shadow-[0_4px_12px_rgba(165,53,86,0.08)] font-bold'
+                                  : 'bg-white/50 border-white text-secondary hover:bg-white hover:border-slate-350 shadow-sm'
+                              }`}
+                              title={item.label}
+                            >
+                              <Icon className={`w-5 h-5 ${isActive ? 'text-primary' : item.color}`} />
+                              <span className="text-[8px] font-bold tracking-tight block truncate w-full text-center">{item.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="text-[10px] text-secondary font-bold leading-normal">
+                        {moodDescriptions[loggedMood] || 'Select focus mood.'}
+                      </p>
+                    </div>
+
+                    {/* Flow Card */}
+                    <div className="bg-white/80 border border-white/80 p-6 rounded-[2rem] shadow-[0_8px_30px_rgba(165,53,86,0.04)] hover:shadow-[0_8px_30px_rgba(165,53,86,0.08)] hover:-translate-y-0.5 transition-all duration-300 min-h-[190px] flex flex-col justify-between">
+                      <div>
+                        <span className="block text-xs font-bold text-secondary uppercase tracking-widest mb-1">Menstrual Flow</span>
+                        <span className="text-xl font-black text-primary">{loggedFlow}</span>
+                      </div>
+                      <div className="bg-white/50 border border-white/70 p-1 rounded-2xl flex w-full justify-between items-center gap-1 my-2 shadow-inner">
+                        {[
+                          { id: 'NONE', label: 'None', icon: Circle, color: 'text-slate-400' },
+                          { id: 'SPOTTING', label: 'Spotting', icon: Droplets, color: 'text-red-300' },
+                          { id: 'LIGHT', label: 'Light', icon: Droplet, color: 'text-red-400' },
+                          { id: 'MEDIUM', label: 'Medium', icon: Activity, color: 'text-red-500' },
+                          { id: 'HEAVY', label: 'Heavy', icon: Waves, color: 'text-red-700' }
+                        ].map(flow => {
+                          const isActive = loggedFlow === flow.id;
+                          const Icon = flow.icon;
+                          return (
+                            <button
+                              key={flow.id}
+                              type="button"
+                              onClick={() => setLoggedFlow(flow.id as any)}
+                              className={`flex-1 py-2 px-1 rounded-xl text-[9px] font-extrabold transition-all duration-300 flex flex-col items-center justify-center gap-1 ${
+                                isActive
+                                  ? 'bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 text-primary shadow-sm scale-102'
+                                  : 'text-secondary hover:text-primary hover:bg-white/60 border border-transparent'
+                              }`}
+                              title={flow.label}
+                            >
+                              <Icon className={`w-4 h-4 ${isActive ? 'text-primary' : flow.color}`} />
+                              <span className="hidden sm:inline font-bold text-[8px]">{flow.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="text-[10px] text-secondary font-bold leading-normal">
+                        Select intensity to update predictions.
+                      </p>
+                    </div>
+
+                    {/* Hydration Card */}
+                    <div className="bg-white/80 border border-white/80 p-6 rounded-[2rem] shadow-[0_8px_30px_rgba(165,53,86,0.04)] hover:shadow-[0_8px_30px_rgba(165,53,86,0.08)] hover:-translate-y-0.5 transition-all duration-300 min-h-[190px] flex flex-col justify-between">
+                      <div className="flex items-center justify-between w-full">
+                        <div>
+                          <span className="block text-xs font-bold text-secondary uppercase tracking-widest mb-1">Water Intake</span>
+                          <span className="text-xl font-black text-primary">{loggedHydration} of 8 Cups</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm font-black text-blue-500 bg-blue-50 px-2.5 py-1 rounded-full">{Math.round((loggedHydration / 8) * 100)}%</span>
+                        </div>
+                      </div>
+                      
+                      {/* 8 horizontal circular indicator dots */}
+                      <div className="flex gap-2 justify-between items-center py-2 px-1">
+                        {Array.from({ length: 8 }).map((_, idx) => {
+                          const isActive = idx < loggedHydration;
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => setLoggedHydration(idx + 1)}
+                              className="group relative flex items-center justify-center transition-all duration-300 focus:outline-none"
+                              title={`Set to ${idx + 1} cups`}
+                            >
+                              <span className={`w-3.5 h-3.5 rounded-full transition-all duration-300 ${
+                                isActive
+                                  ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)] scale-110'
+                                  : 'border-2 border-slate-350 bg-white/40 hover:border-blue-400 group-hover:scale-105'
+                              }`} />
+                              <span className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/90 text-[8px] text-white px-1.5 py-0.5 rounded pointer-events-none whitespace-nowrap z-10 shadow-sm">
+                                {idx + 1} Cup{idx > 0 ? 's' : ''}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden shadow-inner">
+                        <div 
+                          className="bg-gradient-to-r from-blue-500 to-blue-400 h-full transition-all duration-500 ease-out" 
+                          style={{ width: `${(loggedHydration / 8) * 100}%` }} 
+                        />
+                      </div>
+                      
+                      <p className="text-[10px] text-secondary font-bold leading-normal">
+                        Tap a circle to log water intake cups.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Middle Section: Biometrics (2x2 Grid) */}
+                  <div className="bg-gradient-to-br from-white/30 to-white/10 backdrop-blur-xl border border-white/45 p-6 rounded-[2.5rem] shadow-md flex flex-col gap-6">
+                    <div className="flex flex-col gap-1">
+                      <h3 className="text-sm sm:text-base font-extrabold text-primary tracking-wider uppercase ml-1">Body Signals</h3>
+                      <p className="text-secondary text-[11px] ml-1">Calibrate physical recovery indexes and nervous system load.</p>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {/* Energy Card */}
+                      <div className="bg-white/60 border border-white/80 p-5 rounded-2xl flex flex-col justify-between gap-4 shadow-sm hover:shadow-md hover:bg-white/80 transition-all duration-300">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2 text-primary">
+                            <Zap className="w-5 h-5 text-amber-500 shrink-0" />
+                            <span className="text-xs font-bold uppercase tracking-wider text-secondary">Energy</span>
+                          </div>
+                          <span className="text-base sm:text-lg font-black text-primary">{loggedEnergy} / 10</span>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <input
+                            type="range"
+                            min={1}
+                            max={10}
+                            value={loggedEnergy}
+                            onChange={(e) => setLoggedEnergy(parseInt(e.target.value))}
+                            className="w-full accent-primary h-1.5 bg-slate-200/80 rounded-full cursor-pointer hover:accent-[#ff7b9c] transition-all"
+                          />
+                          <div className="flex justify-between text-[9px] text-secondary font-extrabold uppercase tracking-wider">
+                            <span>Low</span>
+                            <span className="text-primary font-black">•</span>
+                            <span>High</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Stress Card */}
+                      <div className="bg-white/60 border border-white/80 p-5 rounded-2xl flex flex-col justify-between gap-4 shadow-sm hover:shadow-md hover:bg-white/80 transition-all duration-300">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2 text-primary">
+                            <BrainCircuit className="w-5 h-5 text-purple-500 shrink-0" />
+                            <span className="text-xs font-bold uppercase tracking-wider text-secondary">Stress</span>
+                          </div>
+                          <span className="text-base sm:text-lg font-black text-primary">{loggedStress} / 10</span>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <input
+                            type="range"
+                            min={1}
+                            max={10}
+                            value={loggedStress}
+                            onChange={(e) => setLoggedStress(parseInt(e.target.value))}
+                            className="w-full accent-primary h-1.5 bg-slate-200/80 rounded-full cursor-pointer hover:accent-[#ff7b9c] transition-all"
+                          />
+                          <div className="flex justify-between text-[9px] text-secondary font-extrabold uppercase tracking-wider">
+                            <span>Calm</span>
+                            <span className="text-primary font-black">•</span>
+                            <span>High</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Sleep Card */}
+                      <div className="bg-white/60 border border-white/80 p-5 rounded-2xl flex flex-col justify-between gap-4 shadow-sm hover:shadow-md hover:bg-white/80 transition-all duration-300">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2 text-primary">
+                            <MoonStar className="w-5 h-5 text-blue-500 shrink-0" />
+                            <span className="text-xs font-bold uppercase tracking-wider text-secondary">Sleep</span>
+                          </div>
+                          <span className="text-base sm:text-lg font-black text-primary">{loggedSleep} hrs</span>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <input
+                            type="range"
+                            min={4}
+                            max={12}
+                            step={0.5}
+                            value={loggedSleep}
+                            onChange={(e) => setLoggedSleep(parseFloat(e.target.value))}
+                            className="w-full accent-primary h-1.5 bg-slate-200/80 rounded-full cursor-pointer hover:accent-[#ff7b9c] transition-all"
+                          />
+                          <div className="flex justify-between text-[9px] text-secondary font-extrabold uppercase tracking-wider">
+                            <span>Restless</span>
+                            <span className="text-primary font-black">•</span>
+                            <span>Deep Rest</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* HRV Card */}
+                      <div className="bg-white/60 border border-white/80 p-5 rounded-2xl flex flex-col justify-between gap-4 shadow-sm hover:shadow-md hover:bg-white/80 transition-all duration-300">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2 text-primary">
+                            <HeartPulse className="w-5 h-5 text-rose-500 shrink-0" />
+                            <span className="text-xs font-bold uppercase tracking-wider text-secondary">HRV</span>
+                          </div>
+                          <span className="text-base sm:text-lg font-black text-primary">{loggedHrv} ms</span>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <input
+                            type="range"
+                            min={20}
+                            max={150}
+                            value={loggedHrv}
+                            onChange={(e) => setLoggedHrv(parseInt(e.target.value))}
+                            className="w-full accent-primary h-1.5 bg-slate-200/80 rounded-full cursor-pointer hover:accent-[#ff7b9c] transition-all"
+                          />
+                          <div className="flex justify-between text-[9px] text-secondary font-extrabold uppercase tracking-wider">
+                            <span>Resting</span>
+                            <span className="text-primary font-black">•</span>
+                            <span>High</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Physical Symptoms Panel */}
+                  <div className="bg-white/80 border border-white/80 p-6 rounded-[2.5rem] shadow-sm flex flex-col gap-4">
+                    <h3 className="text-sm sm:text-base font-extrabold text-primary tracking-wider uppercase ml-1">Physical Symptoms</h3>
+                    <div className="flex flex-wrap gap-3">
+                      {['Cramps', 'Headache', 'Bloating', 'Fatigue', 'Acne Flare', 'Healthy Flow'].map(s => {
+                        const isActive = loggedSymptoms.includes(s);
+                        return (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => handleSymptomToggle(s)}
+                            className={`px-5 py-2 rounded-full text-xs font-bold border transition-all duration-200 hover:scale-[1.03] ${
+                              isActive
+                                ? 'bg-primary/10 border-primary/30 text-primary shadow-[0_2px_10px_rgba(165,53,86,0.08)]'
+                                : 'bg-white/60 border-slate-200 text-secondary hover:bg-white hover:border-slate-350'
+                            }`}
+                          >
+                            {s}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Bottom Row: Today's Summary & Action (Submit) */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+                    {/* Today's Health Summary */}
+                    <div className="lg:col-span-7 bg-white/55 border border-white/70 p-6 rounded-[2.5rem] shadow-sm flex flex-col gap-5 border-l-4 border-l-primary/40 pl-5">
+                      <div className="flex items-center gap-2 text-primary">
+                        <Sparkles className="w-5 h-5 text-primary shrink-0" />
+                        <h3 className="text-sm sm:text-base font-extrabold tracking-wider uppercase">Today's Health Summary</h3>
+                      </div>
+                      
+                      {/* Health Chips */}
+                      <div className="flex flex-wrap gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/70 border border-white/80 rounded-full text-[10px] font-bold text-secondary">
+                          <HeartHandshake className="w-3.5 h-3.5 text-emerald-500" />
+                          Mood: {loggedMood}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/70 border border-white/80 rounded-full text-[10px] font-bold text-secondary">
+                          <Zap className="w-3.5 h-3.5 text-amber-500" />
+                          Energy: {loggedEnergy}/10
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/70 border border-white/80 rounded-full text-[10px] font-bold text-secondary">
+                          <BrainCircuit className="w-3.5 h-3.5 text-purple-500" />
+                          Stress: {loggedStress}/10
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/70 border border-white/80 rounded-full text-[10px] font-bold text-secondary">
+                          <Droplets className="w-3.5 h-3.5 text-blue-500" />
+                          Water: {loggedHydration}/8 Cups
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/70 border border-white/80 rounded-full text-[10px] font-bold text-secondary">
+                          <Droplet className="w-3.5 h-3.5 text-red-500" />
+                          Flow: {loggedFlow}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/70 border border-white/80 rounded-full text-[10px] font-bold text-secondary">
+                          <HeartPulse className="w-3.5 h-3.5 text-rose-500" />
+                          HRV: {loggedHrv}ms
+                        </span>
+                      </div>
+
+                      <p className="text-sm text-secondary font-medium leading-relaxed border-t border-white/40 pt-4">
+                        Based on today's logged signals: {loggedMood} focus mood state, resting sleep duration of {loggedSleep} hours, and active HRV rate at {loggedHrv}ms. Hydration target is {loggedHydration >= 6 ? 'on track' : 'below target - consider drinking 2 more cups'}.
+                      </p>
+                    </div>
+
+                    {/* Commit Action Card */}
+                    <div className="lg:col-span-5 bg-white/40 border border-white/60 p-6 rounded-[2rem] shadow-sm flex flex-col items-center justify-center gap-4 text-center min-h-[190px]">
+                      <div className="flex items-center gap-2 text-emerald-600">
+                        <ShieldCheck className="w-5 h-5 shrink-0" />
+                        <span className="text-sm font-extrabold uppercase tracking-wider">Validation Status</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-base font-black text-primary">Ready to Save</span>
+                        <span className="text-[10px] font-bold text-secondary">All required health metrics completed successfully.</span>
+                      </div>
+                      
+                      <motion.button
+                        type="submit"
+                        className="w-full max-w-[280px] bg-primary text-on-primary py-3.5 rounded-full font-bold text-sm tracking-wide shadow-lg shadow-primary/30 border border-primary/20 flex items-center justify-center gap-2 hover:opacity-95 transition-all"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <CheckCircle className="w-4 h-4 text-on-primary" />
+                        {logSaved ? 'Diagnostics Saved' : "Save Today's Log"}
+                      </motion.button>
+                    </div>
+                  </div>
+                </form>
+              </motion.div>
+            );
+          })()}
 
           {/* ═══════════════ VISUAL INSIGHTS ═══════════════ */}
           {activeTab === 'insights' && (() => {
@@ -1063,7 +1227,7 @@ export const Dashboard: React.FC = () => {
                 d.setDate(d.getDate() - i);
                 const dStr = d.toISOString().split('T')[0];
                 const log = dailyLogs[dStr];
-                energyVals.push(log ? log.energy : 5); // default to 5 if not logged
+                energyVals.push(log ? log.energy : null); // null if not logged
               }
               return energyVals;
             };
@@ -1128,7 +1292,7 @@ export const Dashboard: React.FC = () => {
                                 d.setDate(d.getDate() - i);
                                 const dStr = d.toISOString().split('T')[0];
                                 const log = dailyLogs[dStr];
-                                const val = log ? moodMap[log.mood] || 4 : 4;
+                                const val = log ? moodMap[log.mood] || null : null;
                                 moodVals.push(val);
                                 dayLabels.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
                               }
@@ -1136,12 +1300,14 @@ export const Dashboard: React.FC = () => {
                             };
                             const { moodVals, dayLabels } = getLast7DaysMood();
                             const points = moodVals.map((val, idx) => {
+                              if (val === null) return null;
                               const x = idx * (100 / 6);
                               const y = 40 - (val / 5) * 30; // mapping 1-5 to y range 10-34
                               return { x, y };
-                            });
-                            const linePath = points.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ');
-                            const areaPath = `M 0 40 ${points.map(p => `L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ')} L 100 40 Z`;
+                            }).filter((p): p is {x: number, y: number} => p !== null);
+                            
+                            const linePath = points.length > 0 ? points.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ') : '';
+                            const areaPath = points.length > 0 ? `M ${points[0].x} 40 ${points.map(p => `L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ')} L ${points[points.length-1].x} 40 Z` : '';
                             
                             return (
                               <>
@@ -1175,8 +1341,9 @@ export const Dashboard: React.FC = () => {
                         <div className="h-32 w-full flex items-end justify-between px-2 pt-4">
                           {last7DaysEnergy.map((val, idx) => (
                             <div key={idx} className="flex flex-col items-center gap-1.5 w-full">
-                              <div className="w-4 bg-primary/20 border border-primary/10 rounded-t-md relative overflow-hidden" style={{ height: `${val * 10}%` }}>
-                                <div className="absolute inset-0 bg-primary w-full" style={{ height: '100%', transform: `scaleY(${val/10})`, transformOrigin: 'bottom' }} />
+                              <div className="w-4 bg-primary/5 border border-primary/10 rounded-t-md relative overflow-hidden" style={{ height: val === null ? '15%' : `${val * 10}%` }}>
+                                {val !== null && <div className="absolute inset-0 bg-primary w-full" style={{ height: '100%', transform: `scaleY(${val/10})`, transformOrigin: 'bottom' }} />}
+                                {val === null && <div className="absolute inset-0 flex items-center justify-center text-[6px] text-secondary font-bold rotate-[-90deg]">No Data</div>}
                               </div>
                               <span className="text-[9px] text-secondary font-bold">D{idx+1}</span>
                             </div>
@@ -1227,218 +1394,229 @@ export const Dashboard: React.FC = () => {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              className="flex flex-col gap-10"
+              className="w-full max-w-5xl mx-auto"
             >
-              {/* Wellness Profile Center */}
-              <div className="glass-card rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 md:p-12 border border-white/70 max-w-2xl mx-auto shadow-sm text-center w-full">
-                <div className="flex justify-center mb-6">
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white/60 border border-white/80 flex items-center justify-center text-primary shadow-inner">
-                    <span className="material-symbols-outlined text-[36px] sm:text-[48px] text-primary">shield_person</span>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+                {/* Left Column: User Identity Sidebar (4 cols) */}
+                <div className="lg:col-span-4 bg-white/40 border border-white/60 p-6 sm:p-8 rounded-[2rem] text-center flex flex-col items-center gap-6 shadow-sm">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white/60 border border-white/85 flex items-center justify-center text-primary shadow-inner">
+                    <span className="material-symbols-outlined text-[36px] sm:text-[48px] text-primary font-light">shield_person</span>
+                  </div>
+
+                  <div>
+                    <h2 className="font-headline-md text-xl sm:text-2xl text-primary font-black mb-1">{user.name || 'Elena Ross'}</h2>
+                    <p className="text-secondary text-xs sm:text-sm">{user.email || 'elena@lunacare.com'}</p>
+                  </div>
+
+                  {/* Calibration & Disconnect Actions */}
+                  <div className="w-full flex flex-col gap-3 pt-4 border-t border-outline/10">
+                    <button
+                      onClick={() => navigate('/onboarding')}
+                      className="w-full py-2.5 border border-white bg-white/50 hover:bg-white rounded-full font-bold text-[10px] sm:text-xs uppercase tracking-wider text-primary shadow-sm transition-all"
+                    >
+                      Recalibrate Rhythm Core
+                    </button>
+                    <button
+                      onClick={() => {
+                        logoutUser();
+                        navigate('/landingpage');
+                      }}
+                      className="w-full py-2.5 bg-primary text-on-primary rounded-full font-bold text-[10px] sm:text-xs uppercase tracking-wider shadow-md shadow-primary/20 hover:opacity-95 transition-all"
+                    >
+                      Disconnect Sanctuary
+                    </button>
                   </div>
                 </div>
 
-                <h2 className="font-headline-md text-xl sm:text-2xl text-primary font-black mb-1">{user.name || 'Elena Ross'}</h2>
-                <p className="text-secondary text-xs sm:text-sm mb-6 sm:mb-8">{user.email || 'elena@lunacare.com'}</p>
-
-                {/* Metrics */}
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 mb-6 sm:mb-8">
-                  {[
-                    {
-                      label: forecast && forecast.averageCycleLength ? 'Avg Cycle' : 'Current Cycle',
-                      val: forecast && forecast.averageCycleLength ? `${forecast.averageCycleLength} Days` : `${onboarding.cycleLength} Days`
-                    },
-                    { label: 'Period Range', val: `${onboarding.periodLength} Days` },
-                    { label: 'Logs Saved', val: `${forecast ? forecast.totalLogsCount : Object.keys(dailyLogs).length}` },
-                    { label: 'Prediction Rate', val: forecast ? `${forecast.confidenceRate}%` : '50%' },
-                    { label: 'Accuracy', val: forecast ? `${forecast.accuracyRate}%` : '50%' }
-                  ].map((stat, idx) => (
-                    <div key={idx} className="bg-white/50 border border-white/60 p-2 sm:p-3 rounded-2xl">
-                      <span className="block text-[7.5px] sm:text-[8px] font-bold text-secondary uppercase tracking-widest mb-1">{stat.label}</span>
-                      <span className="text-xs sm:text-sm font-bold text-primary">{stat.val}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Achievements */}
-                <div className="text-left mb-6 sm:mb-8">
-                  <span className="block text-xs font-extrabold text-primary uppercase tracking-wider mb-3 ml-1">Luna Calibration Medals</span>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    {[
-                      { label: '7 Days Tracked (Bronze)', icon: 'workspace_premium', minLogs: 7 },
-                      { label: '14 Days Tracked (Silver)', icon: 'military_tech', minLogs: 14 },
-                      { label: '30 Days Tracked (Gold)', icon: 'stars', minLogs: 30 }
-                    ].map((badge, idx) => {
-                      const totalLogs = forecast ? forecast.totalLogsCount : 0;
-                      const isUnlocked = totalLogs >= badge.minLogs;
-                      return (
-                        <div 
-                          key={idx} 
-                          className={`p-2.5 sm:p-3 rounded-2xl flex items-center gap-2 border transition-all ${
-                            isUnlocked 
-                              ? 'bg-[#ff7b9c]/10 border-primary/20 text-primary' 
-                              : 'bg-slate-100 border-slate-200 text-slate-400 opacity-60'
-                          }`}
-                        >
-                          <span className="material-symbols-outlined text-base sm:text-lg shrink-0">
-                            {isUnlocked ? badge.icon : 'lock'}
-                          </span>
-                          <div className="flex flex-col text-left">
-                            <span className="text-[10px] font-bold leading-tight">
-                              {badge.label}
-                            </span>
-                            <span className="text-[8px] font-medium leading-none mt-0.5">
-                              {isUnlocked ? 'Unlocked' : `Requires ${badge.minLogs} logs (current: ${totalLogs})`}
-                            </span>
-                          </div>
+                {/* Right Column: Analytics & Modules (8 cols) */}
+                <div className="lg:col-span-8 flex flex-col gap-6">
+                  {/* Wellness Metrics Dashboard */}
+                  <div className="bg-white/40 border border-white/60 p-6 rounded-[2.0rem] shadow-sm">
+                    <span className="block text-xs font-extrabold text-primary uppercase tracking-wider mb-4 ml-1">Wellness Statistics</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                      {[
+                        {
+                          label: forecast && forecast.averageCycleLength ? 'Avg Cycle' : 'Current Cycle',
+                          val: forecast && forecast.averageCycleLength ? `${forecast.averageCycleLength} Days` : `${onboarding.cycleLength} Days`
+                        },
+                        { label: 'Period Range', val: `${onboarding.periodLength} Days` },
+                        { label: 'Logs Saved', val: `${forecast ? forecast.totalLogsCount : Object.keys(dailyLogs).length}` },
+                        { label: 'Prediction Rate', val: forecast ? `${forecast.confidenceRate}%` : '50%' },
+                        { label: 'Accuracy', val: forecast ? `${forecast.accuracyRate}%` : '50%' }
+                      ].map((stat, idx) => (
+                        <div key={idx} className="bg-white/50 border border-white/60 p-3 rounded-2xl flex flex-col justify-between min-h-[70px]">
+                          <span className="block text-[7.5px] sm:text-[8px] font-bold text-secondary uppercase tracking-widest leading-normal mb-1">{stat.label}</span>
+                          <span className="text-xs sm:text-sm font-bold text-primary">{stat.val}</span>
                         </div>
-                      );
-                    })}
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                {/* Partner Sync Section */}
-                <div className="text-left mb-6 sm:mb-8 border-t border-outline/10 pt-6">
-                  <span className="block text-xs font-extrabold text-primary uppercase tracking-wider mb-3 ml-1">Partner Sync Core</span>
-                  
-                  {partnerStatus.paired ? (
-                    <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl flex flex-col gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-600">
-                          <span className="material-symbols-outlined text-[22px]">favorite</span>
-                        </div>
-                        <div>
-                          <span className="block text-xs font-bold text-emerald-800">Connected Sanctuary Active</span>
-                          <span className="text-sm font-black text-emerald-950">{partnerStatus.partner.name}</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            triggerPartnerAction('Thinking of you! ❤️');
-                            setPartnerSuccess('Nudge sent to your partner!');
-                            setTimeout(() => setPartnerSuccess(''), 3000);
-                          }}
-                          className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold text-[10px] uppercase tracking-wider transition-all"
-                        >
-                          Send Love Nudge
-                        </button>
-                        <button
-                          onClick={async () => {
-                            if (!window.confirm('Are you sure you want to disconnect from your partner?')) return;
-                            try {
-                              setPartnerLoading(true);
-                              setPartnerError('');
-                              await api.partner.unlink();
-                              setPartnerStatus({ paired: false });
-                              setGeneratedCode('');
-                              setPartnerSuccess('Partner disconnected successfully.');
-                            } catch (err: any) {
-                              setPartnerError(err.message || 'Failed to disconnect partner.');
-                            } finally {
-                              setPartnerLoading(false);
-                            }
-                          }}
-                          className="px-4 py-2 border border-emerald-500/30 text-emerald-800 hover:bg-emerald-500/20 rounded-full font-bold text-[10px] uppercase tracking-wider transition-all"
-                        >
-                          Disconnect
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-white/40 border border-white/60 p-4 rounded-2xl flex flex-col gap-4">
-                      <p className="text-xs text-secondary leading-relaxed font-bold">
-                        Synchronize your cycles and wellness logs with a partner in real-time. Link your profiles to share biological insights.
-                      </p>
-                      
-                      {/* Generate Code Area */}
-                      <div className="flex flex-col gap-2">
-                        {generatedCode ? (
-                          <div className="bg-primary/5 border border-primary/20 p-3 rounded-xl text-center">
-                            <span className="block text-[8px] font-bold text-secondary uppercase tracking-widest mb-1">Your Connection Code</span>
-                            <span className="text-lg font-black text-primary tracking-widest">{generatedCode}</span>
-                            <span className="block text-[8px] text-secondary mt-1">Share this with your partner. Valid for 10 minutes.</span>
+                  {/* Achievements */}
+                  <div className="bg-white/40 border border-white/60 p-6 rounded-[2.0rem] shadow-sm">
+                    <span className="block text-xs font-extrabold text-primary uppercase tracking-wider mb-4 ml-1">Luna Calibration Medals</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      {[
+                        { label: '7 Days Tracked (Bronze)', icon: 'workspace_premium', minLogs: 7 },
+                        { label: '14 Days Tracked (Silver)', icon: 'military_tech', minLogs: 14 },
+                        { label: '30 Days Tracked (Gold)', icon: 'stars', minLogs: 30 }
+                      ].map((badge, idx) => {
+                        const totalLogs = forecast ? forecast.totalLogsCount : 0;
+                        const isUnlocked = totalLogs >= badge.minLogs;
+                        return (
+                          <div 
+                            key={idx} 
+                            className={`p-3 rounded-2xl flex items-center gap-2 border transition-all ${
+                              isUnlocked 
+                                ? 'bg-[#ff7b9c]/10 border-primary/20 text-primary' 
+                                : 'bg-slate-100/50 border-slate-200/60 text-slate-400 opacity-60'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-base sm:text-lg shrink-0">
+                              {isUnlocked ? badge.icon : 'lock'}
+                            </span>
+                            <div className="flex flex-col text-left">
+                              <span className="text-[10px] font-bold leading-tight">
+                                {badge.label}
+                              </span>
+                              <span className="text-[8px] font-medium leading-none mt-0.5">
+                                {isUnlocked ? 'Unlocked' : `Requires ${badge.minLogs} logs`}
+                              </span>
+                            </div>
                           </div>
-                        ) : (
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Partner Sync Section */}
+                  <div className="bg-white/40 border border-white/60 p-6 rounded-[2.0rem] shadow-sm">
+                    <span className="block text-xs font-extrabold text-primary uppercase tracking-wider mb-4 ml-1">Partner Sync Core</span>
+                    
+                    {partnerStatus.paired ? (
+                      <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl flex flex-col gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-600">
+                            <span className="material-symbols-outlined text-[22px]">favorite</span>
+                          </div>
+                          <div>
+                            <span className="block text-xs font-bold text-emerald-800">Connected Sanctuary Active</span>
+                            <span className="text-sm font-black text-emerald-950">{partnerStatus.partner.name}</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
                           <button
+                            type="button"
+                            onClick={() => {
+                              triggerPartnerAction('Thinking of you! ❤️');
+                              setPartnerSuccess('Nudge sent to your partner!');
+                              setTimeout(() => setPartnerSuccess(''), 3000);
+                            }}
+                            className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold text-[10px] uppercase tracking-wider transition-all"
+                          >
+                            Send Love Nudge
+                          </button>
+                          <button
+                            type="button"
                             onClick={async () => {
+                              if (!window.confirm('Are you sure you want to disconnect from your partner?')) return;
                               try {
                                 setPartnerLoading(true);
                                 setPartnerError('');
-                                const res = await api.partner.getCode();
-                                setGeneratedCode(res.syncCode);
+                                await api.partner.unlink();
+                                setPartnerStatus({ paired: false });
+                                setGeneratedCode('');
+                                setPartnerSuccess('Partner disconnected successfully.');
                               } catch (err: any) {
-                                setPartnerError(err.message || 'Failed to generate code.');
+                                setPartnerError(err.message || 'Failed to disconnect partner.');
                               } finally {
                                 setPartnerLoading(false);
                               }
                             }}
-                            disabled={partnerLoading}
-                            className="w-full py-2 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 rounded-full font-bold text-[10px] uppercase tracking-wider transition-all"
+                            className="px-4 py-2 border border-emerald-500/30 text-emerald-800 hover:bg-emerald-500/20 rounded-full font-bold text-[10px] uppercase tracking-wider transition-all"
                           >
-                            {partnerLoading ? 'Generating...' : 'Generate Connection Code'}
+                            Disconnect
                           </button>
-                        )}
+                        </div>
                       </div>
+                    ) : (
+                      <div className="flex flex-col gap-4">
+                        <p className="text-xs text-secondary leading-relaxed font-bold">
+                          Synchronize your cycles and wellness logs with a partner in real-time. Link your profiles to share biological insights.
+                        </p>
+                        
+                        {/* Generate Code Area */}
+                        <div className="flex flex-col gap-2">
+                          {generatedCode ? (
+                            <div className="bg-primary/5 border border-primary/20 p-3 rounded-xl text-center">
+                              <span className="block text-[8px] font-bold text-secondary uppercase tracking-widest mb-1">Your Connection Code</span>
+                              <span className="text-lg font-black text-primary tracking-widest">{generatedCode}</span>
+                              <span className="block text-[8px] text-secondary mt-1">Share this with your partner. Valid for 10 minutes.</span>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  setPartnerLoading(true);
+                                  setPartnerError('');
+                                  const res = await api.partner.getCode();
+                                  setGeneratedCode(res.syncCode);
+                                } catch (err: any) {
+                                  setPartnerError(err.message || 'Failed to generate code.');
+                                } finally {
+                                  setPartnerLoading(false);
+                                }
+                              }}
+                              disabled={partnerLoading}
+                              className="w-full py-2 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 rounded-full font-bold text-[10px] uppercase tracking-wider transition-all"
+                            >
+                              {partnerLoading ? 'Generating...' : 'Generate Connection Code'}
+                            </button>
+                          )}
+                        </div>
 
-                      {/* Enter Code Area */}
-                      <form onSubmit={async (e) => {
-                        e.preventDefault();
-                        if (!partnerCodeInput) return;
-                        try {
-                          setPartnerLoading(true);
-                          setPartnerError('');
-                          setPartnerSuccess('');
-                          const res = await api.partner.pair(partnerCodeInput);
-                          setPartnerSuccess(res.message || 'Successfully paired with partner!');
-                          setPartnerCodeInput('');
-                          const ps = await api.partner.status();
-                          setPartnerStatus(ps);
-                        } catch (err: any) {
-                          setPartnerError(err.message || 'Failed to pair partner.');
-                        } finally {
-                          setPartnerLoading(false);
-                        }
-                      }} className="flex gap-2 mt-2">
-                        <input
-                          type="text"
-                          maxLength={6}
-                          value={partnerCodeInput}
-                          onChange={(e) => setPartnerCodeInput(e.target.value.toUpperCase())}
-                          placeholder="ENTER PARTNER CODE"
-                          className="flex-1 bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/10 px-4 py-2 rounded-full text-xs font-black tracking-widest text-center focus:outline-none"
-                        />
-                        <button
-                          type="submit"
-                          disabled={partnerLoading || !partnerCodeInput}
-                          className="px-4 py-2 bg-primary text-on-primary rounded-full font-bold text-[10px] uppercase tracking-wider disabled:opacity-50"
-                        >
-                          Link
-                        </button>
-                      </form>
-                    </div>
-                  )}
+                        {/* Enter Code Area */}
+                        <form onSubmit={async (e) => {
+                          e.preventDefault();
+                          if (!partnerCodeInput) return;
+                          try {
+                            setPartnerLoading(true);
+                            setPartnerError('');
+                            setPartnerSuccess('');
+                            const res = await api.partner.pair(partnerCodeInput);
+                            setPartnerSuccess(res.message || 'Successfully paired with partner!');
+                            setPartnerCodeInput('');
+                            const ps = await api.partner.status();
+                            setPartnerStatus(ps);
+                          } catch (err: any) {
+                            setPartnerError(err.message || 'Failed to pair partner.');
+                          } finally {
+                            setPartnerLoading(false);
+                          }
+                        }} className="flex gap-2">
+                          <input
+                            type="text"
+                            maxLength={6}
+                            value={partnerCodeInput}
+                            onChange={(e) => setPartnerCodeInput(e.target.value.toUpperCase())}
+                            placeholder="ENTER PARTNER CODE"
+                            className="flex-1 bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/10 px-4 py-2 rounded-full text-xs font-black tracking-widest text-center focus:outline-none"
+                          />
+                          <button
+                            type="submit"
+                            disabled={partnerLoading || !partnerCodeInput}
+                            className="px-4 py-2 bg-primary text-on-primary rounded-full font-bold text-[10px] uppercase tracking-wider disabled:opacity-50"
+                          >
+                            Link
+                          </button>
+                        </form>
+                      </div>
+                    )}
 
-                  {partnerError && <p className="text-[10px] text-red-600 font-bold mt-2 ml-1">{partnerError}</p>}
-                  {partnerSuccess && <p className="text-[10px] text-emerald-600 font-bold mt-2 ml-1">{partnerSuccess}</p>}
-                </div>
-
-                {/* Calibration Controls */}
-                <div className="flex flex-col gap-3 sm:gap-4">
-                  <button
-                    onClick={() => navigate('/onboarding')}
-                    className="w-full py-2.5 sm:py-3.5 border border-white bg-white/50 hover:bg-white rounded-full font-bold text-[10px] sm:text-xs uppercase tracking-wider text-primary shadow-sm"
-                  >
-                    Recalibrate Rhythm Core
-                  </button>
-                  <button
-                    onClick={() => {
-                      logoutUser();
-                      navigate('/landingpage');
-                    }}
-                    className="w-full py-2.5 sm:py-3.5 bg-primary text-on-primary rounded-full font-bold text-[10px] sm:text-xs uppercase tracking-wider shadow-md shadow-primary/20"
-                  >
-                    Disconnect Sanctuary
-                  </button>
+                    {partnerError && <p className="text-[10px] text-red-600 font-bold mt-2 ml-1">{partnerError}</p>}
+                    {partnerSuccess && <p className="text-[10px] text-emerald-600 font-bold mt-2 ml-1">{partnerSuccess}</p>}
+                  </div>
                 </div>
               </div>
             </motion.div>
