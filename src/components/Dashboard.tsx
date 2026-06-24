@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
 import { api } from '../utils/api';
 import { 
@@ -39,6 +40,16 @@ const Tooltip: React.FC<{ text: string; children: React.ReactNode }> = ({ text, 
 
 /* ═══════════════ MAIN DASHBOARD SCREEN ═══════════════ */
 export const Dashboard: React.FC = () => {
+  const { t, i18n } = useTranslation();
+
+  const symptomKeyMap: Record<string, string> = {
+    'Cramps': 'symptoms.cramps',
+    'Headache': 'symptoms.headache',
+    'Bloating': 'symptoms.bloating',
+    'Fatigue': 'symptoms.fatigue',
+    'Acne Flare': 'symptoms.acneFlare',
+    'Healthy Flow': 'symptoms.healthyFlow'
+  };
   const navigate = useNavigate();
   const { user, onboarding, dailyLogs, logDay, logoutUser, partnerAction, partnerLogUpdate, triggerPartnerAction } = useApp();
   const [activeTab, setActiveTab] = useState<'home' | 'lab' | 'calendar' | 'log' | 'insights' | 'profile'>('home');
@@ -140,24 +151,19 @@ export const Dashboard: React.FC = () => {
 
   // Determine current cycle phase
   let currentPhase: 'menstrual' | 'follicular' | 'ovulation' | 'luteal' = 'follicular';
-  let phaseTitle = 'Follicular Phase';
   let phaseColor = '#e2d9f3'; // lavender default
 
   if (currentCycleDay <= periodLength) {
     currentPhase = 'menstrual';
-    phaseTitle = 'Menstrual Phase';
     phaseColor = '#a53556'; // crimson
   } else if (currentCycleDay < ovulationDay - 2) {
     currentPhase = 'follicular';
-    phaseTitle = 'Follicular Phase';
     phaseColor = '#e2d9f3'; // lavender
   } else if (currentCycleDay <= ovulationDay + 1) {
     currentPhase = 'ovulation';
-    phaseTitle = 'Ovulation Phase';
     phaseColor = '#ffdbdb'; // soft rose
   } else {
     currentPhase = 'luteal';
-    phaseTitle = 'Luteal Phase';
     phaseColor = '#fccdc7'; // peach
   }
 
@@ -167,23 +173,23 @@ export const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const hrs = new Date().getHours();
-    let greetStr = 'Welcome back';
-    if (hrs < 12) greetStr = 'Good Morning';
-    else if (hrs < 18) greetStr = 'Good Afternoon';
-    else greetStr = 'Good Evening';
-    setGreeting(greetStr);
+    let greetKey = 'dashboard.welcome';
+    if (hrs < 12) greetKey = 'dashboard.greetingMorning';
+    else if (hrs < 18) greetKey = 'dashboard.greetingAfternoon';
+    else greetKey = 'dashboard.greetingEvening';
+    setGreeting(t(greetKey));
 
     // Contextual Phase Message
     if (currentPhase === 'menstrual') {
-      setPhaseTip('Your body is in a restoration phase. Prioritize light movement and high magnesium intake today.');
+      setPhaseTip(t('rhythms.menstrualDesc'));
     } else if (currentPhase === 'follicular') {
-      setPhaseTip('Your body is entering a high-energy window. Cognitive focus is expected to increase over the next 48 hours.');
+      setPhaseTip(t('rhythms.follicularDesc'));
     } else if (currentPhase === 'ovulation') {
-      setPhaseTip('You are in your peak ovulation phase. Stamina, confidence, and metabolic output are fully optimized.');
+      setPhaseTip(t('rhythms.ovulationDesc'));
     } else {
-      setPhaseTip('Energy is gently turning inward. Grounding exercises and analytical tasks are highly favored today.');
+      setPhaseTip(t('rhythms.lutealDesc'));
     }
-  }, [currentPhase]);
+  }, [currentPhase, i18n.language]);
 
   // Days until next period
   // Already computed as daysUntilNextPeriod above
@@ -265,9 +271,11 @@ export const Dashboard: React.FC = () => {
               <span className="material-symbols-outlined text-[18px]">sync</span>
             </div>
             <div>
-              <span className="block text-[9px] font-black text-emerald-800 uppercase tracking-widest leading-none mb-1">Partner Log Sync</span>
+              <span className="block text-[9px] font-black text-emerald-800 uppercase tracking-widest leading-none mb-1">{t('dashboardExtra.partnerLogSync')}</span>
               <span className="text-[11px] font-bold text-secondary">
-                {partnerLogUpdate.partnerId === partnerStatus?.partner?.id ? partnerStatus?.partner?.name : 'Partner'} updated their daily metrics.
+                {t('dashboardExtra.partnerUpdatedMetrics', {
+                  name: partnerLogUpdate.partnerId === partnerStatus?.partner?.id ? partnerStatus?.partner?.name : t('dashboardExtra.partner')
+                })}
               </span>
             </div>
           </motion.div>
@@ -283,8 +291,10 @@ export const Dashboard: React.FC = () => {
               <span className="material-symbols-outlined text-[18px]">favorite</span>
             </div>
             <div>
-              <span className="block text-[9px] font-black text-primary uppercase tracking-widest leading-none mb-1">Sanctuary Signal</span>
-              <span className="text-[11px] font-bold text-secondary">Your partner sent love: "{partnerAction.action}"</span>
+              <span className="block text-[9px] font-black text-primary uppercase tracking-widest leading-none mb-1">{t('dashboardExtra.sanctuarySignal')}</span>
+              <span className="text-[11px] font-bold text-secondary">
+                {t('dashboardExtra.partnerSentLove', { action: partnerAction.action })}
+              </span>
             </div>
           </motion.div>
         )}
@@ -304,7 +314,7 @@ export const Dashboard: React.FC = () => {
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right hidden sm:block">
-            <span className="block text-xs font-bold text-secondary">Body Calibrated</span>
+            <span className="block text-xs font-bold text-secondary">{t('dashboard.bodyCalibrated')}</span>
             <span className="text-sm font-bold text-primary">{user.name || 'Elena Ross'}</span>
           </div>
           <button
@@ -347,7 +357,7 @@ export const Dashboard: React.FC = () => {
                   <div>
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/70 border border-white/80 rounded-full text-xs font-extrabold uppercase tracking-widest text-primary mb-3">
                       <span className="material-symbols-outlined text-[14px]">psychology</span>
-                      Intelligence Core
+                      {t('dashboard.intelCore')}
                     </span>
                     <h2 className="font-headline-lg text-2xl sm:text-3xl md:text-4xl text-primary font-extrabold mb-3">
                       {greeting}, {user.name?.split(' ')[0] || 'Elena'}.
@@ -359,12 +369,12 @@ export const Dashboard: React.FC = () => {
 
                   <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-sm mx-auto lg:mx-0">
                     <div className="bg-white/40 border border-white/60 p-3 sm:p-4 rounded-2xl">
-                      <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest mb-0.5">Focus State</span>
-                      <span className="text-xs sm:text-sm font-bold text-primary">{forecast ? forecast.focusState : 'Calibrating...'}</span>
+                      <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest mb-0.5">{t('dashboard.focusState')}</span>
+                      <span className="text-xs sm:text-sm font-bold text-primary">{forecast ? forecast.focusState : t('dashboard.calibrating')}</span>
                     </div>
                     <div className="bg-white/40 border border-white/60 p-3 sm:p-4 rounded-2xl">
-                      <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest mb-0.5">HRV Baseline</span>
-                      <span className="text-xs sm:text-sm font-bold text-primary">{forecast ? forecast.hrvBaseline : 'Calibrating...'}</span>
+                      <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest mb-0.5">{t('dashboard.hrvBaseline')}</span>
+                      <span className="text-xs sm:text-sm font-bold text-primary">{forecast ? forecast.hrvBaseline : t('dashboard.calibrating')}</span>
                     </div>
                   </div>
                 </div>
@@ -377,16 +387,16 @@ export const Dashboard: React.FC = () => {
                   {(() => {
                     const todayLog = dailyLogs[todayStr];
                     const modules = [
-                      { label: 'Day', val: `${currentCycleDay}` },
-                      { label: 'Mood', val: todayLog ? todayLog.mood : '--' },
-                      { label: 'Sleep', val: todayLog ? `${todayLog.sleep}h` : '--h' },
-                      { label: 'Energy', val: todayLog ? (todayLog.energy >= 7 ? 'High' : 'Moderate') : '--' },
-                      { label: 'Stress', val: todayLog ? (todayLog.stress <= 4 ? 'Low' : 'Mild') : '--' },
-                      { label: 'Accuracy', val: forecast ? `${forecast.accuracyRate}%` : '50%' }
+                      { label: t('mockup.day', { num: '' }).trim(), val: `${currentCycleDay}` },
+                      { label: t('science.mood'), val: todayLog ? t('moods.' + todayLog.mood.toLowerCase().replace(' ', '')) : '--' },
+                      { label: t('science.sleep'), val: todayLog ? `${todayLog.sleep}h` : '--h' },
+                      { label: t('science.energy'), val: todayLog ? (todayLog.energy >= 7 ? t('logger.high') : t('onboarding.moderate')) : '--' },
+                      { label: t('science.stress'), val: todayLog ? (todayLog.stress <= 4 ? t('logger.low') : t('onboarding.moderate')) : '--' },
+                      { label: t('profile.accuracy'), val: forecast ? `${forecast.accuracyRate}%` : '50%' }
                     ];
                     return modules.map((mod, i) => (
                       <motion.div
-                        key={mod.label}
+                        key={i}
                         className="absolute glass px-3 py-1.5 rounded-full border border-white/50 text-[10px] font-bold text-primary shadow-sm flex items-center gap-1.5 whitespace-nowrap z-20"
                         animate={{
                           x: [
@@ -420,9 +430,9 @@ export const Dashboard: React.FC = () => {
                       <span className="material-symbols-outlined text-[20px] sm:text-[24px]">calendar_today</span>
                     </div>
                     <div>
-                      <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest leading-normal">Next Cycle Commencement</span>
+                      <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest leading-normal">{t('dashboard.nextPeriodForecast')}</span>
                       <span className="text-sm sm:text-base font-extrabold text-primary">
-                        {daysUntilNextPeriod > 0 ? `In ${daysUntilNextPeriod} Days` : 'Period Commencing Today'}
+                        {daysUntilNextPeriod > 0 ? t('dashboard.inDays', { days: daysUntilNextPeriod }) : t('dashboard.periodCommencing')}
                       </span>
                     </div>
                   </div>
@@ -432,9 +442,9 @@ export const Dashboard: React.FC = () => {
                       <span className="material-symbols-outlined text-[20px] sm:text-[24px]">wb_sunny</span>
                     </div>
                     <div>
-                      <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest leading-normal">Est. Ovulation Date</span>
+                      <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest leading-normal">{t('dashboard.ovulationForecast')}</span>
                       <span className="text-sm sm:text-base font-extrabold text-purple-700">
-                        {daysUntilOvulation > 0 ? `In ${daysUntilOvulation} Days` : 'Ovulated'}
+                        {daysUntilOvulation > 0 ? t('dashboard.inDays', { days: daysUntilOvulation }) : t('dashboard.completed')}
                       </span>
                     </div>
                   </div>
@@ -444,9 +454,9 @@ export const Dashboard: React.FC = () => {
                       <span className="material-symbols-outlined text-[20px] sm:text-[24px]">check_circle</span>
                     </div>
                     <div>
-                      <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest leading-normal">Forecast Confidence</span>
+                      <span className="block text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest leading-normal">{t('dashboard.consistencyScore')}</span>
                       <span className="text-sm sm:text-base font-extrabold text-emerald-700">
-                        {forecast && forecast.totalLogsCount >= 1 ? `${forecast.confidenceRate}% Calibrated` : 'Baseline: 50%'}
+                        {forecast && forecast.totalLogsCount >= 1 ? t('dashboard.confidenceConf', { score: forecast.confidenceRate }) : 'Baseline: 50%'}
                       </span>
                     </div>
                   </div>
@@ -456,8 +466,8 @@ export const Dashboard: React.FC = () => {
               {/* Connected Cycle Journey Segment */}
               <div className="glass-card p-5 sm:p-8 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-6">
                 <div>
-                  <h3 className="font-extrabold text-primary text-lg tracking-tight mb-1">Interactive Cycle Journey</h3>
-                  <p className="text-secondary text-xs">Visualize biological phase pathways and expected transitions</p>
+                  <h3 className="font-extrabold text-primary text-lg tracking-tight mb-1">{t('dashboardExtra.journeyTitle')}</h3>
+                  <p className="text-secondary text-xs">{t('dashboardExtra.journeyDesc')}</p>
                 </div>
                 
                 <div className="relative py-6 sm:py-8 px-2 sm:px-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-2">
@@ -465,10 +475,10 @@ export const Dashboard: React.FC = () => {
                   <div className="absolute left-[27px] top-6 bottom-6 w-1 bg-white/50 rounded-full md:hidden z-0" />
                   
                   {[
-                    { id: 'menstrual', label: 'Menstrual Phase', color: 'bg-[#a53556]', desc: 'Restoration & Reset', range: `Days 1-${periodLength}` },
-                    { id: 'follicular', label: 'Follicular Phase', color: 'bg-[#e2d9f3]', desc: 'Mental focus & energy rising', range: `Days ${periodLength + 1}-${ovulationDay - 3}` },
-                    { id: 'ovulation', label: 'Ovulation Phase', color: 'bg-[#ffdbdb]', desc: 'Peak fertility window', range: `Days ${ovulationDay - 2}-${ovulationDay + 1}` },
-                    { id: 'luteal', label: 'Luteal Phase', color: 'bg-[#fccdc7]', desc: 'Introspection & calm transition', range: `Days ${ovulationDay + 2}-${cycleLength}` },
+                    { id: 'menstrual', label: t('rhythms.menstrualTitle'), color: 'bg-[#a53556]', desc: t('dashboardExtra.menstrualShortDesc'), range: `Days 1-${periodLength}` },
+                    { id: 'follicular', label: t('rhythms.follicularTitle'), color: 'bg-[#e2d9f3]', desc: t('dashboardExtra.follicularShortDesc'), range: `Days ${periodLength + 1}-${ovulationDay - 3}` },
+                    { id: 'ovulation', label: t('rhythms.ovulationTitle'), color: 'bg-[#ffdbdb]', desc: t('dashboardExtra.ovulationShortDesc'), range: `Days ${ovulationDay - 2}-${ovulationDay + 1}` },
+                    { id: 'luteal', label: t('rhythms.lutealTitle'), color: 'bg-[#fccdc7]', desc: t('dashboardExtra.lutealShortDesc'), range: `Days ${ovulationDay + 2}-${cycleLength}` },
                   ].map((phaseItem) => {
                     const isActive = currentPhase === phaseItem.id;
                     return (
@@ -490,7 +500,7 @@ export const Dashboard: React.FC = () => {
                 <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center gap-3">
                   <span className="material-symbols-outlined text-primary text-xl">auto_awesome</span>
                   <span className="text-xs font-bold text-primary">
-                    Micro-Insight: You are {currentCycleDay <= ovulationDay ? `${ovulationDay - currentCycleDay} days away from peak ovulation` : 'moving towards hormonal recovery'}. Sleep quality and focus duration should peak soon.
+                    {t('dashboardExtra.microInsight')}: {currentCycleDay <= ovulationDay ? t('dashboardExtra.daysAway', { days: ovulationDay - currentCycleDay }) : t('dashboardExtra.recoveryBound')}. {t('dashboardExtra.microInsightBody')}
                   </span>
                 </div>
               </div>
@@ -499,33 +509,33 @@ export const Dashboard: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
                   {
-                    title: 'Estrogen Level',
-                    val: forecast ? `${forecast.hormones.estrogen}%` : 'Calibrating...',
-                    desc: forecast ? (forecast.hormones.estrogen >= 70 ? 'High follicular rise / peak flow' : 'Resting baseline cycle levels') : 'Initial learning phase active',
+                    title: t('dashboardExtra.estrogenLevel'),
+                    val: forecast ? `${forecast.hormones.estrogen}%` : t('dashboard.calibrating'),
+                    desc: forecast ? (forecast.hormones.estrogen >= 70 ? t('dashboardExtra.highFollicular') : t('dashboardExtra.restingBaseline')) : t('dashboardExtra.learningActive'),
                     icon: 'water_drop',
                     col: 'text-[#ff7b9c]',
                     pct: forecast ? forecast.hormones.estrogen : 50
                   },
                   {
-                    title: 'Progesterone Level',
-                    val: forecast ? `${forecast.hormones.progesterone}%` : 'Calibrating...',
-                    desc: forecast ? (forecast.hormones.progesterone >= 50 ? 'Luteal phase dominance' : 'Baseline pre-ovulation levels') : 'Initial learning phase active',
+                    title: t('dashboardExtra.progesteroneLevel'),
+                    val: forecast ? `${forecast.hormones.progesterone}%` : t('dashboard.calibrating'),
+                    desc: forecast ? (forecast.hormones.progesterone >= 50 ? t('dashboardExtra.lutealDominance') : t('dashboardExtra.baselinePreOvulation')) : t('dashboardExtra.learningActive'),
                     icon: 'spa',
                     col: 'text-purple-600',
                     pct: forecast ? forecast.hormones.progesterone : 50
                   },
                   {
-                    title: 'LH Level',
-                    val: forecast ? `${forecast.hormones.lh}%` : 'Calibrating...',
-                    desc: forecast ? (forecast.hormones.lh >= 80 ? 'Ovulation surge active' : 'Stable follicular baseline') : 'Initial learning phase active',
+                    title: t('dashboardExtra.lhLevel'),
+                    val: forecast ? `${forecast.hormones.lh}%` : t('dashboard.calibrating'),
+                    desc: forecast ? (forecast.hormones.lh >= 80 ? t('dashboardExtra.ovulationSurgeActive') : t('dashboardExtra.stableFollicular')) : t('dashboardExtra.learningActive'),
                     icon: 'bolt',
                     col: 'text-amber-500',
                     pct: forecast ? forecast.hormones.lh : 50
                   },
                   {
-                    title: 'FSH Level',
-                    val: forecast ? `${forecast.hormones.fsh}%` : 'Calibrating...',
-                    desc: forecast ? (forecast.hormones.fsh >= 40 ? 'Follicle stimulating active' : 'Stable post-ovulatory levels') : 'Initial learning phase active',
+                    title: t('dashboardExtra.fshLevel'),
+                    val: forecast ? `${forecast.hormones.fsh}%` : t('dashboard.calibrating'),
+                    desc: forecast ? (forecast.hormones.fsh >= 40 ? t('dashboardExtra.follicleStimulating') : t('dashboardExtra.stablePostOvulatory')) : t('dashboardExtra.learningActive'),
                     icon: 'psychology',
                     col: 'text-emerald-600',
                     pct: forecast ? forecast.hormones.fsh : 50
@@ -569,24 +579,24 @@ export const Dashboard: React.FC = () => {
                   <div>
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/70 border border-white/80 rounded-full text-xs font-extrabold uppercase tracking-widest text-primary mb-3">
                       <span className="material-symbols-outlined text-[14px]">science</span>
-                      Signature Laboratory
+                      {t('dashboardExtra.signatureLab')}
                     </span>
                     <h2 className="font-headline-lg text-2xl sm:text-3xl md:text-4xl text-primary font-black leading-tight mb-3">
-                      Prediction Lab
+                      {t('dashboardExtra.predictionLab')}
                     </h2>
                     <p className="text-secondary font-medium leading-relaxed max-w-md text-xs sm:text-sm">
-                      Our signature adaptive engine forecasts future physiological states by analyzing continuous biometric logs.
+                      {t('dashboardExtra.predictionLabDesc')}
                     </p>
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Calibration Status</span>
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest">{t('dashboardExtra.calibrationStatus')}</span>
                     <div className="flex items-center gap-2">
                       <div className="w-32 h-2 bg-white/60 border border-white/80 rounded-full overflow-hidden">
                         <div className="h-full bg-primary" style={{ width: forecast ? `${forecast.accuracyRate}%` : '50%' }} />
                       </div>
                       <span className="text-xs font-bold text-primary">
-                        {forecast ? `${forecast.accuracyRate}% Synchronized` : 'Learning...'}
+                        {forecast ? t('dashboardExtra.synchronizedPercent', { rate: forecast.accuracyRate }) : t('dashboard.learning')}
                       </span>
                     </div>
                   </div>
@@ -602,8 +612,8 @@ export const Dashboard: React.FC = () => {
                     animate={{ y: [0, -10, 0] }}
                     transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
                   >
-                    <span className="block text-[8px] font-bold text-primary uppercase mb-1">LH Hormone</span>
-                    <span className="block text-xs font-bold text-secondary">Surge expected in 3 days</span>
+                    <span className="block text-[8px] font-bold text-primary uppercase mb-1">{t('dashboardExtra.lhHormone')}</span>
+                    <span className="block text-xs font-bold text-secondary">{t('dashboardExtra.lhSurgeExpected')}</span>
                   </motion.div>
                   
                   <motion.div
@@ -611,8 +621,8 @@ export const Dashboard: React.FC = () => {
                     animate={{ y: [0, 8, 0] }}
                     transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
                   >
-                    <span className="block text-[8px] font-bold text-purple-600 uppercase mb-1">Rhythm Variance</span>
-                    <span className="block text-xs font-bold text-secondary">Cycle adapts dynamically</span>
+                    <span className="block text-[8px] font-bold text-purple-600 uppercase mb-1">{t('dashboardExtra.rhythmVariance')}</span>
+                    <span className="block text-xs font-bold text-secondary">{t('dashboardExtra.cycleAdapts')}</span>
                   </motion.div>
                 </div>
               </div>
@@ -623,22 +633,22 @@ export const Dashboard: React.FC = () => {
                   <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                     <span className="material-symbols-outlined text-[32px]">query_stats</span>
                   </div>
-                  <h3 className="font-headline-md text-xl text-primary font-black">Collecting Baseline Data...</h3>
+                  <h3 className="font-headline-md text-xl text-primary font-black">{t('dashboard.collectingBaseline')}</h3>
                   <p className="text-secondary text-xs max-w-sm font-medium leading-relaxed">
-                    LunaCare requires at least 3 daily telemetry logs to establish baseline biometrics. Log daily signals to unlock predictions.
+                    {t('dashboard.telemetryLogsRequired')}
                   </p>
                   <button
                     onClick={() => setActiveTab('log')}
                     className="px-6 py-2.5 bg-primary text-on-primary rounded-full font-bold text-xs tracking-wider shadow-lg shadow-primary/20 hover:scale-103 transition-all"
                   >
-                    Log Daily Signals
+                    {t('dashboard.logDailySignals')}
                   </button>
                 </div>
               ) : (
                 <div className="glass-card p-5 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-white/60 shadow-sm flex flex-col gap-6 sm:gap-8">
                   <div>
-                    <h3 className="font-bold text-primary text-lg tracking-tight mb-1">Physiological Timeline Forecast</h3>
-                    <p className="text-secondary text-xs">Select a horizon node to project your future biometrics</p>
+                    <h3 className="font-bold text-primary text-lg tracking-tight mb-1">{t('dashboard.timelineTitle')}</h3>
+                    <p className="text-secondary text-xs">{t('dashboard.timelineSubtitle')}</p>
                   </div>
 
                   {/* Timeline nodes */}
@@ -657,7 +667,7 @@ export const Dashboard: React.FC = () => {
                               : 'bg-white border-white text-secondary hover:bg-slate-50'
                           }`}
                         >
-                          {offset === 0 ? 'Today' : `+${offset}d`}
+                          {offset === 0 ? t('dashboardExtra.today') : `+${offset}d`}
                         </button>
                       );
                     })}
@@ -667,7 +677,7 @@ export const Dashboard: React.FC = () => {
                   {labLoading ? (
                     <div className="text-center py-10 w-full flex flex-col items-center justify-center min-h-[200px]">
                       <span className="material-symbols-outlined text-primary animate-spin text-3xl">sync</span>
-                      <span className="mt-2 text-xs font-bold text-secondary">Computing dynamic projections...</span>
+                      <span className="mt-2 text-xs font-bold text-secondary">{t('dashboard.computingProjections')}</span>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
@@ -686,6 +696,42 @@ export const Dashboard: React.FC = () => {
                         const sleepStatus = phase === 'menstrual' ? 'Extended Rest Quality' : phase === 'follicular' ? 'Optimal Rest Duration' : phase === 'ovulation' ? 'Deep Slow-Wave Rest' : 'Slightly Fragmented REM';
                         const stressStatus = phase === 'menstrual' ? 'Moderate Sensitivity' : phase === 'follicular' ? 'High Resilience' : phase === 'ovulation' ? 'Calm Stability' : 'Varying Resilience';
 
+                        const typeMap: Record<string, string> = {
+                          'Period Flow': t('dashboardExtra.periodFlow'),
+                          'Ovulation': t('rhythms.ovulationShort'),
+                          'Mood Tendency': t('dashboardExtra.moodTendency'),
+                          'Physical Energy': t('dashboardExtra.physicalEnergy'),
+                          'Sleep Recovery': t('dashboardExtra.sleepRecovery'),
+                          'Stress Resilience': t('dashboardExtra.stressResilience')
+                        };
+
+                        const statusKeyMap: Record<string, string> = {
+                          'Active bleeding': 'dashboardExtra.activeBleeding',
+                          'Resting Phase': 'dashboardExtra.restingPhase',
+                          'Follicular Transition': 'dashboardExtra.follicularTransition',
+                          'Next Cycle Starting': 'dashboardExtra.nextCycleStarting',
+                          'Peak ovulation surge': 'dashboardExtra.peakOvulationSurge',
+                          'High fertility window': 'dashboardExtra.highFertilityWindow',
+                          'Developing follicle': 'dashboardExtra.developingFollicle',
+                          'Completed cycle shift': 'dashboardExtra.completedCycleShift',
+                          'Restful & Reflective': 'dashboardExtra.restfulReflective',
+                          'Radiant & Social': 'dashboardExtra.radiantSocial',
+                          'High Social Stamina': 'dashboardExtra.highSocialStamina',
+                          'Reflective Detail Focus': 'dashboardExtra.reflectiveDetailFocus',
+                          'Resting / Recovery': 'dashboardExtra.restingRecovery',
+                          'High Peak Stamina': 'dashboardExtra.highPeakStamina',
+                          'Peak Metabolic Energy': 'dashboardExtra.peakMetabolicEnergy',
+                          'Moderate Inward Flow': 'dashboardExtra.moderateInwardFlow',
+                          'Extended Rest Quality': 'dashboardExtra.extendedRestQuality',
+                          'Optimal Rest Duration': 'dashboardExtra.optimalRestDuration',
+                          'Deep Slow-Wave Rest': 'dashboardExtra.deepSlowWaveRest',
+                          'Slightly Fragmented REM': 'dashboardExtra.slightlyFragmentedREM',
+                          'Moderate Sensitivity': 'dashboardExtra.moderateSensitivity',
+                          'High Resilience': 'dashboardExtra.highResilience',
+                          'Calm Stability': 'dashboardExtra.calmStability',
+                          'Varying Resilience': 'dashboardExtra.varyingResilience'
+                        };
+
                         return [
                           { type: 'Period Flow', status: flowStatus, icon: 'water_drop', score: `${accuracy}%` },
                           { type: 'Ovulation', status: ovulationStatus, icon: 'wb_sunny', score: `${Math.max(50, accuracy - 3)}%` },
@@ -697,11 +743,11 @@ export const Dashboard: React.FC = () => {
                           <div key={pred.type} className="bg-white/40 border border-white/60 p-3 sm:p-5 rounded-2xl flex flex-col justify-between gap-3 shadow-inner">
                             <div className="flex justify-between items-center">
                               <span className="material-symbols-outlined text-primary text-base sm:text-lg">{pred.icon}</span>
-                              <span className="text-[8px] sm:text-[9px] font-bold text-primary">{pred.score} Conf.</span>
+                              <span className="text-[8px] sm:text-[9px] font-bold text-primary">{t('dashboard.confidenceConf', { score: pred.score.replace('%', '') })}</span>
                             </div>
                             <div>
-                              <span className="block text-[8px] sm:text-[10px] font-bold text-secondary uppercase mb-0.5">{pred.type}</span>
-                              <span className="text-[11px] sm:text-xs font-bold text-primary leading-tight">{pred.status}</span>
+                              <span className="block text-[8px] sm:text-[10px] font-bold text-secondary uppercase mb-0.5">{typeMap[pred.type] || pred.type}</span>
+                              <span className="text-[11px] sm:text-xs font-bold text-primary leading-tight">{t(statusKeyMap[pred.status] || pred.status)}</span>
                             </div>
                           </div>
                         ));
@@ -712,9 +758,9 @@ export const Dashboard: React.FC = () => {
                   <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center justify-between text-xs">
                     <span className="font-bold text-primary flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-base">info</span>
-                      Predictions are dynamically updated using local Bayesian intelligence engines.
+                      {t('dashboard.predictionsNotice')}
                     </span>
-                    <span className="font-bold text-secondary text-[10px]">Adaptive Confidence Rate: {forecast.confidenceRate}%</span>
+                    <span className="font-bold text-secondary text-[10px]">{t('dashboard.adaptiveConfidence', { rate: forecast.confidenceRate })}</span>
                   </div>
                 </div>
               )}
@@ -733,11 +779,11 @@ export const Dashboard: React.FC = () => {
               {/* Calendar Summary */}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
                 {[
-                  { label: 'Current Phase', val: phaseTitle },
-                  { label: 'Next Period Forecast', val: daysUntilNextPeriod > 0 ? `In ${daysUntilNextPeriod} Days` : 'Period Commencing' },
-                  { label: 'Ovulation Forecast', val: daysUntilOvulation > 0 ? `In ${daysUntilOvulation} Days` : 'Completed' },
-                  { label: 'Consistency Score', val: forecast ? `${forecast.confidenceRate}%` : '50%' },
-                  { label: 'Prediction Accuracy', val: forecast ? `${forecast.accuracyRate}% Calibrated` : 'Learning...' }
+                  { label: t('dashboard.currentPhase'), val: t('rhythms.' + currentPhase + 'Title') },
+                  { label: t('dashboard.nextPeriodForecast'), val: daysUntilNextPeriod > 0 ? t('dashboard.inDays', { days: daysUntilNextPeriod }) : t('dashboard.periodCommencing') },
+                  { label: t('dashboard.ovulationForecast'), val: daysUntilOvulation > 0 ? t('dashboard.inDays', { days: daysUntilOvulation }) : t('dashboard.completed') },
+                  { label: t('dashboard.consistencyScore'), val: forecast ? `${forecast.confidenceRate}%` : '50%' },
+                  { label: t('dashboardExtra.calibrationStatus'), val: forecast ? `${forecast.accuracyRate}% ${t('onboarding.calibrated')}` : t('dashboard.learning') }
                 ].map((stat) => (
                   <div key={stat.label} className="glass-card p-3 sm:p-4 rounded-2xl border border-white/60 text-center flex flex-col justify-center">
                     <span className="block text-[8px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">{stat.label}</span>
@@ -755,7 +801,7 @@ export const Dashboard: React.FC = () => {
                     return (
                       <div key={cycleIndex} className="glass-card p-4 sm:p-6 rounded-[2rem] border border-white/60 shadow-sm">
                         <h4 className="font-extrabold text-primary text-sm uppercase tracking-wider mb-4">
-                          Cycle Sequence {cycleIndex + 1} ({cycleStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })})
+                          {t('dashboard.cycleSequence', { num: cycleIndex + 1 })} ({cycleStart.toLocaleDateString(i18n.language, { month: 'long', year: 'numeric' })})
                         </h4>
 
                         <div className="grid grid-cols-7 gap-1 xs:gap-2.5 text-center">
@@ -796,33 +842,33 @@ export const Dashboard: React.FC = () => {
                 {/* Right: Selected Day Intelligence Panel */}
                 <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-6">
                   <div>
-                    <span className="block text-[10px] font-extrabold text-primary uppercase tracking-widest mb-1">Diagnostic Ledger</span>
+                    <span className="block text-[10px] font-extrabold text-primary uppercase tracking-widest mb-1">{t('dashboard.diagnosticLedger')}</span>
                     <h4 className="font-extrabold text-primary text-base">
-                      {new Date(selectedDateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                      {new Date(selectedDateStr).toLocaleDateString(i18n.language, { month: 'long', day: 'numeric', year: 'numeric' })}
                     </h4>
                   </div>
 
                   {selectedLog ? (
                     <div className="flex flex-col gap-4">
                       <div className="bg-white/50 border border-white/60 p-4 rounded-2xl flex flex-col gap-2">
-                        <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">Logged Signals</span>
+                        <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">{t('dashboard.loggedSignals')}</span>
                         <div className="flex justify-between text-xs font-bold text-primary">
-                          <span>Mood: {selectedLog.mood}</span>
-                          <span>Sleep: {selectedLog.sleep}h</span>
+                          <span>{t('science.mood')}: {t('moods.' + selectedLog.mood.toLowerCase().replace(' ', ''))}</span>
+                          <span>{t('science.sleep')}: {selectedLog.sleep}{t('logger.hrs')}</span>
                         </div>
                         <div className="flex justify-between text-xs font-bold text-primary">
-                          <span>Energy: {selectedLog.energy}/10</span>
-                          <span>Stress: {selectedLog.stress}/10</span>
+                          <span>{t('science.energy')}: {selectedLog.energy}/10</span>
+                          <span>{t('science.stress')}: {selectedLog.stress}/10</span>
                         </div>
                         <div className="flex justify-between text-xs font-bold text-primary">
-                          <span>Flow: {selectedLog.flowType || 'NONE'}</span>
-                          <span>Hydration: {selectedLog.hydration || 0} cups</span>
+                          <span>{t('dashboardExtra.periodFlow')}: {t('flow.' + (selectedLog.flowType || 'NONE').toLowerCase())}</span>
+                          <span>{t('onboarding.hydration')}: {selectedLog.hydration || 0} {t('logger.cups')}</span>
                         </div>
                         {selectedLog.symptoms.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 mt-1.5">
                             {selectedLog.symptoms.map(s => (
                               <span key={s} className="bg-primary/10 border border-primary/20 text-[9px] font-bold text-primary px-2 py-0.5 rounded-full">
-                                {s}
+                                {t(symptomKeyMap[s] || s)}
                               </span>
                             ))}
                           </div>
@@ -830,9 +876,9 @@ export const Dashboard: React.FC = () => {
                       </div>
 
                       <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl">
-                        <span className="block text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1">AI Recommendation</span>
+                        <span className="block text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1">{t('dashboard.aiRecommendation')}</span>
                         <p className="text-xs text-emerald-800 leading-relaxed font-bold">
-                          "Historically, your focus peaking capacity occurs around this phase day. Recommended scheduling of complex tasks is advised."
+                          {t('dashboard.aiRecText')}
                         </p>
                       </div>
                     </div>
@@ -840,13 +886,13 @@ export const Dashboard: React.FC = () => {
                     <div className="flex-1 flex flex-col items-center justify-center text-center py-10 gap-4">
                       <span className="material-symbols-outlined text-[48px] text-secondary/30">analytics</span>
                       <p className="text-secondary text-xs leading-relaxed">
-                        No telemetry logs registered for this date. Click below to register indicators.
+                        {t('dashboard.noLogsRegistered')}
                       </p>
                       <button
                         onClick={() => setActiveTab('log')}
                         className="px-5 py-2.5 bg-primary text-on-primary rounded-full text-xs font-bold shadow-sm"
                       >
-                        Register Log
+                        {t('dashboard.registerLog')}
                       </button>
                     </div>
                   )}
@@ -858,11 +904,11 @@ export const Dashboard: React.FC = () => {
           {/* ═══════════════ TACTILE LOGGING ═══════════════ */}
           {activeTab === 'log' && (() => {
             const moodDescriptions: Record<string, string> = {
-              Radiant: 'High energy, positive outlook & focused stamina.',
-              Balanced: 'Centered, calm, and emotionally stable.',
-              Sensitive: 'Emotionally open, intuitive, and responsive.',
-              'Low Energy': 'Resting state, slow baseline & reflective focus.',
-              Anxious: 'Alert, highly active nervous system & tension signals.'
+              Radiant: t('dashboardExtra.radiantDesc'),
+              Balanced: t('dashboardExtra.balancedDesc'),
+              Sensitive: t('dashboardExtra.sensitiveDesc'),
+              'Low Energy': t('dashboardExtra.lowenergyDesc'),
+              Anxious: t('dashboardExtra.anxiousDesc')
             };
 
             return (
@@ -874,9 +920,9 @@ export const Dashboard: React.FC = () => {
                 className="w-full max-w-5xl mx-auto flex flex-col gap-6 sm:gap-8"
               >
                 <div className="flex flex-col gap-2 ml-1">
-                  <h2 className="text-3xl sm:text-4xl text-primary font-black uppercase tracking-wide">Metrics Logger</h2>
+                  <h2 className="text-3xl sm:text-4xl text-primary font-black uppercase tracking-wide">{t('logger.title')}</h2>
                   <p className="text-secondary text-sm">
-                    Perform daily calibrations of sleep, stress, energy levels, and active cycle symptoms.
+                    {t('logger.desc')}
                   </p>
                 </div>
 
@@ -886,16 +932,16 @@ export const Dashboard: React.FC = () => {
                     {/* Mood Card */}
                     <div className="bg-white/80 border border-white/80 p-6 rounded-[2rem] shadow-[0_8px_30px_rgba(165,53,86,0.04)] hover:shadow-[0_8px_30px_rgba(165,53,86,0.08)] hover:-translate-y-0.5 transition-all duration-300 min-h-[190px] flex flex-col justify-between">
                       <div>
-                        <span className="block text-xs font-bold text-secondary uppercase tracking-widest mb-1">Focus Mood</span>
-                        <span className="text-xl font-black text-primary">{loggedMood}</span>
+                        <span className="block text-xs font-bold text-secondary uppercase tracking-widest mb-1">{t('logger.focusMood')}</span>
+                        <span className="text-xl font-black text-primary">{t('moods.' + loggedMood.toLowerCase().replace(' ', ''))}</span>
                       </div>
                       <div className="grid grid-cols-5 gap-2 my-2">
                         {[
-                          { id: 'Radiant', label: 'Radiant', icon: Sparkles, color: 'text-amber-500' },
-                          { id: 'Balanced', label: 'Balanced', icon: HeartHandshake, color: 'text-emerald-500' },
-                          { id: 'Sensitive', label: 'Sensitive', icon: HeartPulse, color: 'text-rose-500' },
-                          { id: 'Low Energy', label: 'Low Energy', icon: BatteryLow, color: 'text-blue-500' },
-                          { id: 'Anxious', label: 'Anxious', icon: Brain, color: 'text-purple-500' }
+                          { id: 'Radiant', label: t('moods.radiant'), icon: Sparkles, color: 'text-amber-500' },
+                          { id: 'Balanced', label: t('moods.balanced'), icon: HeartHandshake, color: 'text-emerald-500' },
+                          { id: 'Sensitive', label: t('moods.sensitive'), icon: HeartPulse, color: 'text-rose-500' },
+                          { id: 'Low Energy', label: t('moods.lowenergy'), icon: BatteryLow, color: 'text-blue-500' },
+                          { id: 'Anxious', label: t('moods.anxious'), icon: Brain, color: 'text-purple-500' }
                         ].map(item => {
                           const isActive = loggedMood === item.id;
                           const Icon = item.icon;
@@ -918,23 +964,23 @@ export const Dashboard: React.FC = () => {
                         })}
                       </div>
                       <p className="text-[10px] text-secondary font-bold leading-normal">
-                        {moodDescriptions[loggedMood] || 'Select focus mood.'}
+                        {moodDescriptions[loggedMood] || t('logger.selectMood')}
                       </p>
                     </div>
 
                     {/* Flow Card */}
                     <div className="bg-white/80 border border-white/80 p-6 rounded-[2rem] shadow-[0_8px_30px_rgba(165,53,86,0.04)] hover:shadow-[0_8px_30px_rgba(165,53,86,0.08)] hover:-translate-y-0.5 transition-all duration-300 min-h-[190px] flex flex-col justify-between">
                       <div>
-                        <span className="block text-xs font-bold text-secondary uppercase tracking-widest mb-1">Menstrual Flow</span>
-                        <span className="text-xl font-black text-primary">{loggedFlow}</span>
+                        <span className="block text-xs font-bold text-secondary uppercase tracking-widest mb-1">{t('dashboardExtra.periodFlow')}</span>
+                        <span className="text-xl font-black text-primary">{t('flow.' + loggedFlow.toLowerCase())}</span>
                       </div>
                       <div className="bg-white/50 border border-white/70 p-1 rounded-2xl flex w-full justify-between items-center gap-1 my-2 shadow-inner">
                         {[
-                          { id: 'NONE', label: 'None', icon: Circle, color: 'text-slate-400' },
-                          { id: 'SPOTTING', label: 'Spotting', icon: Droplets, color: 'text-red-300' },
-                          { id: 'LIGHT', label: 'Light', icon: Droplet, color: 'text-red-400' },
-                          { id: 'MEDIUM', label: 'Medium', icon: Activity, color: 'text-red-500' },
-                          { id: 'HEAVY', label: 'Heavy', icon: Waves, color: 'text-red-700' }
+                          { id: 'NONE', label: t('flow.none'), icon: Circle, color: 'text-slate-400' },
+                          { id: 'SPOTTING', label: t('flow.spotting'), icon: Droplets, color: 'text-red-300' },
+                          { id: 'LIGHT', label: t('flow.light'), icon: Droplet, color: 'text-red-400' },
+                          { id: 'MEDIUM', label: t('flow.medium'), icon: Activity, color: 'text-red-500' },
+                          { id: 'HEAVY', label: t('flow.heavy'), icon: Waves, color: 'text-red-700' }
                         ].map(flow => {
                           const isActive = loggedFlow === flow.id;
                           const Icon = flow.icon;
@@ -957,7 +1003,7 @@ export const Dashboard: React.FC = () => {
                         })}
                       </div>
                       <p className="text-[10px] text-secondary font-bold leading-normal">
-                        Select intensity to update predictions.
+                        {t('dashboardExtra.selectIntensity')}
                       </p>
                     </div>
 
@@ -965,8 +1011,8 @@ export const Dashboard: React.FC = () => {
                     <div className="bg-white/80 border border-white/80 p-6 rounded-[2rem] shadow-[0_8px_30px_rgba(165,53,86,0.04)] hover:shadow-[0_8px_30px_rgba(165,53,86,0.08)] hover:-translate-y-0.5 transition-all duration-300 min-h-[190px] flex flex-col justify-between">
                       <div className="flex items-center justify-between w-full">
                         <div>
-                          <span className="block text-xs font-bold text-secondary uppercase tracking-widest mb-1">Water Intake</span>
-                          <span className="text-xl font-black text-primary">{loggedHydration} of 8 Cups</span>
+                          <span className="block text-xs font-bold text-secondary uppercase tracking-widest mb-1">{t('onboarding.hydration')}</span>
+                          <span className="text-xl font-black text-primary">{loggedHydration} {t('logger.cups')}</span>
                         </div>
                         <div className="text-right">
                           <span className="text-sm font-black text-blue-500 bg-blue-50 px-2.5 py-1 rounded-full">{Math.round((loggedHydration / 8) * 100)}%</span>
@@ -983,7 +1029,7 @@ export const Dashboard: React.FC = () => {
                               type="button"
                               onClick={() => setLoggedHydration(idx + 1)}
                               className="group relative flex items-center justify-center transition-all duration-300 focus:outline-none"
-                              title={`Set to ${idx + 1} cups`}
+                              title={`${idx + 1} ${t('logger.cups')}`}
                             >
                               <span className={`w-3.5 h-3.5 rounded-full transition-all duration-300 ${
                                 isActive
@@ -991,7 +1037,7 @@ export const Dashboard: React.FC = () => {
                                   : 'border-2 border-slate-350 bg-white/40 hover:border-blue-400 group-hover:scale-105'
                               }`} />
                               <span className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/90 text-[8px] text-white px-1.5 py-0.5 rounded pointer-events-none whitespace-nowrap z-10 shadow-sm">
-                                {idx + 1} Cup{idx > 0 ? 's' : ''}
+                                {idx + 1} {t('logger.cups')}
                               </span>
                             </button>
                           );
@@ -1006,7 +1052,7 @@ export const Dashboard: React.FC = () => {
                       </div>
                       
                       <p className="text-[10px] text-secondary font-bold leading-normal">
-                        Tap a circle to log water intake cups.
+                        {t('logger.hydrationTap')}
                       </p>
                     </div>
                   </div>
@@ -1014,8 +1060,8 @@ export const Dashboard: React.FC = () => {
                   {/* Middle Section: Biometrics (2x2 Grid) */}
                   <div className="bg-gradient-to-br from-white/30 to-white/10 backdrop-blur-xl border border-white/45 p-6 rounded-[2.5rem] shadow-md flex flex-col gap-6">
                     <div className="flex flex-col gap-1">
-                      <h3 className="text-sm sm:text-base font-extrabold text-primary tracking-wider uppercase ml-1">Body Signals</h3>
-                      <p className="text-secondary text-[11px] ml-1">Calibrate physical recovery indexes and nervous system load.</p>
+                      <h3 className="text-sm sm:text-base font-extrabold text-primary tracking-wider uppercase ml-1">{t('logger.bodySignals')}</h3>
+                      <p className="text-secondary text-[11px] ml-1">{t('logger.bodySignalsDesc')}</p>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       {/* Energy Card */}
@@ -1023,7 +1069,7 @@ export const Dashboard: React.FC = () => {
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2 text-primary">
                             <Zap className="w-5 h-5 text-amber-500 shrink-0" />
-                            <span className="text-xs font-bold uppercase tracking-wider text-secondary">Energy</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-secondary">{t('science.energy')}</span>
                           </div>
                           <span className="text-base sm:text-lg font-black text-primary">{loggedEnergy} / 10</span>
                         </div>
@@ -1037,9 +1083,9 @@ export const Dashboard: React.FC = () => {
                             className="w-full accent-primary h-1.5 bg-slate-200/80 rounded-full cursor-pointer hover:accent-[#ff7b9c] transition-all"
                           />
                           <div className="flex justify-between text-[9px] text-secondary font-extrabold uppercase tracking-wider">
-                            <span>Low</span>
+                            <span>{t('logger.low')}</span>
                             <span className="text-primary font-black">•</span>
-                            <span>High</span>
+                            <span>{t('logger.high')}</span>
                           </div>
                         </div>
                       </div>
@@ -1049,7 +1095,7 @@ export const Dashboard: React.FC = () => {
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2 text-primary">
                             <BrainCircuit className="w-5 h-5 text-purple-500 shrink-0" />
-                            <span className="text-xs font-bold uppercase tracking-wider text-secondary">Stress</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-secondary">{t('science.stress')}</span>
                           </div>
                           <span className="text-base sm:text-lg font-black text-primary">{loggedStress} / 10</span>
                         </div>
@@ -1063,9 +1109,9 @@ export const Dashboard: React.FC = () => {
                             className="w-full accent-primary h-1.5 bg-slate-200/80 rounded-full cursor-pointer hover:accent-[#ff7b9c] transition-all"
                           />
                           <div className="flex justify-between text-[9px] text-secondary font-extrabold uppercase tracking-wider">
-                            <span>Calm</span>
+                            <span>{t('logger.calm')}</span>
                             <span className="text-primary font-black">•</span>
-                            <span>High</span>
+                            <span>{t('logger.high')}</span>
                           </div>
                         </div>
                       </div>
@@ -1075,9 +1121,9 @@ export const Dashboard: React.FC = () => {
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2 text-primary">
                             <MoonStar className="w-5 h-5 text-blue-500 shrink-0" />
-                            <span className="text-xs font-bold uppercase tracking-wider text-secondary">Sleep</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-secondary">{t('science.sleep')}</span>
                           </div>
-                          <span className="text-base sm:text-lg font-black text-primary">{loggedSleep} hrs</span>
+                          <span className="text-base sm:text-lg font-black text-primary">{loggedSleep} {t('logger.hrs')}</span>
                         </div>
                         <div className="flex flex-col gap-2">
                           <input
@@ -1090,9 +1136,9 @@ export const Dashboard: React.FC = () => {
                             className="w-full accent-primary h-1.5 bg-slate-200/80 rounded-full cursor-pointer hover:accent-[#ff7b9c] transition-all"
                           />
                           <div className="flex justify-between text-[9px] text-secondary font-extrabold uppercase tracking-wider">
-                            <span>Restless</span>
+                            <span>{t('logger.restless')}</span>
                             <span className="text-primary font-black">•</span>
-                            <span>Deep Rest</span>
+                            <span>{t('logger.deepRest')}</span>
                           </div>
                         </div>
                       </div>
@@ -1102,9 +1148,9 @@ export const Dashboard: React.FC = () => {
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2 text-primary">
                             <HeartPulse className="w-5 h-5 text-rose-500 shrink-0" />
-                            <span className="text-xs font-bold uppercase tracking-wider text-secondary">HRV</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-secondary">{t('logger.hrv')}</span>
                           </div>
-                          <span className="text-base sm:text-lg font-black text-primary">{loggedHrv} ms</span>
+                          <span className="text-base sm:text-lg font-black text-primary">{loggedHrv} {t('logger.ms')}</span>
                         </div>
                         <div className="flex flex-col gap-2">
                           <input
@@ -1116,9 +1162,9 @@ export const Dashboard: React.FC = () => {
                             className="w-full accent-primary h-1.5 bg-slate-200/80 rounded-full cursor-pointer hover:accent-[#ff7b9c] transition-all"
                           />
                           <div className="flex justify-between text-[9px] text-secondary font-extrabold uppercase tracking-wider">
-                            <span>Resting</span>
+                            <span>{t('logger.resting')}</span>
                             <span className="text-primary font-black">•</span>
-                            <span>High</span>
+                            <span>{t('logger.high')}</span>
                           </div>
                         </div>
                       </div>
@@ -1127,7 +1173,7 @@ export const Dashboard: React.FC = () => {
 
                   {/* Physical Symptoms Panel */}
                   <div className="bg-white/80 border border-white/80 p-6 rounded-[2.5rem] shadow-sm flex flex-col gap-4">
-                    <h3 className="text-sm sm:text-base font-extrabold text-primary tracking-wider uppercase ml-1">Physical Symptoms</h3>
+                    <h3 className="text-sm sm:text-base font-extrabold text-primary tracking-wider uppercase ml-1">{t('logger.physicalSymptoms')}</h3>
                     <div className="flex flex-wrap gap-3">
                       {['Cramps', 'Headache', 'Bloating', 'Fatigue', 'Acne Flare', 'Healthy Flow'].map(s => {
                         const isActive = loggedSymptoms.includes(s);
@@ -1142,7 +1188,7 @@ export const Dashboard: React.FC = () => {
                                 : 'bg-white/60 border-slate-200 text-secondary hover:bg-white hover:border-slate-350'
                             }`}
                           >
-                            {s}
+                            {t(symptomKeyMap[s] || s)}
                           </button>
                         );
                       })}
@@ -1155,39 +1201,44 @@ export const Dashboard: React.FC = () => {
                     <div className="lg:col-span-7 bg-white/55 border border-white/70 p-6 rounded-[2.5rem] shadow-sm flex flex-col gap-5 border-l-4 border-l-primary/40 pl-5">
                       <div className="flex items-center gap-2 text-primary">
                         <Sparkles className="w-5 h-5 text-primary shrink-0" />
-                        <h3 className="text-sm sm:text-base font-extrabold tracking-wider uppercase">Today's Health Summary</h3>
+                        <h3 className="text-sm sm:text-base font-extrabold tracking-wider uppercase">{t('logger.healthSummaryTitle')}</h3>
                       </div>
                       
                       {/* Health Chips */}
                       <div className="flex flex-wrap gap-2">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/70 border border-white/80 rounded-full text-[10px] font-bold text-secondary">
                           <HeartHandshake className="w-3.5 h-3.5 text-emerald-500" />
-                          Mood: {loggedMood}
+                          {t('science.mood')}: {t('moods.' + loggedMood.toLowerCase().replace(' ', ''))}
                         </span>
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/70 border border-white/80 rounded-full text-[10px] font-bold text-secondary">
                           <Zap className="w-3.5 h-3.5 text-amber-500" />
-                          Energy: {loggedEnergy}/10
+                          {t('science.energy')}: {loggedEnergy}/10
                         </span>
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/70 border border-white/80 rounded-full text-[10px] font-bold text-secondary">
                           <BrainCircuit className="w-3.5 h-3.5 text-purple-500" />
-                          Stress: {loggedStress}/10
+                          {t('science.stress')}: {loggedStress}/10
                         </span>
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/70 border border-white/80 rounded-full text-[10px] font-bold text-secondary">
                           <Droplets className="w-3.5 h-3.5 text-blue-500" />
-                          Water: {loggedHydration}/8 Cups
+                          {t('onboarding.hydration')}: {loggedHydration}/8 {t('logger.cups')}
                         </span>
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/70 border border-white/80 rounded-full text-[10px] font-bold text-secondary">
                           <Droplet className="w-3.5 h-3.5 text-red-500" />
-                          Flow: {loggedFlow}
+                          {t('dashboardExtra.periodFlow')}: {t('flow.' + loggedFlow.toLowerCase())}
                         </span>
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/70 border border-white/80 rounded-full text-[10px] font-bold text-secondary">
                           <HeartPulse className="w-3.5 h-3.5 text-rose-500" />
-                          HRV: {loggedHrv}ms
+                          {t('logger.hrv')}: {loggedHrv}{t('logger.ms')}
                         </span>
                       </div>
 
                       <p className="text-sm text-secondary font-medium leading-relaxed border-t border-white/40 pt-4">
-                        Based on today's logged signals: {loggedMood} focus mood state, resting sleep duration of {loggedSleep} hours, and active HRV rate at {loggedHrv}ms. Hydration target is {loggedHydration >= 6 ? 'on track' : 'below target - consider drinking 2 more cups'}.
+                        {t('logger.healthSummaryDesc', {
+                          mood: t('moods.' + loggedMood.toLowerCase().replace(' ', '')),
+                          sleep: loggedSleep,
+                          hrv: loggedHrv,
+                          hydrationStatus: loggedHydration >= 6 ? t('logger.hydrationOnTrack') : t('logger.hydrationBelow')
+                        })}
                       </p>
                     </div>
 
@@ -1195,11 +1246,11 @@ export const Dashboard: React.FC = () => {
                     <div className="lg:col-span-5 bg-white/40 border border-white/60 p-6 rounded-[2rem] shadow-sm flex flex-col items-center justify-center gap-4 text-center min-h-[190px]">
                       <div className="flex items-center gap-2 text-emerald-600">
                         <ShieldCheck className="w-5 h-5 shrink-0" />
-                        <span className="text-sm font-extrabold uppercase tracking-wider">Validation Status</span>
+                        <span className="text-sm font-extrabold uppercase tracking-wider">{t('logger.validationStatus')}</span>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <span className="text-base font-black text-primary">Ready to Save</span>
-                        <span className="text-[10px] font-bold text-secondary">All required health metrics completed successfully.</span>
+                        <span className="text-base font-black text-primary">{t('logger.readyToSave')}</span>
+                        <span className="text-[10px] font-bold text-secondary">{t('logger.readyToSaveDesc')}</span>
                       </div>
                       
                       <motion.button
@@ -1209,7 +1260,7 @@ export const Dashboard: React.FC = () => {
                         whileTap={{ scale: 0.98 }}
                       >
                         <CheckCircle className="w-4 h-4 text-on-primary" />
-                        {logSaved ? 'Diagnostics Saved' : "Save Today's Log"}
+                        {logSaved ? t('logger.diagnosticsSaved') : t('logger.saveLog')}
                       </motion.button>
                     </div>
                   </div>
@@ -1243,9 +1294,9 @@ export const Dashboard: React.FC = () => {
               >
                 {/* Insight Summary Banner */}
                 <div>
-                  <h2 className="font-headline-md text-headline-md text-primary font-black mb-1">Biological Insights Dashboard</h2>
+                  <h2 className="font-headline-md text-headline-md text-primary font-black mb-1">{t('dashboardExtra.bioInsightsTitle')}</h2>
                   <p className="text-secondary font-body-md">
-                    Curated telemetry correlations processed by Luna's deep pattern recognition engine.
+                    {t('dashboardExtra.bioInsightsDesc')}
                   </p>
                 </div>
 
@@ -1254,15 +1305,15 @@ export const Dashboard: React.FC = () => {
                     <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                       <span className="material-symbols-outlined text-[32px]">insights</span>
                     </div>
-                    <h3 className="font-headline-md text-xl text-primary font-black">Collecting Baseline Data...</h3>
+                    <h3 className="font-headline-md text-xl text-primary font-black">{t('dashboard.collectingBaseline')}</h3>
                     <p className="text-secondary text-xs max-w-sm font-medium leading-relaxed">
-                      Real-time biological insights and correlation graphs require historical logs to find patterns. Log daily signals to discover correlations.
+                      {t('dashboard.telemetryLogsRequired')}
                     </p>
                     <button
                       onClick={() => setActiveTab('log')}
                       className="px-6 py-2.5 bg-primary text-on-primary rounded-full font-bold text-xs tracking-wider shadow-lg shadow-primary/20 hover:scale-103 transition-all"
                     >
-                      Log Daily Signals
+                      {t('dashboard.logDailySignals')}
                     </button>
                   </div>
                 ) : (
@@ -1272,7 +1323,7 @@ export const Dashboard: React.FC = () => {
                       {/* Mood Trends Area Chart */}
                       <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4">
                         <div className="flex justify-between items-center">
-                          <span className="font-bold text-primary text-xs uppercase tracking-widest">Mood Trends (Last 7 Days)</span>
+                          <span className="font-bold text-primary text-xs uppercase tracking-widest">{t('dashboardExtra.moodTrends')}</span>
                           <span className="material-symbols-outlined text-primary text-base">sentiment_satisfied</span>
                         </div>
                         <div className="h-32 w-full pt-4 relative">
@@ -1294,7 +1345,7 @@ export const Dashboard: React.FC = () => {
                                 const log = dailyLogs[dStr];
                                 const val = log ? moodMap[log.mood] || null : null;
                                 moodVals.push(val);
-                                dayLabels.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
+                                dayLabels.push(d.toLocaleDateString(i18n.language, { weekday: 'short' }));
                               }
                               return { moodVals, dayLabels };
                             };
@@ -1323,7 +1374,7 @@ export const Dashboard: React.FC = () => {
                                 </svg>
                                 <div className="flex justify-between text-[9px] text-secondary font-bold mt-2">
                                   {dayLabels.map((lbl, idx) => (
-                                    <span key={idx}>{idx === 6 ? 'Today' : lbl}</span>
+                                    <span key={idx}>{idx === 6 ? t('dashboardExtra.today') : lbl}</span>
                                   ))}
                                 </div>
                               </>
@@ -1335,7 +1386,7 @@ export const Dashboard: React.FC = () => {
                       {/* Energy Fluctuations Bar Chart */}
                       <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4">
                         <div className="flex justify-between items-center">
-                          <span className="font-bold text-primary text-xs uppercase tracking-widest">Energy Fluctuations</span>
+                          <span className="font-bold text-primary text-xs uppercase tracking-widest">{t('dashboardExtra.energyFluctuations')}</span>
                           <span className="material-symbols-outlined text-primary text-base">bolt</span>
                         </div>
                         <div className="h-32 w-full flex items-end justify-between px-2 pt-4">
@@ -1343,7 +1394,7 @@ export const Dashboard: React.FC = () => {
                             <div key={idx} className="flex flex-col items-center gap-1.5 w-full">
                               <div className="w-4 bg-primary/5 border border-primary/10 rounded-t-md relative overflow-hidden" style={{ height: val === null ? '15%' : `${val * 10}%` }}>
                                 {val !== null && <div className="absolute inset-0 bg-primary w-full" style={{ height: '100%', transform: `scaleY(${val/10})`, transformOrigin: 'bottom' }} />}
-                                {val === null && <div className="absolute inset-0 flex items-center justify-center text-[6px] text-secondary font-bold rotate-[-90deg]">No Data</div>}
+                                {val === null && <div className="absolute inset-0 flex items-center justify-center text-[6px] text-secondary font-bold rotate-[-90deg]">{t('dashboardExtra.noData')}</div>}
                               </div>
                               <span className="text-[9px] text-secondary font-bold">D{idx+1}</span>
                             </div>
@@ -1372,13 +1423,13 @@ export const Dashboard: React.FC = () => {
                     <div className="glass-card p-8 rounded-[2rem] border border-white/60 shadow-sm bg-gradient-to-tr from-primary/5 via-transparent to-[#ae9fc4]/10">
                       <div className="flex items-center gap-2 mb-4">
                         <span className="material-symbols-outlined text-primary text-xl animate-bounce">auto_awesome</span>
-                        <h4 className="font-extrabold text-primary text-sm uppercase tracking-wider">AI Pattern Discovery</h4>
+                        <h4 className="font-extrabold text-primary text-sm uppercase tracking-wider">{t('dashboardExtra.aiPatternTitle')}</h4>
                       </div>
                       <p className="text-secondary text-sm leading-relaxed mb-4">
                         "{forecast.insights.aiPattern || 'Based on your logs, your energy levels peak consistently around your follicular phase...'}"
                       </p>
                       <div className="text-[10px] text-secondary font-bold uppercase">
-                        Luna Diagnostics Core • {forecast.confidenceRate}% Confidence
+                        {t('dashboardExtra.aiConfidence', { rate: forecast.confidenceRate })}
                       </div>
                     </div>
                   </>
@@ -1414,7 +1465,7 @@ export const Dashboard: React.FC = () => {
                       onClick={() => navigate('/onboarding')}
                       className="w-full py-2.5 border border-white bg-white/50 hover:bg-white rounded-full font-bold text-[10px] sm:text-xs uppercase tracking-wider text-primary shadow-sm transition-all"
                     >
-                      Recalibrate Rhythm Core
+                      {t('profile.recalibrate')}
                     </button>
                     <button
                       onClick={() => {
@@ -1423,7 +1474,7 @@ export const Dashboard: React.FC = () => {
                       }}
                       className="w-full py-2.5 bg-primary text-on-primary rounded-full font-bold text-[10px] sm:text-xs uppercase tracking-wider shadow-md shadow-primary/20 hover:opacity-95 transition-all"
                     >
-                      Disconnect Sanctuary
+                      {t('profile.disconnect')}
                     </button>
                   </div>
                 </div>
@@ -1432,17 +1483,17 @@ export const Dashboard: React.FC = () => {
                 <div className="lg:col-span-8 flex flex-col gap-6">
                   {/* Wellness Metrics Dashboard */}
                   <div className="bg-white/40 border border-white/60 p-6 rounded-[2.0rem] shadow-sm">
-                    <span className="block text-xs font-extrabold text-primary uppercase tracking-wider mb-4 ml-1">Wellness Statistics</span>
+                    <span className="block text-xs font-extrabold text-primary uppercase tracking-wider mb-4 ml-1">{t('profile.wellnessStats')}</span>
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
                       {[
                         {
-                          label: forecast && forecast.averageCycleLength ? 'Avg Cycle' : 'Current Cycle',
-                          val: forecast && forecast.averageCycleLength ? `${forecast.averageCycleLength} Days` : `${onboarding.cycleLength} Days`
+                          label: forecast && forecast.averageCycleLength ? t('profile.avgCycle') : t('profile.currentCycle'),
+                          val: forecast && forecast.averageCycleLength ? t('mockup.days', { num: forecast.averageCycleLength }) : t('mockup.days', { num: onboarding.cycleLength })
                         },
-                        { label: 'Period Range', val: `${onboarding.periodLength} Days` },
-                        { label: 'Logs Saved', val: `${forecast ? forecast.totalLogsCount : Object.keys(dailyLogs).length}` },
-                        { label: 'Prediction Rate', val: forecast ? `${forecast.confidenceRate}%` : '50%' },
-                        { label: 'Accuracy', val: forecast ? `${forecast.accuracyRate}%` : '50%' }
+                        { label: t('profile.periodRange'), val: t('mockup.days', { num: onboarding.periodLength }) },
+                        { label: t('profile.logsSaved'), val: `${forecast ? forecast.totalLogsCount : Object.keys(dailyLogs).length}` },
+                        { label: t('profile.predictionRate'), val: forecast ? `${forecast.confidenceRate}%` : '50%' },
+                        { label: t('profile.accuracy'), val: forecast ? `${forecast.accuracyRate}%` : '50%' }
                       ].map((stat, idx) => (
                         <div key={idx} className="bg-white/50 border border-white/60 p-3 rounded-2xl flex flex-col justify-between min-h-[70px]">
                           <span className="block text-[7.5px] sm:text-[8px] font-bold text-secondary uppercase tracking-widest leading-normal mb-1">{stat.label}</span>
@@ -1454,12 +1505,12 @@ export const Dashboard: React.FC = () => {
 
                   {/* Achievements */}
                   <div className="bg-white/40 border border-white/60 p-6 rounded-[2.0rem] shadow-sm">
-                    <span className="block text-xs font-extrabold text-primary uppercase tracking-wider mb-4 ml-1">Luna Calibration Medals</span>
+                    <span className="block text-xs font-extrabold text-primary uppercase tracking-wider mb-4 ml-1">{t('profile.medalsTitle')}</span>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       {[
-                        { label: '7 Days Tracked (Bronze)', icon: 'workspace_premium', minLogs: 7 },
-                        { label: '14 Days Tracked (Silver)', icon: 'military_tech', minLogs: 14 },
-                        { label: '30 Days Tracked (Gold)', icon: 'stars', minLogs: 30 }
+                        { label: t('dashboardExtra.bronzeMedal'), icon: 'workspace_premium', minLogs: 7 },
+                        { label: t('dashboardExtra.silverMedal'), icon: 'military_tech', minLogs: 14 },
+                        { label: t('dashboardExtra.goldMedal'), icon: 'stars', minLogs: 30 }
                       ].map((badge, idx) => {
                         const totalLogs = forecast ? forecast.totalLogsCount : 0;
                         const isUnlocked = totalLogs >= badge.minLogs;
@@ -1480,7 +1531,7 @@ export const Dashboard: React.FC = () => {
                                 {badge.label}
                               </span>
                               <span className="text-[8px] font-medium leading-none mt-0.5">
-                                {isUnlocked ? 'Unlocked' : `Requires ${badge.minLogs} logs`}
+                                {isUnlocked ? t('profile.unlocked') : t('profile.requiresLogs', { num: badge.minLogs })}
                               </span>
                             </div>
                           </div>
@@ -1491,7 +1542,7 @@ export const Dashboard: React.FC = () => {
 
                   {/* Partner Sync Section */}
                   <div className="bg-white/40 border border-white/60 p-6 rounded-[2.0rem] shadow-sm">
-                    <span className="block text-xs font-extrabold text-primary uppercase tracking-wider mb-4 ml-1">Partner Sync Core</span>
+                    <span className="block text-xs font-extrabold text-primary uppercase tracking-wider mb-4 ml-1">{t('profile.partnerSyncTitle')}</span>
                     
                     {partnerStatus.paired ? (
                       <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl flex flex-col gap-4">
@@ -1500,7 +1551,7 @@ export const Dashboard: React.FC = () => {
                             <span className="material-symbols-outlined text-[22px]">favorite</span>
                           </div>
                           <div>
-                            <span className="block text-xs font-bold text-emerald-800">Connected Sanctuary Active</span>
+                            <span className="block text-xs font-bold text-emerald-800">{t('profile.pairedActive')}</span>
                             <span className="text-sm font-black text-emerald-950">{partnerStatus.partner.name}</span>
                           </div>
                         </div>
@@ -1514,7 +1565,7 @@ export const Dashboard: React.FC = () => {
                             }}
                             className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold text-[10px] uppercase tracking-wider transition-all"
                           >
-                            Send Love Nudge
+                            {t('profile.sendLove')}
                           </button>
                           <button
                             type="button"
@@ -1535,23 +1586,23 @@ export const Dashboard: React.FC = () => {
                             }}
                             className="px-4 py-2 border border-emerald-500/30 text-emerald-800 hover:bg-emerald-500/20 rounded-full font-bold text-[10px] uppercase tracking-wider transition-all"
                           >
-                            Disconnect
+                            {t('profile.disconnectPartner')}
                           </button>
                         </div>
                       </div>
                     ) : (
                       <div className="flex flex-col gap-4">
                         <p className="text-xs text-secondary leading-relaxed font-bold">
-                          Synchronize your cycles and wellness logs with a partner in real-time. Link your profiles to share biological insights.
+                          {t('profile.syncDescription')}
                         </p>
                         
                         {/* Generate Code Area */}
                         <div className="flex flex-col gap-2">
                           {generatedCode ? (
                             <div className="bg-primary/5 border border-primary/20 p-3 rounded-xl text-center">
-                              <span className="block text-[8px] font-bold text-secondary uppercase tracking-widest mb-1">Your Connection Code</span>
+                              <span className="block text-[8px] font-bold text-secondary uppercase tracking-widest mb-1">{t('profile.partnerCodeTitle')}</span>
                               <span className="text-lg font-black text-primary tracking-widest">{generatedCode}</span>
-                              <span className="block text-[8px] text-secondary mt-1">Share this with your partner. Valid for 10 minutes.</span>
+                              <span className="block text-[8px] text-secondary mt-1">{t('profile.partnerCodeShare')}</span>
                             </div>
                           ) : (
                             <button
@@ -1571,7 +1622,7 @@ export const Dashboard: React.FC = () => {
                               disabled={partnerLoading}
                               className="w-full py-2 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 rounded-full font-bold text-[10px] uppercase tracking-wider transition-all"
                             >
-                              {partnerLoading ? 'Generating...' : 'Generate Connection Code'}
+                              {partnerLoading ? t('profile.generating') : t('profile.generateCode')}
                             </button>
                           )}
                         </div>
@@ -1600,7 +1651,7 @@ export const Dashboard: React.FC = () => {
                             maxLength={6}
                             value={partnerCodeInput}
                             onChange={(e) => setPartnerCodeInput(e.target.value.toUpperCase())}
-                            placeholder="ENTER PARTNER CODE"
+                            placeholder={t('profile.enterCodePlaceholder')}
                             className="flex-1 bg-white/50 border border-outline/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/10 px-4 py-2 rounded-full text-xs font-black tracking-widest text-center focus:outline-none"
                           />
                           <button
@@ -1608,7 +1659,7 @@ export const Dashboard: React.FC = () => {
                             disabled={partnerLoading || !partnerCodeInput}
                             className="px-4 py-2 bg-primary text-on-primary rounded-full font-bold text-[10px] uppercase tracking-wider disabled:opacity-50"
                           >
-                            Link
+                            {t('profile.link')}
                           </button>
                         </form>
                       </div>
@@ -1629,12 +1680,12 @@ export const Dashboard: React.FC = () => {
       <nav className="fixed bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-40 w-[95%] max-w-lg">
         <div className="glass shadow-[0_24px_50px_rgba(165,53,86,0.12)] border border-white/70 p-1.5 sm:p-3 rounded-full flex justify-between items-center gap-1">
           {[
-            { id: 'home', label: 'Home', icon: 'space_dashboard' },
-            { id: 'lab', label: 'Lab', icon: 'science' },
-            { id: 'calendar', label: 'Calendar', icon: 'calendar_month' },
-            { id: 'log', label: 'Log', icon: 'edit_note' },
-            { id: 'insights', label: 'Insights', icon: 'insights' },
-            { id: 'profile', label: 'Profile', icon: 'person' }
+            { id: 'home', label: t('nav.home'), icon: 'space_dashboard' },
+            { id: 'lab', label: t('nav.lab'), icon: 'science' },
+            { id: 'calendar', label: t('nav.calendar'), icon: 'calendar_month' },
+            { id: 'log', label: t('nav.log'), icon: 'edit_note' },
+            { id: 'insights', label: t('nav.insights'), icon: 'insights' },
+            { id: 'profile', label: t('nav.profile'), icon: 'person' }
           ].map((tab) => {
             const isActive = activeTab === tab.id;
             return (

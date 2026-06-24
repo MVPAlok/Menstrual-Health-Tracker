@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   motion,
   useScroll,
@@ -27,6 +28,7 @@ const scaleIn: Variants = {
   hidden: { opacity: 0, scale: 0.85 },
   visible: (i: number = 0) => ({
     opacity: 1,
+    y: 0,
     scale: 1,
     transition: { duration: 0.7, delay: i * 0.12, type: 'spring', stiffness: 100, damping: 15 },
   }),
@@ -84,10 +86,33 @@ function RevealOnScroll({
    ───────────────────────────────────────────── */
 
 export default function LandingPage() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activePhase, setActivePhase] = useState('follicular');
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const languages = [
+    { code: 'en', label: 'English', flag: '🇮🇳' },
+    { code: 'hi', label: 'हिन्दी', flag: '🇮🇳' },
+    { code: 'bn', label: 'বাংলা', flag: '🇮🇳' },
+    { code: 'ta', label: 'தமிழ்', flag: '🇮🇳' },
+    { code: 'te', label: 'తెలుగు', flag: '🇮🇳' },
+    { code: 'mr', label: 'मराठी', flag: '🇮🇳' }
+  ];
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setLangDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>, targetId: string) => {
     e.preventDefault();
@@ -113,28 +138,28 @@ export default function LandingPage() {
   /* Phase data */
   const phaseData: Record<string, { num: string; title: string; desc: string; energy: string }> = {
     menstrual: {
-      num: "Phase 01 / 04",
-      title: "Menstrual Phase",
-      desc: "Introspection and renewal. Hormonal parameters are at their lowest baseline. Focus on gentle recovery and magnesium.",
-      energy: "Energy: 40%"
+      num: `${t('rhythms.phase')} 01 / 04`,
+      title: t('rhythms.menstrualTitle'),
+      desc: t('rhythms.menstrualDesc'),
+      energy: `${t('rhythms.energy')}: 40%`
     },
     follicular: {
-      num: "Phase 02 / 04",
-      title: "Follicular Phase",
-      desc: "Rising estrogen drives high cognitive focus and social confidence. The \"Spring\" of your internal calendar.",
-      energy: "Energy: 88%"
+      num: `${t('rhythms.phase')} 02 / 04`,
+      title: t('rhythms.follicularTitle'),
+      desc: t('rhythms.follicularDesc'),
+      energy: `${t('rhythms.energy')}: 88%`
     },
     ovulation: {
-      num: "Phase 03 / 04",
-      title: "Ovulation Phase",
-      desc: "Peak estrogen and testosterone triggers ovulation. Physical stamina, verbal fluency, and social confidence peak.",
-      energy: "Energy: 98%"
+      num: `${t('rhythms.phase')} 03 / 04`,
+      title: t('rhythms.ovulationTitle'),
+      desc: t('rhythms.ovulationDesc'),
+      energy: `${t('rhythms.energy')}: 98%`
     },
     luteal: {
-      num: "Phase 04 / 04",
-      title: "Luteal Phase",
-      desc: "Progesterone builds up, directing energy inward. Ideal for detail-oriented work, nesting, and grounding routines.",
-      energy: "Energy: 65%"
+      num: `${t('rhythms.phase')} 04 / 04`,
+      title: t('rhythms.lutealTitle'),
+      desc: t('rhythms.lutealDesc'),
+      energy: `${t('rhythms.energy')}: 65%`
     }
   };
 
@@ -422,18 +447,71 @@ export default function LandingPage() {
     </motion.div>
 
     <div className="hidden md:flex gap-8 items-center">
-      {['Rhythms', 'Science', 'Insights', 'Experience'].map((item, i) => (
+      {[
+        { name: 'Rhythms', key: 'rhythms' },
+        { name: 'Science', key: 'science' },
+        { name: 'Insights', key: 'insights' },
+        { name: 'Experience', key: 'experience' }
+      ].map((item, i) => (
         <motion.a
-          key={item}
+          key={item.key}
           className={`${i === 0 ? 'text-primary font-bold' : 'text-secondary hover:text-primary font-semibold'} text-xs tracking-widest uppercase transition-colors duration-300`}
-          href={`#${item.toLowerCase()}`}
-          onClick={(e) => handleNavClick(e, item.toLowerCase())}
+          href={`#${item.key}`}
+          onClick={(e) => handleNavClick(e, item.key)}
           whileHover={{ y: -2 }}
           transition={{ type: 'spring', stiffness: 300, damping: 20 }}
         >
-          {item}
+          {t(`nav.${item.key}`)}
         </motion.a>
       ))}
+
+      {/* Language Selector */}
+      <div className="relative" ref={dropdownRef}>
+        <motion.button
+          onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+          className="flex items-center gap-1.5 text-secondary hover:text-primary font-semibold text-xs tracking-widest uppercase transition-colors duration-300 py-1.5 px-3 rounded-full hover:bg-white/40 border border-transparent hover:border-white/20"
+          whileHover={{ y: -1 }}
+        >
+          <span>🌐</span>
+          <span>{languages.find(l => l.code === (i18n.language?.substring(0, 2) || 'en'))?.label || 'English'}</span>
+          <span className="text-[10px]">▼</span>
+        </motion.button>
+        <AnimatePresence>
+          {langDropdownOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="absolute right-0 mt-2 w-48 rounded-2xl bg-white/90 backdrop-blur-2xl border border-white/60 p-2 shadow-xl z-50 flex flex-col gap-1"
+            >
+              {languages.map((lang) => {
+                const isSelected = (i18n.language?.substring(0, 2) || 'en') === lang.code;
+                return (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      i18n.changeLanguage(lang.code);
+                      setLangDropdownOpen(false);
+                    }}
+                    className={`flex items-center justify-between w-full px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all ${
+                      isSelected
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-secondary hover:bg-primary/5 hover:text-primary'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span>{lang.flag}</span>
+                      <span>{lang.label}</span>
+                    </span>
+                    {isSelected && <span className="material-symbols-outlined text-[16px] text-primary">check</span>}
+                  </button>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
 
     <div className="flex items-center gap-3">
@@ -443,7 +521,7 @@ export default function LandingPage() {
         whileTap={{ scale: 0.95 }}
         onClick={() => navigate('/welcome')}
       >
-        Join Now
+        {t('nav.joinNow')}
       </motion.button>
 
       <motion.button
@@ -476,21 +554,52 @@ export default function LandingPage() {
         exit="closed"
       >
         <div className="flex flex-col gap-5 text-center mt-2">
-          {['Rhythms', 'Science', 'Insights', 'Experience'].map((item, i) => (
+          {[
+            { name: 'Rhythms', key: 'rhythms' },
+            { name: 'Science', key: 'science' },
+            { name: 'Insights', key: 'insights' },
+            { name: 'Experience', key: 'experience' }
+          ].map((item, i) => (
             <motion.a
-              key={item}
+              key={item.key}
               className={`${i === 0 ? 'text-primary' : 'text-secondary hover:text-primary'} font-bold text-base tracking-widest uppercase py-3 border-b border-primary/5 transition-colors`}
-              href={`#${item.toLowerCase()}`}
+              href={`#${item.key}`}
               variants={menuItemVariants}
               custom={i}
               onClick={(e) => {
                 setMenuOpen(false);
-                handleNavClick(e, item.toLowerCase());
+                handleNavClick(e, item.key);
               }}
             >
-              {item}
+              {t(`nav.${item.key}`)}
             </motion.a>
           ))}
+
+          {/* Mobile Language Selector */}
+          <div className="flex flex-col gap-2 py-3 border-b border-primary/5">
+            <span className="text-[10px] font-black uppercase tracking-widest text-primary/50 mb-2">🌐 {t('nav.language')}</span>
+            <div className="grid grid-cols-3 gap-2">
+              {languages.map((lang) => {
+                const isSelected = (i18n.language?.substring(0, 2) || 'en') === lang.code;
+                return (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      i18n.changeLanguage(lang.code);
+                      setMenuOpen(false);
+                    }}
+                    className={`py-2 px-1 rounded-xl text-[10px] font-bold border transition-all ${
+                      isSelected
+                        ? 'bg-primary/10 border-primary/20 text-primary'
+                        : 'bg-white/40 border-primary/5 text-secondary hover:text-primary'
+                    }`}
+                  >
+                    {lang.flag} {lang.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
         <motion.button
           className="bg-primary text-on-primary w-full py-4 rounded-full font-bold text-sm tracking-wide shadow-lg shadow-primary/30"
@@ -501,7 +610,7 @@ export default function LandingPage() {
             navigate('/welcome');
           }}
         >
-          Join the Sanctuary
+          {t('nav.joinSanctuary')}
         </motion.button>
       </motion.div>
     )}
@@ -543,14 +652,14 @@ export default function LandingPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.4 }}
     >
-      Your Body Has Patterns. <br className="hidden md:block" />
+      {t('hero.title')} <br className="hidden md:block" />
       <motion.span
         className="text-gradient"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.7 }}
       >
-        Finally See Them.
+        {t('hero.subtitle')}
       </motion.span>
     </motion.h1>
 
@@ -560,7 +669,7 @@ export default function LandingPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.9 }}
     >
-      Understand your cycle, mood, symptoms, and energy through <br className="hidden md:block" />beautifully visualized body intelligence.
+      {t('hero.desc')}
     </motion.p>
 
     <motion.div
@@ -576,7 +685,7 @@ export default function LandingPage() {
         onClick={() => navigate('/welcome')}
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       >
-        Start Tracking
+        {t('hero.startTracking')}
       </motion.button>
       <motion.button
         className="glass px-6 py-3 md:px-10 md:py-5 rounded-full font-bold text-base md:text-lg text-primary w-full sm:w-auto"
@@ -585,7 +694,7 @@ export default function LandingPage() {
         onClick={(e) => handleNavClick(e, 'experience')}
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       >
-        Explore Experience
+        {t('hero.exploreExperience')}
       </motion.button>
     </motion.div>
 
@@ -597,9 +706,9 @@ export default function LandingPage() {
       transition={{ duration: 0.8, delay: 1.3 }}
     >
       {[
-        { icon: 'ssid_chart', label: 'Neural Mapping' },
-        { icon: 'biotech', label: 'Hormonal Logic' },
-        { icon: 'shield_person', label: 'Privacy First' },
+        { icon: 'ssid_chart', label: t('hero.neuralMapping') },
+        { icon: 'biotech', label: t('hero.hormonalLogic') },
+        { icon: 'shield_person', label: t('hero.privacyFirst') },
       ].map((pill, i) => (
         <motion.div
           key={pill.label}
@@ -622,8 +731,8 @@ export default function LandingPage() {
 {/* ═══════════════ SECTION 2: LIVING RHYTHM ═══════════════ */}
 <section id="rhythms" className="py-section-gap relative min-h-screen flex flex-col items-center justify-center bg-[#fffdfd] overflow-hidden">
   <RevealOnScroll className="text-center max-w-3xl mx-auto mb-20 px-container-padding-mobile">
-    <h2 className="text-6xl md:text-7xl font-black mb-6 tracking-tighter text-on-background">The Living Rhythm</h2>
-    <p className="text-xl text-secondary">A cinematic representation of your hormonal journey, mapped across 28 days of evolution.</p>
+    <h2 className="text-6xl md:text-7xl font-black mb-6 tracking-tighter text-on-background">{t('rhythms.title')}</h2>
+    <p className="text-xl text-secondary">{t('rhythms.desc')}</p>
   </RevealOnScroll>
 
   {/* Giant Interactive Cycle Ring */}
@@ -701,7 +810,7 @@ export default function LandingPage() {
           className="flex flex-col items-center"
         >
           <span className="text-primary font-black text-[10px] md:text-xs tracking-[0.3em] uppercase mb-2 md:mb-3">{phaseData[activePhase].num}</span>
-          <h3 className="text-3xl sm:text-4xl md:text-5xl font-black text-on-background mb-2 md:mb-4">{phaseData[activePhase].title.split(' ')[0]}</h3>
+          <h3 className="text-3xl sm:text-4xl md:text-5xl font-black text-on-background mb-2 md:mb-4">{t('rhythms.' + activePhase + 'Short')}</h3>
           <p className="text-secondary text-xs sm:text-sm md:text-base leading-relaxed max-w-sm hidden sm:block">{phaseData[activePhase].desc}</p>
         </motion.div>
       </AnimatePresence>
@@ -745,7 +854,7 @@ export default function LandingPage() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.5 + i * 0.1, type: 'spring', stiffness: 200, damping: 15 }}
       >
-        {label.id.charAt(0).toUpperCase() + label.id.slice(1)}
+        {t('rhythms.' + label.id + 'Short')}
       </motion.div>
     ))}
   </RevealOnScroll>
@@ -760,10 +869,10 @@ export default function LandingPage() {
       viewport={{ once: true, amount: 0.3 }}
       variants={staggerContainer}
     >
-      <motion.h2 variants={staggerItem} className="text-6xl font-black tracking-tighter mb-10 leading-none">Mapping The<br/>Invisible Shifts.</motion.h2>
-      <motion.p variants={staggerItem} className="text-xl text-secondary leading-relaxed mb-12">Luna translates microscopic hormonal shifts into macro-level life insights. Every ripple in your cycle creates a wave in your experience.</motion.p>
+      <motion.h2 variants={staggerItem} className="text-6xl font-black tracking-tighter mb-10 leading-none">{t('science.title')}</motion.h2>
+      <motion.p variants={staggerItem} className="text-xl text-secondary leading-relaxed mb-12">{t('science.desc')}</motion.p>
       <motion.button variants={staggerItem} className="group flex items-center gap-4 font-black text-primary uppercase tracking-widest text-sm" whileHover={{ x: 5 }}>
-        Learn the Science
+        {t('science.cta')}
         <motion.span className="material-symbols-outlined" whileHover={{ x: 8 }} transition={{ type: 'spring', stiffness: 300 }}>arrow_forward</motion.span>
       </motion.button>
     </motion.div>
@@ -801,12 +910,12 @@ export default function LandingPage() {
 
       {/* Floating Cards */}
       {[
-        { icon: 'healing', title: 'Recovery', desc: 'HRV & cell repair', pos: 'top-[8%] left-[2%]', delay: 0 },
-        { icon: 'bedtime', title: 'Sleep', desc: 'Deep sleep quality', pos: 'top-[8%] right-[2%]', delay: 1.5 },
-        { icon: 'spa', title: 'Stress', desc: 'Cortisol balancing', pos: 'top-[42%] left-[-8%]', delay: 3 },
-        { icon: 'sentiment_satisfied', title: 'Mood', desc: 'Emotional resilience', pos: 'top-[42%] right-[-8%]', delay: 0.8 },
-        { icon: 'psychology', title: 'Focus', desc: 'Estrogen-driven flow', pos: 'bottom-[8%] left-[2%]', delay: 2.2 },
-        { icon: 'bolt', title: 'Energy', desc: 'Mitochondrial rate', pos: 'bottom-[8%] right-[2%]', delay: 1.1 },
+        { icon: 'healing', title: t('science.recovery'), desc: t('science.recoveryDesc'), pos: 'top-[8%] left-[2%]', delay: 0 },
+        { icon: 'bedtime', title: t('science.sleep'), desc: t('science.sleepDesc'), pos: 'top-[8%] right-[2%]', delay: 1.5 },
+        { icon: 'spa', title: t('science.stress'), desc: t('science.stressDesc'), pos: 'top-[42%] left-[-8%]', delay: 3 },
+        { icon: 'sentiment_satisfied', title: t('science.mood'), desc: t('science.moodDesc'), pos: 'top-[42%] right-[-8%]', delay: 0.8 },
+        { icon: 'psychology', title: t('science.focus'), desc: t('science.focusDesc'), pos: 'bottom-[8%] left-[2%]', delay: 2.2 },
+        { icon: 'bolt', title: t('science.energy'), desc: t('science.energyDesc'), pos: 'bottom-[8%] right-[2%]', delay: 1.1 },
       ].map((card) => (
         <motion.div
           key={card.title}
@@ -830,8 +939,8 @@ export default function LandingPage() {
 <section id="neural-map" className="py-section-gap relative overflow-hidden bg-[#fff8fb]">
   <div className="px-container-padding-mobile md:px-container-padding-desktop max-w-full mx-auto">
     <RevealOnScroll className="text-center mb-16">
-      <h2 className="text-6xl font-black tracking-tighter mb-6 text-on-background">The Neural Map</h2>
-      <p className="text-xl text-secondary max-w-2xl mx-auto">Our AI core builds a private neural network of your specific symptoms and patterns.</p>
+      <h2 className="text-6xl font-black tracking-tighter mb-6 text-on-background">{t('neuralMap.title')}</h2>
+      <p className="text-xl text-secondary max-w-2xl mx-auto">{t('neuralMap.desc')}</p>
     </RevealOnScroll>
 
     <RevealOnScroll className="relative h-[300px] sm:h-[450px] md:h-[650px] w-full flex items-center justify-center overflow-hidden max-w-7xl mx-auto scale-[0.35] sm:scale-[0.6] md:scale-100 origin-center neural-map-scale" variants={scaleIn}>
@@ -877,14 +986,14 @@ export default function LandingPage() {
 
       {/* Neural Nodes */}
       {[
-        { label: 'Stress Sync', desc: 'Cortisol correlation', color: 'bg-primary animate-pulse', pos: 'top-[10%] left-[2%]' },
-        { label: 'Cognitive Flow', desc: 'Estrogen peak efficiency', color: 'bg-[#ff7b9c]', pos: 'top-[2%] left-[28%]' },
-        { label: 'Estrogen Wave', desc: 'Follicular baseline', color: 'bg-[#ae9fc4]', pos: 'top-[2%] right-[28%]' },
-        { label: 'Mood Bias', desc: 'Luteal stage mapping', color: 'bg-primary animate-pulse', pos: 'top-[10%] right-[2%]' },
-        { label: 'Cravings Shift', desc: 'Metabolic indicators', color: 'bg-[#ff7b9c]', pos: 'bottom-[10%] left-[2%]' },
-        { label: 'HRV Correlation', desc: 'Autonomic stability', color: 'bg-[#ae9fc4]', pos: 'bottom-[2%] left-[28%]' },
-        { label: 'Recovery Index', desc: 'Sleep stages link', color: 'bg-primary', pos: 'bottom-[2%] right-[28%]' },
-        { label: 'Sleep stage', desc: 'Restorative efficiency', color: 'bg-primary animate-pulse', pos: 'bottom-[10%] right-[2%]' },
+        { label: t('neuralMap.stressSync'), desc: t('neuralMap.stressSyncDesc'), color: 'bg-primary animate-pulse', pos: 'top-[10%] left-[2%]' },
+        { label: t('neuralMap.cognitiveFlow'), desc: t('neuralMap.cognitiveFlowDesc'), color: 'bg-[#ff7b9c]', pos: 'top-[2%] left-[28%]' },
+        { label: t('neuralMap.estrogenWave'), desc: t('neuralMap.estrogenWaveDesc'), color: 'bg-[#ae9fc4]', pos: 'top-[2%] right-[28%]' },
+        { label: t('neuralMap.moodBias'), desc: t('neuralMap.moodBiasDesc'), color: 'bg-primary animate-pulse', pos: 'top-[10%] right-[2%]' },
+        { label: t('neuralMap.cravingsShift'), desc: t('neuralMap.cravingsShiftDesc'), color: 'bg-[#ff7b9c]', pos: 'bottom-[10%] left-[2%]' },
+        { label: t('neuralMap.hrvCorrelation'), desc: t('neuralMap.hrvCorrelationDesc'), color: 'bg-[#ae9fc4]', pos: 'bottom-[2%] left-[28%]' },
+        { label: t('neuralMap.recoveryIndex'), desc: t('neuralMap.recoveryIndexDesc'), color: 'bg-primary', pos: 'bottom-[2%] right-[28%]' },
+        { label: t('neuralMap.sleepStage'), desc: t('neuralMap.sleepStageDesc'), color: 'bg-primary animate-pulse', pos: 'bottom-[10%] right-[2%]' },
       ].map((node, i) => (
         <motion.div
           key={node.label}
@@ -924,8 +1033,8 @@ export default function LandingPage() {
 
   <div className="px-container-padding-mobile max-w-7xl mx-auto w-full text-center relative z-10">
     <RevealOnScroll>
-      <h2 className="text-7xl font-black mb-6 tracking-tighter text-white hero-glow-text">The Prediction Core</h2>
-      <p className="text-white/60 text-lg max-w-xl mx-auto mb-16">A volumetric diagnostic engine projecting your future body states with cinematic precision.</p>
+      <h2 className="text-7xl font-black mb-6 tracking-tighter text-white hero-glow-text">{t('prediction.title')}</h2>
+      <p className="text-white/60 text-lg max-w-xl mx-auto mb-16">{t('prediction.desc')}</p>
     </RevealOnScroll>
 
     {/* Orbiting Sphere Area */}
@@ -992,10 +1101,10 @@ export default function LandingPage() {
 
       {/* Orbiting Cards */}
       {[
-        { id: 1, delay: '0s', badge: 'Hormone Curve', text: '"Energy peaks in 3 days"', sub1: 'Estrogen cycle day 11', sub2: 'Confidence: 98%', dotColor: 'bg-primary animate-ping' },
-        { id: 2, delay: '-8s', badge: 'Autonomic Trend', text: '"Cycle remains consistent"', sub1: '28.2 day avg variance', sub2: 'Optimal stability', dotColor: 'bg-[#ae9fc4] animate-pulse' },
-        { id: 3, delay: '-16s', badge: 'Somnological Index', text: '"Sleep quality improving"', sub1: 'REM +22m over baseline', sub2: 'HRV recovery positive', dotColor: 'bg-[#ffd9df]' },
-        { id: 4, delay: '-24s', badge: 'Critical Phase', text: '"Ovulation approaching"', sub1: 'Fertility peak in 48h', sub2: 'LH surge detected', dotColor: 'bg-primary animate-pulse' },
+        { id: 1, delay: '0s', badge: t('prediction.badge1'), text: t('prediction.text1'), sub1: t('prediction.sub1_1'), sub2: t('prediction.sub1_2'), dotColor: 'bg-primary animate-ping' },
+        { id: 2, delay: '-8s', badge: t('prediction.badge2'), text: t('prediction.text2'), sub1: t('prediction.sub2_1'), sub2: t('prediction.sub2_2'), dotColor: 'bg-[#ae9fc4] animate-pulse' },
+        { id: 3, delay: '-16s', badge: t('prediction.badge3'), text: t('prediction.text3'), sub1: t('prediction.sub3_1'), sub2: t('prediction.sub3_2'), dotColor: 'bg-[#ffd9df]' },
+        { id: 4, delay: '-24s', badge: t('prediction.badge4'), text: t('prediction.text4'), sub1: t('prediction.sub4_1'), sub2: t('prediction.sub4_2'), dotColor: 'bg-primary animate-pulse' },
       ].map(card => (
         <div key={card.id} id={`prediction-card-${card.id}`} className="orbit-card-wrapper pointer-events-auto" style={{ animation: 'orbit-elliptical 32s linear infinite', animationDelay: card.delay }}>
           <motion.div
@@ -1024,10 +1133,10 @@ export default function LandingPage() {
   <RevealOnScroll className="px-container-padding-mobile text-center mb-16">
     <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full glass border border-primary/10 text-primary font-bold text-xs tracking-[0.2em] mb-6">
       <motion.span className="material-symbols-outlined text-[16px]" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}>analytics</motion.span>
-      BIOMETRIC CORRELATIONS
+      {t('biometrics.badge')}
     </div>
-    <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tighter text-on-background">Your Body Is Constantly Communicating.</h2>
-    <p className="text-xl text-secondary max-w-2xl mx-auto">Luna decodes autonomic responses to map the exact relationship between chemical shifts and lifestyle inputs.</p>
+    <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tighter text-on-background">{t('biometrics.title')}</h2>
+    <p className="text-xl text-secondary max-w-2xl mx-auto">{t('biometrics.desc')}</p>
   </RevealOnScroll>
 
   <motion.div
@@ -1041,17 +1150,17 @@ export default function LandingPage() {
     <motion.div variants={staggerItem} className="glass-card p-10 rounded-[2.5rem] flex flex-col justify-between cursor-pointer" whileHover={{ y: -8, boxShadow: '0 30px 60px -15px rgba(165,53,86,0.1)' }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
       <div>
         <div className="flex justify-between items-center mb-6">
-          <span className="text-primary font-black text-xs tracking-widest uppercase">Energy Waveform</span>
+          <span className="text-primary font-black text-xs tracking-widest uppercase">{t('biometrics.energyWaveform')}</span>
           <span className="material-symbols-outlined text-primary text-2xl">bolt</span>
         </div>
-        <h3 className="text-3xl font-black text-on-background mb-4">Hormonal Stamina</h3>
-        <p className="text-secondary leading-relaxed mb-8">Fluctuations in estrogen dictate cellular metabolic rates. Identify your physical baseline to structure high-impact output during your follicular phase and lower intensities during luteal entry.</p>
+        <h3 className="text-3xl font-black text-on-background mb-4">{t('biometrics.energyTitle')}</h3>
+        <p className="text-secondary leading-relaxed mb-8">{t('biometrics.energyDesc')}</p>
       </div>
       <div className="glass p-6 rounded-2xl flex items-center justify-between gap-6 border border-primary/5">
         <div className="w-full">
           <div className="flex justify-between text-[11px] text-secondary font-bold uppercase mb-2">
-            <span>Estrogen Curve</span>
-            <span className="text-primary">Peak Day 14</span>
+            <span>{t('biometrics.estrogenCurve')}</span>
+            <span className="text-primary">{t('biometrics.peakDay')}</span>
           </div>
           <svg className="w-full h-14" viewBox="0 0 240 60" preserveAspectRatio="none">
             <path d="M 0 45 Q 40 40, 80 48 T 120 10 T 160 48 T 240 50" fill="none" stroke="#ff7b9c" strokeWidth="3" strokeLinecap="round" />
@@ -1066,22 +1175,22 @@ export default function LandingPage() {
     <motion.div variants={staggerItem} className="glass-card p-10 rounded-[2.5rem] flex flex-col justify-between cursor-pointer" whileHover={{ y: -8, boxShadow: '0 30px 60px -15px rgba(165,53,86,0.1)' }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
       <div>
         <div className="flex justify-between items-center mb-6">
-          <span className="text-primary font-black text-xs tracking-widest uppercase">Hormonal Temperature</span>
+          <span className="text-primary font-black text-xs tracking-widest uppercase">{t('biometrics.hormonalTemp')}</span>
           <span className="material-symbols-outlined text-primary text-2xl">sentiment_satisfied</span>
         </div>
-        <h3 className="text-3xl font-black text-on-background mb-4">Emotional Weather</h3>
-        <p className="text-secondary leading-relaxed mb-8">Chemical changes subtly shape emotional resilience. Map these shifts to cycle phases to transform mood variability into intuitive self-knowledge.</p>
+        <h3 className="text-3xl font-black text-on-background mb-4">{t('biometrics.moodTitle')}</h3>
+        <p className="text-secondary leading-relaxed mb-8">{t('biometrics.moodDesc')}</p>
       </div>
       <div className="glass p-6 rounded-2xl flex flex-col gap-4 border border-primary/5">
         <div className="flex justify-between text-[11px] text-secondary font-bold uppercase">
-          <span>Autonomic Seasons</span>
-          <span className="text-primary">Current: Spring</span>
+          <span>{t('biometrics.autonomicSeasons')}</span>
+          <span className="text-primary">{t('biometrics.currentSpring')}</span>
         </div>
         <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-black">
-          <div className="p-2 rounded-xl bg-secondary-container/40 text-secondary">QUIET<br/><span className="text-[9px] font-normal">Menstrual</span></div>
-          <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">ALERT<br/><span className="text-[9px] font-normal">Follicular</span></div>
-          <div className="p-2 rounded-xl bg-[#ffd8c7]/50 text-[#760e34]">SOCIAL<br/><span className="text-[9px] font-normal">Ovular</span></div>
-          <div className="p-2 rounded-xl bg-[#ecdcff]/40 text-[#413555]">CALM<br/><span className="text-[9px] font-normal">Luteal</span></div>
+          <div className="p-2 rounded-xl bg-secondary-container/40 text-secondary">{t('biometrics.quiet').toUpperCase()}<br/><span className="text-[9px] font-normal">{t('rhythms.menstrualShort')}</span></div>
+          <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">{t('biometrics.alert').toUpperCase()}<br/><span className="text-[9px] font-normal">{t('rhythms.follicularShort')}</span></div>
+          <div className="p-2 rounded-xl bg-[#ffd8c7]/50 text-[#760e34]">{t('biometrics.social').toUpperCase()}<br/><span className="text-[9px] font-normal">{t('rhythms.ovulationShort')}</span></div>
+          <div className="p-2 rounded-xl bg-[#ecdcff]/40 text-[#413555]">{t('biometrics.calm').toUpperCase()}<br/><span className="text-[9px] font-normal">{t('rhythms.lutealShort')}</span></div>
         </div>
       </div>
     </motion.div>
@@ -1090,16 +1199,16 @@ export default function LandingPage() {
     <motion.div variants={staggerItem} className="glass-card p-10 rounded-[2.5rem] flex flex-col justify-between cursor-pointer" whileHover={{ y: -8, boxShadow: '0 30px 60px -15px rgba(165,53,86,0.1)' }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
       <div>
         <div className="flex justify-between items-center mb-6">
-          <span className="text-primary font-black text-xs tracking-widest uppercase">Restorative stage</span>
+          <span className="text-primary font-black text-xs tracking-widest uppercase">{t('biometrics.restorativeStage')}</span>
           <span className="material-symbols-outlined text-primary text-2xl">bedtime</span>
         </div>
-        <h3 className="text-3xl font-black text-on-background mb-4">Sleep Architecture</h3>
-        <p className="text-secondary leading-relaxed mb-8">Fluctuating core body temperature affects deep and REM recovery periods. By syncing sleep schedules to hormonal cycles, you can improve recovery efficiency.</p>
+        <h3 className="text-3xl font-black text-on-background mb-4">{t('biometrics.sleepTitle')}</h3>
+        <p className="text-secondary leading-relaxed mb-8">{t('biometrics.sleepDesc')}</p>
       </div>
       <div className="glass p-6 rounded-2xl flex flex-col gap-3 border border-primary/5">
         <div className="flex justify-between text-[11px] text-secondary font-bold uppercase">
-          <span>Deep Sleep Quality</span>
-          <span className="text-primary">7.8h RESTORED</span>
+          <span>{t('biometrics.deepSleepQuality')}</span>
+          <span className="text-primary">7.8h {t('biometrics.restored').toUpperCase()}</span>
         </div>
         <div className="h-5 w-full bg-secondary-container/30 rounded-full overflow-hidden flex">
           <div className="h-full bg-primary/20" style={{ width: '15%' }}></div>
@@ -1117,25 +1226,25 @@ export default function LandingPage() {
     <motion.div variants={staggerItem} className="glass-card p-10 rounded-[2.5rem] flex flex-col justify-between cursor-pointer" whileHover={{ y: -8, boxShadow: '0 30px 60px -15px rgba(165,53,86,0.1)' }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
       <div>
         <div className="flex justify-between items-center mb-6">
-          <span className="text-primary font-black text-xs tracking-widest uppercase">Autonomic Correlations</span>
+          <span className="text-primary font-black text-xs tracking-widest uppercase">{t('biometrics.autonomicCorrelations')}</span>
           <span className="material-symbols-outlined text-primary text-2xl">healing</span>
         </div>
-        <h3 className="text-3xl font-black text-on-background mb-4">Symptom Logic</h3>
-        <p className="text-secondary leading-relaxed mb-8">Identify triggers causing physical discomfort. Luna maps how factors like caffeine intake, hydration, and stress levels affect cramps, bloating, and fatigue.</p>
+        <h3 className="text-3xl font-black text-on-background mb-4">{t('biometrics.symptomTitle')}</h3>
+        <p className="text-secondary leading-relaxed mb-8">{t('biometrics.symptomDesc')}</p>
       </div>
       <div className="glass p-6 rounded-2xl border border-primary/5">
         <div className="flex flex-col gap-3 text-xs">
           <div className="flex justify-between items-center border-b border-outline-variant/10 pb-2">
-            <span className="font-bold text-secondary">Caffeine + Luteal Stage</span>
-            <span className="text-primary font-black">+32% Cramping Risk</span>
+            <span className="font-bold text-secondary">{t('biometrics.caffeineLuteal')}</span>
+            <span className="text-primary font-black">+{t('biometrics.crampingRisk')}</span>
           </div>
           <div className="flex justify-between items-center border-b border-outline-variant/10 pb-2">
-            <span className="font-bold text-secondary">Hydration Baseline</span>
-            <span className="text-green-700 font-black">-15% Bloating Index</span>
+            <span className="font-bold text-secondary">{t('biometrics.hydrationBaseline')}</span>
+            <span className="text-green-700 font-black">-{t('biometrics.bloatingIndex')}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="font-bold text-secondary">Magnesium Syncing</span>
-            <span className="text-green-700 font-black">-40% Cramp Duration</span>
+            <span className="font-bold text-secondary">{t('biometrics.magnesiumSync')}</span>
+            <span className="text-green-700 font-black">-{t('biometrics.crampDuration')}</span>
           </div>
         </div>
       </div>
@@ -1187,15 +1296,15 @@ export default function LandingPage() {
                   <span className="material-symbols-outlined text-[10px] text-primary">wifi</span>
                 </div>
                 <div className="flex-grow flex flex-col items-center justify-center text-center mt-4">
-                  <span className="text-primary font-black text-[8px] tracking-widest uppercase mb-1">Luteal Phase</span>
-                  <h4 className="text-xl font-black text-on-background mb-3">Day 22</h4>
+                  <span className="text-primary font-black text-[8px] tracking-widest uppercase mb-1">{t('mockup.lutealPhase')}</span>
+                  <h4 className="text-xl font-black text-on-background mb-3">{t('mockup.day', { num: 22 })}</h4>
                   <div className="relative w-24 h-24 flex items-center justify-center mb-4">
                     <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
                       <circle cx="18" cy="18" r="16" fill="none" stroke="#f3ded9" strokeWidth="2.5"></circle>
                       <circle cx="18" cy="18" r="16" fill="none" stroke="#a53556" strokeWidth="2.5" strokeDasharray="100" strokeDashoffset="30" strokeLinecap="round"></circle>
                     </svg>
                     <div className="absolute text-center">
-                      <span className="font-black text-[10px] text-primary">4 Days</span>
+                      <span className="font-black text-[10px] text-primary">{t('mockup.days', { num: 4 })}</span>
                     </div>
                   </div>
                 </div>
@@ -1214,19 +1323,19 @@ export default function LandingPage() {
               <div className="absolute top-3 left-1/2 -translate-x-1/2 w-16 h-4 bg-black rounded-full z-50"></div>
               <div className="w-full h-full rounded-[32px] bg-[#fffdfd] overflow-hidden relative p-4 flex flex-col justify-between iphone-reflection">
                 <div className="flex justify-between items-center text-[9px] text-secondary font-black">
-                  <span>Logging</span>
-                  <span className="text-secondary/60">Active</span>
+                  <span>{t('mockup.logging')}</span>
+                  <span className="text-secondary/60">{t('mockup.active')}</span>
                 </div>
                 <div className="flex-grow flex flex-col text-left mt-6">
-                  <h4 className="text-base font-black text-on-background mb-4">Log Biometrics</h4>
+                  <h4 className="text-base font-black text-on-background mb-4">{t('mockup.logBiometrics')}</h4>
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-secondary/10 text-[8px] font-bold">
-                      <span className="text-secondary flex items-center gap-1.5"><span className="material-symbols-outlined text-primary text-[10px]">bolt</span>Energy</span>
-                      <span className="bg-[#ffd9df] text-primary px-1.5 py-0.5 rounded-full">HIGH</span>
+                      <span className="text-secondary flex items-center gap-1.5"><span className="material-symbols-outlined text-primary text-[10px]">bolt</span>{t('logger.energy')}</span>
+                      <span className="bg-[#ffd9df] text-primary px-1.5 py-0.5 rounded-full">{t('mockup.high')}</span>
                     </div>
                     <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-secondary/10 text-[8px] font-bold">
-                      <span className="text-secondary flex items-center gap-1.5"><span className="material-symbols-outlined text-primary text-[10px]">healing</span>Cramps</span>
-                      <span className="bg-secondary-container text-secondary px-1.5 py-0.5 rounded-full">NONE</span>
+                      <span className="text-secondary flex items-center gap-1.5"><span className="material-symbols-outlined text-primary text-[10px]">healing</span>{t('biometrics.symptomTitle').split(' ')[0]}</span>
+                      <span className="bg-secondary-container text-secondary px-1.5 py-0.5 rounded-full">{t('mockup.none')}</span>
                     </div>
                   </div>
                 </div>
@@ -1250,17 +1359,17 @@ export default function LandingPage() {
                   <span className="text-secondary/80">10:09 AM</span>
                 </div>
                 <div className="flex-grow flex flex-col text-left mt-8">
-                  <p className="text-[10px] text-secondary font-bold uppercase tracking-wider mb-1">Good Morning,</p>
+                  <p className="text-[10px] text-secondary font-bold uppercase tracking-wider mb-1">{t('dashboard.greetingMorning')},</p>
                   <h4 className="text-2xl font-black text-on-background mb-5">Clara</h4>
                   <div className="glass bg-white/80 p-4 rounded-2xl mb-4 border border-primary/10 shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-full blur-xl"></div>
-                    <span className="text-primary font-black text-[9px] uppercase tracking-wider mb-2 block">DAILY SANCTUARY</span>
-                    <p className="text-[11px] text-on-background font-bold leading-relaxed">"Your estrogen is leveling. Expect high cognitive focus and calm energy today."</p>
+                    <span className="text-primary font-black text-[9px] uppercase tracking-wider mb-2 block">{t('mockup.dailySanctuary')}</span>
+                    <p className="text-[11px] text-on-background font-bold leading-relaxed">{t('mockup.estrogenMsg')}</p>
                   </div>
                   <div className="bg-white p-4 rounded-2xl border border-secondary/5 flex flex-col gap-3 shadow-sm">
                     <div className="flex justify-between text-[9px] font-bold text-secondary">
-                      <span>Focus State</span>
-                      <span className="text-primary">Optimized (92%)</span>
+                      <span>{t('mockup.focusState')}</span>
+                      <span className="text-primary">{t('mockup.optimized')}</span>
                     </div>
                     <div className="h-10 flex items-end gap-1.5 justify-between px-1">
                       <div className="w-full h-[30%] bg-secondary-fixed rounded-sm"></div>
@@ -1293,10 +1402,10 @@ export default function LandingPage() {
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <span className="material-symbols-outlined text-primary text-[14px]">calendar_month</span>
                 </div>
-                <span className="text-[9px] font-black uppercase tracking-widest text-primary">Prediction</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-primary">{t('mockup.prediction')}</span>
               </div>
-              <p className="text-on-background font-black text-sm md:text-base leading-tight relative z-10">Ovulation in 48h</p>
-              <p className="text-[10px] text-secondary mt-1 font-semibold relative z-10">Confidence: 98.4%</p>
+              <p className="text-on-background font-black text-sm md:text-base leading-tight relative z-10">{t('mockup.ovulationTime')}</p>
+              <p className="text-[10px] text-secondary mt-1 font-semibold relative z-10">{t('mockup.confidence', { rate: 98.4 })}</p>
             </motion.div>
 
             <motion.div
@@ -1311,9 +1420,9 @@ export default function LandingPage() {
                 <div className="w-8 h-8 rounded-full bg-[#ae9fc4]/20 flex items-center justify-center">
                   <span className="material-symbols-outlined text-[#413555] text-[14px]">sentiment_satisfied</span>
                 </div>
-                <span className="text-[9px] font-black uppercase tracking-widest text-[#413555]">Insight</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-[#413555]">{t('mockup.insight')}</span>
               </div>
-              <p className="text-on-background font-black text-sm leading-tight relative z-10">Serene focus state</p>
+              <p className="text-on-background font-black text-sm leading-tight relative z-10">{t('mockup.sereneFocus')}</p>
               <div className="w-full h-1.5 bg-secondary-container mt-3 rounded-full overflow-hidden relative z-10">
                 <div className="w-[85%] h-full bg-[#ae9fc4] rounded-full shadow-[0_0_8px_#ae9fc4]"></div>
               </div>
@@ -1331,8 +1440,8 @@ export default function LandingPage() {
                 <span className="material-symbols-outlined text-primary text-[20px] drop-shadow-[0_0_5px_rgba(165,53,86,0.5)]">bolt</span>
                 <span className="text-primary font-black text-sm md:text-base">88%</span>
               </div>
-              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-primary block mt-1 relative z-10">Energy Wave</span>
-              <p className="text-[10px] md:text-[11px] font-bold text-on-background mt-0.5 relative z-10">Peak stamina</p>
+              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-primary block mt-1 relative z-10">{t('mockup.energyWave')}</span>
+              <p className="text-[10px] md:text-[11px] font-bold text-on-background mt-0.5 relative z-10">{t('mockup.peakStamina')}</p>
             </motion.div>
 
             <motion.div
@@ -1342,7 +1451,7 @@ export default function LandingPage() {
               whileHover={{ scale: 1.05, x: -3 }}
               style={{ transform: 'translateZ(100px) rotateY(12deg)' }}
             >
-              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-secondary block mb-2">Tracked Input</span>
+              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-secondary block mb-2">{t('mockup.trackedInput')}</span>
               <div className="flex gap-2 relative z-10">
                 <motion.div className="w-7 h-7 rounded-full bg-[#ffd9df] flex items-center justify-center border border-[#ffb1c1] shadow-[0_4px_10px_rgba(165,53,86,0.2)]" whileHover={{ scale: 1.15 }}>
                   <span className="material-symbols-outlined text-[14px] text-primary">healing</span>
@@ -1363,13 +1472,13 @@ export default function LandingPage() {
         viewport={{ once: true, amount: 0.3 }}
         variants={staggerContainer}
       >
-        <motion.h2 variants={staggerItem} className="text-6xl font-black mb-10 tracking-tighter leading-none text-on-background">High-Fidelity<br/>Health.</motion.h2>
-        <motion.p variants={staggerItem} className="text-xl text-secondary mb-12">The Luna interface is engineered for zero friction. Every tap is a step toward total self-mastery.</motion.p>
+        <motion.h2 variants={staggerItem} className="text-6xl font-black mb-10 tracking-tighter leading-none text-on-background">{t('features.title1')}</motion.h2>
+        <motion.p variants={staggerItem} className="text-xl text-secondary mb-12">{t('features.desc1')}</motion.p>
         <div className="space-y-10">
           {[
-            { icon: 'calendar_month', title: 'Predictive Calendar', desc: 'Visual forecasting with 98% prediction accuracy.' },
-            { icon: 'add_notes', title: 'Fluid Logging', desc: 'Swipe-to-log symptoms in less than 3 seconds.' },
-            { icon: 'lock_person', title: 'Encrypted Vault', desc: 'Your data is yours. End-to-end medical encryption.' },
+            { icon: 'calendar_month', title: t('features.calendarTitle'), desc: t('features.calendarDesc') },
+            { icon: 'add_notes', title: t('features.loggingTitle'), desc: t('features.loggingDesc') },
+            { icon: 'lock_person', title: t('features.vaultTitle'), desc: t('features.vaultDesc') },
           ].map((feature, i) => (
             <motion.div key={feature.title} variants={staggerItem} className="flex items-start gap-8">
               <motion.div
@@ -1400,9 +1509,9 @@ export default function LandingPage() {
     <RevealOnScroll>
       <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full glass border border-primary/10 text-primary font-bold text-xs tracking-[0.2em] mb-6">
         <motion.span className="material-symbols-outlined text-[16px]" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}>chat</motion.span>
-        CURATED INTEL FEED
+        {t('wisdom.badge')}
       </div>
-      <h2 className="text-4xl md:text-6xl font-black mb-16 tracking-tighter text-on-background">Listen To Your Body.</h2>
+      <h2 className="text-4xl md:text-6xl font-black mb-16 tracking-tighter text-on-background">{t('wisdom.title')}</h2>
     </RevealOnScroll>
 
     <motion.div
@@ -1416,24 +1525,24 @@ export default function LandingPage() {
       <motion.div variants={staggerItem} className="glass p-12 rounded-[2.5rem] md:col-span-2 flex flex-col justify-between shadow-xl border border-primary/5 cursor-pointer relative group" whileHover={{ y: -8, backgroundColor: 'rgba(255,255,255,0.7)', boxShadow: '0 30px 60px rgba(165,53,86,0.08)' }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
         <div>
           <div className="flex justify-between items-center mb-8">
-            <p className="text-primary font-black uppercase tracking-widest text-xs">Today's Wisdom</p>
-            <span className="px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-[9px] uppercase tracking-wider">Luteal • Day 26</span>
+            <p className="text-primary font-black uppercase tracking-widest text-xs">{t('wisdom.wisdomTitle')}</p>
+            <span className="px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-[9px] uppercase tracking-wider">{t('rhythms.lutealShort')} • Day 26</span>
           </div>
-          <h4 className="text-4xl font-black mb-6 text-on-background group-hover:text-primary transition-colors leading-tight">"Your body is asking for more magnesium today."</h4>
-          <p className="text-secondary text-lg leading-relaxed max-w-2xl">Autonomic markers indicate light uterine strain as progesterone transitions. Synced hydration and taking magnesium targets smooth recovery during late luteal entry.</p>
+          <h4 className="text-4xl font-black mb-6 text-on-background group-hover:text-primary transition-colors leading-tight">{t('wisdom.magnesiumTip')}</h4>
+          <p className="text-secondary text-lg leading-relaxed max-w-2xl">{t('wisdom.magnesiumTipDesc')}</p>
         </div>
         <div className="mt-8 flex items-center gap-3 text-secondary/60 text-xs font-bold uppercase">
           <span className="material-symbols-outlined text-primary text-[18px]">info</span>
-          <span>Based on sleep architecture and recovery index variance</span>
+          <span>{t('wisdom.magnesiumFooter')}</span>
         </div>
       </motion.div>
 
       {/* Cards 2-5 */}
       {[
-        { badge: 'Energy Forecast', phase: 'Follicular • Day 9', phaseBg: 'bg-[#ffd8c7]/50 text-[#760e34]', title: '"Optimized for deep work between 10am-2pm."', desc: 'Cognitive focus is peaking as estrogen levels rise. Save complex logic problems or critical writing for this peak performance window.', icon: 'bolt', footer: 'Cognitive flow peak detected' },
-        { badge: 'Social Pulse', phase: 'Ovulation • Day 14', phaseBg: 'bg-[#ff7b9c]/20 text-primary', title: '"High social resilience detected for tonight."', desc: 'Estrogen and testosterone surges peak. You are entering your most expressive phase—ideal for collaboration.', icon: 'forum', footer: 'Communication scores optimized' },
-        { badge: 'Recovery Focus', phase: 'Luteal • Day 20', phaseBg: 'bg-[#ecdcff] text-[#413555]', title: '"Prioritize low-impact aerobic recovery."', desc: 'HRV variance trends slightly lower as baseline body temperature rises. Focus on gentle recovery.', icon: 'healing', footer: 'Heart rate variability warning' },
-        { badge: 'Sleep Preparation', phase: 'Menstrual • Day 2', phaseBg: 'bg-secondary-container text-secondary', title: '"Deep sleep cycles projected to extend by 15m."', desc: 'Lower progesterone ranges prompt deeper recovery stages. Sleep early to capture this natural optimization wave.', icon: 'bedtime', footer: 'Volumetric REM recovery forecast' },
+        { badge: t('wisdom.forecastTitle'), phase: `${t('rhythms.follicularShort')} • Day 9`, phaseBg: 'bg-[#ffd8c7]/50 text-[#760e34]', title: t('wisdom.forecastText'), desc: t('wisdom.forecastDesc'), icon: 'bolt', footer: t('wisdom.forecastFooter') },
+        { badge: t('wisdom.socialTitle'), phase: `${t('rhythms.ovulationShort')} • Day 14`, phaseBg: 'bg-[#ff7b9c]/20 text-primary', title: t('wisdom.socialText'), desc: t('wisdom.socialDesc'), icon: 'forum', footer: t('wisdom.socialFooter') },
+        { badge: t('wisdom.recoveryTitle'), phase: `${t('rhythms.lutealShort')} • Day 20`, phaseBg: 'bg-[#ecdcff] text-[#413555]', title: t('wisdom.recoveryText'), desc: t('wisdom.recoveryDesc'), icon: 'healing', footer: t('wisdom.recoveryFooter') },
+        { badge: t('wisdom.sleepPrepTitle'), phase: `${t('rhythms.menstrualShort')} • Day 2`, phaseBg: 'bg-secondary-container text-secondary', title: t('wisdom.sleepPrepText'), desc: t('wisdom.sleepPrepDesc'), icon: 'bedtime', footer: t('wisdom.sleepPrepFooter') },
       ].map((card) => (
         <motion.div key={card.badge} variants={staggerItem} className="glass p-12 rounded-[2.5rem] flex flex-col justify-between shadow-xl border border-primary/5 cursor-pointer group" whileHover={{ y: -8, backgroundColor: 'rgba(255,255,255,0.7)', boxShadow: '0 30px 60px rgba(165,53,86,0.08)' }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
           <div>
@@ -1460,7 +1569,7 @@ export default function LandingPage() {
     <RevealOnScroll className="mb-12">
       <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full glass border border-primary/10 text-primary font-bold text-xs tracking-[0.2em]">
         <motion.span className="material-symbols-outlined text-[16px]" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}>shield_health</motion.span>
-        GLOBAL METRICS
+        {t('metrics.badge').toUpperCase()}
       </div>
     </RevealOnScroll>
 
@@ -1472,9 +1581,9 @@ export default function LandingPage() {
       variants={staggerContainer}
     >
       {[
-        { stat: '98%', title: 'Prediction Accuracy', desc: 'Luna decodes endocrine patterns, consistently reducing forecasting error below standard thresholds.', visual: 'sparkline' },
-        { stat: '100K+', title: 'Cycles Mapped', desc: 'Our system processes biometric entries globally, building the most extensive anonymous database of female health.', visual: 'nodes' },
-        { stat: '4.9/5', title: 'App Store Rating', desc: 'Consistently ranked as a premium experience, combining interface luxury with medical efficacy.', visual: 'stars' },
+        { stat: '98%', title: t('metrics.widget1Title'), desc: t('metrics.widget1Desc'), visual: 'sparkline' },
+        { stat: '100K+', title: t('metrics.widget2Title'), desc: t('metrics.widget2Desc'), visual: 'nodes' },
+        { stat: '4.9/5', title: t('metrics.widget3Title'), desc: t('metrics.widget3Desc'), visual: 'stars' },
       ].map((widget) => (
         <motion.div
           key={widget.title}
@@ -1526,7 +1635,13 @@ export default function LandingPage() {
     {/* Marquee */}
     <div className="flex flex-col gap-6 opacity-85">
       <div className="flex gap-6 animate-[marquee_50s_linear_infinite]">
-        {['"The most beautiful health app I\'ve ever used."', '"Finally understand my energy dips."', '"Radical body literacy in my pocket."', '"No more guessing games."', '"A visual masterpiece and science tool."'].map((review, i) => (
+        {[
+          t('reviews.review1'),
+          t('reviews.review2'),
+          t('reviews.review3'),
+          t('reviews.review4'),
+          t('reviews.review5')
+        ].map((review, i) => (
           <div key={i} className="glass px-8 py-4 rounded-full whitespace-nowrap font-black text-sm text-secondary">{review}</div>
         ))}
       </div>
@@ -1546,30 +1661,39 @@ export default function LandingPage() {
     <RevealOnScroll>
       <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full glass border border-white/15 text-white font-bold text-xs tracking-[0.2em] mb-8 uppercase select-none">
         <motion.span className="material-symbols-outlined text-[16px] text-[#ff7b9c]" animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 2, repeat: Infinity }}>favorite</motion.span>
-        ALIGNED WITH NATURE • DRIVEN BY SCIENCE
+        {t('trust.badge')}
       </div>
     </RevealOnScroll>
 
     <RevealOnScroll>
-      <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-6 leading-[1.1] tracking-tighter">
-        Your Rhythm. <motion.span className="text-gradient bg-gradient-to-r from-primary to-primary-container" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.3, duration: 0.8 }}>Your Superpower.</motion.span>
-      </h2>
+      {(() => {
+        const titleParts = t('trust.title').split(/[.।]/);
+        const sep = i18n.language === 'hi' || i18n.language === 'bn' ? '।' : '.';
+        return (
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-6 leading-[1.1] tracking-tighter">
+            {titleParts[0]?.trim()}{sep}{' '}
+            <motion.span className="text-gradient bg-gradient-to-r from-primary to-primary-container" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.3, duration: 0.8 }}>
+              {titleParts[1]?.trim()}{sep}
+            </motion.span>
+          </h2>
+        );
+      })()}
     </RevealOnScroll>
 
     <RevealOnScroll custom={1}>
       <p className="font-body-lg text-base md:text-lg text-white/70 max-w-2xl mx-auto mb-10 leading-relaxed">
-        Luna translates the micro-fluctuations of your cycle into daily personal wisdom.
-        Begin a new, harmonious relationship with your biology today.
+        {t('trust.desc')}
       </p>
     </RevealOnScroll>
 
     <RevealOnScroll custom={2} className="w-full max-w-md mb-16">
       <motion.button
+        onClick={() => navigate('/welcome')}
         className="relative overflow-hidden group w-full sm:w-auto bg-white hover:bg-transparent text-on-background hover:text-white px-12 py-5 rounded-full font-black text-xl border-2 border-white transition-all duration-500 shadow-xl"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        <span className="relative z-10 transition-colors duration-500">Enter the Sanctuary</span>
+        <span className="relative z-10 transition-colors duration-500">{t('trust.buttonText')}</span>
         <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary-container opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0"></div>
       </motion.button>
     </RevealOnScroll>
@@ -1583,12 +1707,12 @@ export default function LandingPage() {
       variants={staggerContainer}
     >
       {[
-        { icon: 'lock', title: 'Medical-Grade Security', desc: 'Zero-knowledge local encryption. Your health data remains strictly on your device.' },
-        { icon: 'biotech', title: 'Endocrine-Validated', desc: 'Built and verified in collaboration with leading gynecologists and researchers.' },
-        { icon: 'shield_person', title: '100% Private & Ad-Free', desc: 'No data brokers, no advertisers, no compromises. We protect your privacy always.' },
-        { icon: 'query_stats', title: '98% Prediction Accuracy', desc: 'Luna learns your personal cycle variability to project symptoms and energy levels.' },
-        { icon: 'spa', title: 'Adaptive Bio-Insights', desc: 'Receive customized nutrition, sleep, and exercise advice synchronized to your cycle.' },
-        { icon: 'groups', title: 'Global Sanctuary', desc: 'Join a growing collective of 1M+ members aligning their schedules to biology.' },
+        { icon: 'lock', title: t('trust.card1Title'), desc: t('trust.card1Desc') },
+        { icon: 'biotech', title: t('trust.card2Title'), desc: t('trust.card2Desc') },
+        { icon: 'shield_person', title: t('trust.card3Title'), desc: t('trust.card3Desc') },
+        { icon: 'query_stats', title: t('trust.card4Title'), desc: t('trust.card4Desc') },
+        { icon: 'spa', title: t('trust.card5Title'), desc: t('trust.card5Desc') },
+        { icon: 'groups', title: t('trust.card6Title'), desc: t('trust.card6Desc') },
       ].map((card) => (
         <motion.div
           key={card.title}
@@ -1608,7 +1732,7 @@ export default function LandingPage() {
 
     <RevealOnScroll custom={4} className="mt-12">
       <p className="text-white/30 italic font-medium text-xs">
-        "You are not a static machine. You are a living rhythm. It's time to align."
+        {t('trust.footerQuote')}
       </p>
     </RevealOnScroll>
   </div>
@@ -1621,7 +1745,7 @@ export default function LandingPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-16 mb-24">
         <div className="col-span-2">
           <div className="font-headline-md text-3xl text-primary font-black tracking-tighter mb-8">LunaCare</div>
-          <p className="text-secondary text-xl max-w-sm mb-10">Transforming how the world views women's health through cinematic intelligence and radical empathy.</p>
+          <p className="text-secondary text-xl max-w-sm mb-10">{t('footer.desc')}</p>
           <div className="flex gap-6">
             {['language', 'favorite'].map(icon => (
               <motion.div key={icon} className="w-12 h-12 rounded-full glass border border-primary/20 flex items-center justify-center cursor-pointer" whileHover={{ scale: 1.1, backgroundColor: 'rgba(165,53,86,0.1)' }}>
@@ -1631,26 +1755,40 @@ export default function LandingPage() {
           </div>
         </div>
         <div>
-          <h5 className="font-black text-primary uppercase tracking-widest text-xs mb-8">Product</h5>
+          <h5 className="font-black text-primary uppercase tracking-widest text-xs mb-8">{t('footer.product')}</h5>
           <ul className="space-y-4 font-bold text-secondary">
-            {['Rhythms', 'Science', 'Predictions', 'Security'].map(item => (
-              <li key={item}><motion.a className="hover:text-primary transition-colors" href="#" whileHover={{ x: 4 }}>{item}</motion.a></li>
+            {[
+              { label: t('nav.rhythms'), href: '#rhythms' },
+              { label: t('nav.science'), href: '#science' },
+              { label: t('nav.insights'), href: '#insights' },
+              { label: t('footer.security'), href: '#' }
+            ].map(item => (
+              <li key={item.label}><motion.a className="hover:text-primary transition-colors" href={item.href} whileHover={{ x: 4 }}>{item.label}</motion.a></li>
             ))}
           </ul>
         </div>
         <div>
-          <h5 className="font-black text-primary uppercase tracking-widest text-xs mb-8">Sanctuary</h5>
+          <h5 className="font-black text-primary uppercase tracking-widest text-xs mb-8">{t('footer.sanctuary')}</h5>
           <ul className="space-y-4 font-bold text-secondary">
-            {['Journal', 'Community', 'Research', 'Careers'].map(item => (
+            {[
+              t('footerExtra.journal'),
+              t('footerExtra.community'),
+              t('footerExtra.research'),
+              t('footerExtra.careers')
+            ].map(item => (
               <li key={item}><motion.a className="hover:text-primary transition-colors" href="#" whileHover={{ x: 4 }}>{item}</motion.a></li>
             ))}
           </ul>
         </div>
       </div>
       <div className="flex flex-col md:flex-row justify-between items-center pt-12 border-t border-outline-variant/20 gap-8">
-        <p className="text-secondary/50 font-bold">© 2024 LunaCare. All rights reserved.</p>
+        <p className="text-secondary/50 font-bold">{t('footer.copyright')}</p>
         <div className="flex gap-10 font-bold text-secondary/50 text-sm">
-          {['Privacy Policy', 'Terms of Service', 'Security'].map(item => (
+          {[
+            t('footer.privacy'),
+            t('footer.terms'),
+            t('footer.security')
+          ].map(item => (
             <motion.a key={item} className="hover:text-primary transition-colors" href="#" whileHover={{ y: -2 }}>{item}</motion.a>
           ))}
         </div>

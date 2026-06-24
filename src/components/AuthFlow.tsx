@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { BackgroundShader } from './BackgroundShader';
 import { useApp } from '../context/AppContext';
 
@@ -25,6 +26,7 @@ const AuthContainer: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 /* ═══════════════ WELCOME SCREEN ═══════════════ */
 export const WelcomeScreen: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <AuthContainer>
@@ -42,10 +44,10 @@ export const WelcomeScreen: React.FC = () => {
         </div>
 
         <h1 className="font-headline-lg text-2xl sm:text-headline-lg text-primary mb-3">
-          Understand Your Rhythm.
+          {t('auth.welcomeTitle')}
         </h1>
         <p className="text-secondary text-xs sm:text-sm mb-6 sm:mb-10 text-center leading-relaxed">
-          Create your personal cycle intelligence profile and begin understanding your body through data, patterns, and insights.
+          {t('auth.welcomeDesc')}
         </p>
 
         <div className="flex flex-col gap-4">
@@ -55,7 +57,7 @@ export const WelcomeScreen: React.FC = () => {
             whileHover={{ scale: 1.03, boxShadow: '0 8px 30px rgba(165,53,86,0.35)' }}
             whileTap={{ scale: 0.98 }}
           >
-            Create Account
+            {t('auth.createAccount')}
           </motion.button>
           <motion.button
             onClick={() => navigate('/login')}
@@ -63,7 +65,7 @@ export const WelcomeScreen: React.FC = () => {
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
           >
-            Sign In
+            {t('auth.signIn')}
           </motion.button>
         </div>
       </div>
@@ -75,6 +77,7 @@ export const WelcomeScreen: React.FC = () => {
 export const LoginScreen: React.FC = () => {
   const navigate = useNavigate();
   const { loginUser } = useApp();
+  const { t } = useTranslation();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [password, setPassword] = useState('');
@@ -85,7 +88,7 @@ export const LoginScreen: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firstName || !lastName || !password) {
-      setError('Please fill in all fields.');
+      setError(t('auth.errorFillFields'));
       return;
     }
     try {
@@ -98,7 +101,7 @@ export const LoginScreen: React.FC = () => {
         navigate('/onboarding');
       }
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please verify credentials.');
+      setError(err.message || t('auth.errorLogin'));
     } finally {
       setLoading(false);
     }
@@ -116,8 +119,8 @@ export const LoginScreen: React.FC = () => {
         <span className="font-extrabold text-base sm:text-lg text-primary tracking-tight">LunaCare</span>
       </div>
 
-      <h2 className="font-headline-lg text-2xl sm:text-headline-lg text-primary mb-1 sm:mb-2">Welcome Back</h2>
-      <p className="text-secondary text-xs sm:text-sm mb-5 sm:mb-8">Sign in to sync your rhythm parameters.</p>
+      <h2 className="font-headline-lg text-2xl sm:text-headline-lg text-primary mb-1 sm:mb-2">{t('auth.welcomeBack')}</h2>
+      <p className="text-secondary text-xs sm:text-sm mb-5 sm:mb-8">{t('auth.signInSubtitle')}</p>
 
       {error && (
         <div className="bg-error-container text-on-error-container p-2.5 sm:p-3 rounded-2xl mb-4 sm:mb-5 text-xs sm:text-sm font-medium border border-error/10">
@@ -128,7 +131,7 @@ export const LoginScreen: React.FC = () => {
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-5">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 sm:mb-2 ml-1">First Name</label>
+            <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 sm:mb-2 ml-1">{t('auth.firstName')}</label>
             <input
               type="text"
               value={firstName}
@@ -138,7 +141,7 @@ export const LoginScreen: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 sm:mb-2 ml-1">Last Name</label>
+            <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 sm:mb-2 ml-1">{t('auth.lastName')}</label>
             <input
               type="text"
               value={lastName}
@@ -151,7 +154,7 @@ export const LoginScreen: React.FC = () => {
 
         <div>
           <div className="flex justify-between items-center mb-1.5 sm:mb-2 ml-1">
-            <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase">Password</label>
+            <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase">{t('auth.password')}</label>
           </div>
           <input
             type="password"
@@ -170,7 +173,7 @@ export const LoginScreen: React.FC = () => {
               onChange={(e) => setRememberMe(e.target.checked)}
               className="w-3.5 h-3.5 rounded border-outline/30 text-primary focus:ring-primary/20 bg-white/50"
             />
-            Remember me
+            {t('auth.rememberMe')}
           </label>
         </div>
 
@@ -181,7 +184,7 @@ export const LoginScreen: React.FC = () => {
           whileHover={loading ? {} : { scale: 1.02, boxShadow: '0 8px 30px rgba(165,53,86,0.35)' }}
           whileTap={loading ? {} : { scale: 0.98 }}
         >
-          {loading ? 'Signing In...' : 'Sign In'}
+          {loading ? t('auth.signingIn') : t('auth.signIn')}
         </motion.button>
       </form>
 
@@ -191,7 +194,7 @@ export const LoginScreen: React.FC = () => {
           <div className="w-full border-t border-outline/10"></div>
         </div>
         <span className="relative bg-transparent px-3 text-[10px] font-bold uppercase tracking-widest text-outline-variant">
-          Or continue with
+          {t('auth.orContinueWith')}
         </span>
       </div>
 
@@ -222,9 +225,9 @@ export const LoginScreen: React.FC = () => {
       </div>
 
       <div className="mt-8 text-center text-sm text-secondary font-medium">
-        Don't have an account?{' '}
+        {t('auth.noAccount')}{' '}
         <button onClick={() => navigate('/signup')} className="text-primary font-bold hover:underline">
-          Sign Up
+          {t('auth.signUp')}
         </button>
       </div>
     </AuthContainer>
@@ -235,6 +238,7 @@ export const LoginScreen: React.FC = () => {
 export const SignUpScreen: React.FC = () => {
   const navigate = useNavigate();
   const { registerUser } = useApp();
+  const { t } = useTranslation();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [password, setPassword] = useState('');
@@ -246,15 +250,15 @@ export const SignUpScreen: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firstName || !lastName || !password || !confirmPassword) {
-      setError('Please fill in all fields.');
+      setError(t('auth.errorFillFields'));
       return;
     }
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError(t('auth.errorMatchPasswords'));
       return;
     }
     if (!termsAccepted) {
-      setError('Please accept the Terms of Service.');
+      setError(t('auth.errorAcceptTerms'));
       return;
     }
     try {
@@ -264,7 +268,7 @@ export const SignUpScreen: React.FC = () => {
       // Auto-logged in, navigate directly to success screen
       navigate('/auth-success');
     } catch (err: any) {
-      setError(err.message || 'Registration failed.');
+      setError(err.message || t('auth.errorRegistration'));
     } finally {
       setLoading(false);
     }
@@ -282,8 +286,8 @@ export const SignUpScreen: React.FC = () => {
         <span className="font-extrabold text-base sm:text-lg text-primary tracking-tight">LunaCare</span>
       </div>
 
-      <h2 className="font-headline-lg text-2xl sm:text-headline-lg text-primary mb-1 sm:mb-2">Create Sanctuary</h2>
-      <p className="text-secondary text-xs sm:text-sm mb-4 sm:mb-6">Begin your personal cycle intelligence profile.</p>
+      <h2 className="font-headline-lg text-2xl sm:text-headline-lg text-primary mb-1 sm:mb-2">{t('auth.createSanctuary')}</h2>
+      <p className="text-secondary text-xs sm:text-sm mb-4 sm:mb-6">{t('auth.signUpSubtitle')}</p>
 
       {error && (
         <div className="bg-error-container text-on-error-container p-2.5 sm:p-3 rounded-2xl mb-4 text-xs sm:text-sm font-medium border border-error/10">
@@ -294,7 +298,7 @@ export const SignUpScreen: React.FC = () => {
       <form onSubmit={handleSubmit} className="flex flex-col gap-3.5 sm:gap-4.5">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">First Name</label>
+            <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">{t('auth.firstName')}</label>
             <input
               type="text"
               value={firstName}
@@ -304,7 +308,7 @@ export const SignUpScreen: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">Last Name</label>
+            <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">{t('auth.lastName')}</label>
             <input
               type="text"
               value={lastName}
@@ -316,7 +320,7 @@ export const SignUpScreen: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">Password</label>
+          <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">{t('auth.password')}</label>
           <input
             type="password"
             value={password}
@@ -327,7 +331,7 @@ export const SignUpScreen: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">Confirm Password</label>
+          <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-1.5 ml-1">{t('auth.confirmPassword')}</label>
           <input
             type="password"
             value={confirmPassword}
@@ -346,13 +350,13 @@ export const SignUpScreen: React.FC = () => {
             className="w-4 h-4 mt-0.5 rounded border-outline/30 text-primary focus:ring-primary/20 bg-white/50 cursor-pointer"
           />
           <label htmlFor="terms" className="text-xs text-secondary leading-normal cursor-pointer">
-            I accept the{' '}
+            {t('auth.acceptTerms')}{' '}
             <a href="#terms" className="text-primary font-bold hover:underline">
-              Terms of Service
+              {t('auth.termsOfService')}
             </a>{' '}
-            and{' '}
+            {t('auth.and')}{' '}
             <a href="#privacy" className="text-primary font-bold hover:underline">
-              Privacy Sanctuary Policy
+              {t('auth.privacyPolicy')}
             </a>.
           </label>
         </div>
@@ -364,14 +368,14 @@ export const SignUpScreen: React.FC = () => {
           whileHover={loading ? {} : { scale: 1.02, boxShadow: '0 8px 30px rgba(165,53,86,0.35)' }}
           whileTap={loading ? {} : { scale: 0.98 }}
         >
-          {loading ? 'Creating Profile...' : 'Create My Profile'}
+          {loading ? t('auth.creatingProfile') : t('auth.createMyProfile')}
         </motion.button>
       </form>
 
       <div className="mt-6 text-center text-sm text-secondary font-medium">
-        Already have an account?{' '}
+        {t('auth.hasAccount')}{' '}
         <button onClick={() => navigate('/login')} className="text-primary font-bold hover:underline">
-          Sign In
+          {t('auth.signIn')}
         </button>
       </div>
     </AuthContainer>
@@ -382,6 +386,7 @@ export const SignUpScreen: React.FC = () => {
 export const SuccessScreen: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useApp();
+  const { t } = useTranslation();
 
   return (
     <AuthContainer>
@@ -403,12 +408,12 @@ export const SuccessScreen: React.FC = () => {
           </div>
         </div>
 
-        <h2 className="font-headline-lg text-headline-lg text-primary mb-3">Sanctuary Connected</h2>
+        <h2 className="font-headline-lg text-headline-lg text-primary mb-3">{t('auth.successTitle')}</h2>
         <p className="text-secondary font-body-md mb-4 leading-relaxed">
-          Welcome, <span className="font-bold text-primary">{user.name || 'Elena'}</span>. Your secure intelligence channel is now fully online.
+          {t('auth.successDesc', { name: user.name || 'Elena' })}
         </p>
         <p className="text-outline font-body-md mb-10 leading-relaxed text-sm">
-          Next, let's tailor the predictive neural nets to align with your personal bio-rhythms.
+          {t('auth.successSub')}
         </p>
 
         <motion.button
@@ -417,7 +422,7 @@ export const SuccessScreen: React.FC = () => {
           whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(165,53,86,0.35)' }}
           whileTap={{ scale: 0.98 }}
         >
-          Let's Personalize
+          {t('auth.letPersonalize')}
           <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
         </motion.button>
       </div>

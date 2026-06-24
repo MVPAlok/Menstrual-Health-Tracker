@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { BackgroundShader } from './BackgroundShader';
 import { useApp } from '../context/AppContext';
 
 export const OnboardingFlow: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { onboarding, updateOnboarding } = useApp();
   const [step, setStep] = useState(1);
@@ -14,9 +16,19 @@ export const OnboardingFlow: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(5); // June (0-indexed)
 
   const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    t('months.january'), t('months.february'), t('months.march'), t('months.april'),
+    t('months.may'), t('months.june'), t('months.july'), t('months.august'),
+    t('months.september'), t('months.october'), t('months.november'), t('months.december')
   ];
+
+  const goalKeyMap: Record<string, string> = {
+    'Track Periods': 'onboarding.trackPeriods',
+    'Understand Symptoms': 'onboarding.understandSymptoms',
+    'Improve Wellness': 'onboarding.improveWellness',
+    'Learn Body Patterns': 'onboarding.learnBodyPatterns',
+    'Predict Ovulation': 'onboarding.predictOvulation',
+    'Improve Energy': 'onboarding.improveEnergy'
+  };
 
   const handleNext = async () => {
     if (step < 8) {
@@ -68,9 +80,10 @@ export const OnboardingFlow: React.FC = () => {
   };
 
   const formattedSelectedDate = () => {
-    if (!onboarding.lastPeriodDate) return 'No date selected';
+    if (!onboarding.lastPeriodDate) return t('onboarding.noDateSelected');
     const d = new Date(onboarding.lastPeriodDate);
-    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    const monthKey = monthNames[d.getMonth()];
+    return `${monthKey} ${d.getDate()}, ${d.getFullYear()}`;
   };
 
   // SVG Visualizer calculations for Step 3
@@ -102,7 +115,7 @@ export const OnboardingFlow: React.FC = () => {
               transition={{ duration: 0.4 }}
             />
           </div>
-          <span className="text-[10px] sm:text-xs font-bold text-primary whitespace-nowrap">Step {step} of 8</span>
+          <span className="text-[10px] sm:text-xs font-bold text-primary whitespace-nowrap">{t('onboarding.stepOf', { step })}</span>
         </div>
       </div>
 
@@ -130,10 +143,10 @@ export const OnboardingFlow: React.FC = () => {
                 </span>
               </div>
               <h2 className="font-hero-display-mobile md:font-headline-lg text-2xl sm:text-headline-lg text-primary mb-4 leading-tight">
-                Let's Understand Your Rhythm.
+                {t('onboarding.welcomeTitle')}
               </h2>
               <p className="text-secondary font-body-lg max-w-md mx-auto mb-10 leading-relaxed">
-                Answer a few questions so we can personalize your experience and calibrate our predictive algorithms.
+                {t('onboarding.welcomeDesc')}
               </p>
               <motion.button
                 onClick={handleNext}
@@ -141,7 +154,7 @@ export const OnboardingFlow: React.FC = () => {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
               >
-                Begin Personalization
+                {t('onboarding.beginButton')}
               </motion.button>
             </motion.div>
           )}
@@ -153,9 +166,9 @@ export const OnboardingFlow: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <h3 className="font-headline-md text-xl sm:text-headline-md text-primary mb-2">Last Period Date</h3>
+              <h3 className="font-headline-md text-xl sm:text-headline-md text-primary mb-2">{t('onboarding.lastPeriodTitle')}</h3>
               <p className="text-secondary text-xs sm:text-sm mb-6 sm:mb-8">
-                Select the day your last menstrual flow commenced.
+                {t('onboarding.lastPeriodDesc')}
               </p>
 
               <div className="flex flex-col md:flex-row gap-6 sm:gap-8 items-center justify-between">
@@ -217,12 +230,12 @@ export const OnboardingFlow: React.FC = () => {
                 <div className="flex-1 text-center md:text-left flex flex-col items-center md:items-start gap-4">
                   <div className="p-5 bg-white/50 border border-white/60 rounded-3xl w-full text-center">
                     <span className="block text-xs font-bold text-outline-variant uppercase tracking-widest mb-1">
-                      Selected Period Start
+                      {t('onboarding.selectedPeriodStart')}
                     </span>
                     <span className="text-xl font-bold text-primary">{formattedSelectedDate()}</span>
                   </div>
                   <p className="text-xs text-secondary leading-relaxed">
-                    LunaCare utilizes this baseline to forecast follicular, luteal, and ovulation milestones.
+                    {t('onboarding.lastPeriodNotice')}
                   </p>
                 </div>
               </div>
@@ -232,13 +245,13 @@ export const OnboardingFlow: React.FC = () => {
                   onClick={handlePrev}
                   className="px-6 py-3 border border-white bg-white/40 rounded-full font-bold text-xs uppercase tracking-wider text-secondary"
                 >
-                  Back
+                  {t('onboarding.back')}
                 </button>
                 <button
                   onClick={handleNext}
                   className="px-8 py-3 bg-primary text-on-primary rounded-full font-bold text-xs uppercase tracking-wider shadow-md shadow-primary/20"
                 >
-                  Continue
+                  {t('onboarding.continue')}
                 </button>
               </div>
             </motion.div>
@@ -251,9 +264,9 @@ export const OnboardingFlow: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <h3 className="font-headline-md text-xl sm:text-headline-md text-primary mb-2">Cycle Length</h3>
+              <h3 className="font-headline-md text-xl sm:text-headline-md text-primary mb-2">{t('onboarding.cycleLengthTitle')}</h3>
               <p className="text-secondary text-xs sm:text-sm mb-6 sm:mb-8">
-                What is the typical interval between the start of one period and the next?
+                {t('onboarding.cycleLengthDesc')}
               </p>
 
               <div className="flex flex-col md:flex-row gap-6 sm:gap-10 items-center justify-between">
@@ -262,7 +275,7 @@ export const OnboardingFlow: React.FC = () => {
                   <div className="text-center bg-white/40 border border-white/70 rounded-3xl p-4 sm:p-6 shadow-sm">
                     <span className="text-5xl sm:text-6xl font-extrabold text-primary">{onboarding.cycleLength}</span>
                     <span className="block text-xs font-bold uppercase tracking-widest text-secondary mt-2">
-                      Days
+                      {t('onboarding.days')}
                     </span>
                   </div>
                   <input
@@ -274,9 +287,9 @@ export const OnboardingFlow: React.FC = () => {
                     className="w-full accent-primary h-2 bg-white/50 rounded-lg cursor-pointer"
                   />
                   <div className="flex justify-between text-xs font-bold text-secondary px-1">
-                    <span>21 Days</span>
-                    <span>28 Days (Avg)</span>
-                    <span>35 Days</span>
+                    <span>21 {t('onboarding.days')}</span>
+                    <span>{t('onboarding.daysAvg')}</span>
+                    <span>35 {t('onboarding.days')}</span>
                   </div>
                 </div>
 
@@ -334,15 +347,15 @@ export const OnboardingFlow: React.FC = () => {
                     </svg>
 
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                      <span className="text-xs font-bold text-secondary">Est. Phases</span>
-                      <span className="text-lg font-extrabold text-primary">Calibrated</span>
+                      <span className="text-xs font-bold text-secondary">{t('onboarding.estPhases')}</span>
+                      <span className="text-lg font-extrabold text-primary">{t('onboarding.calibrated')}</span>
                     </div>
                   </div>
                   <div className="flex gap-4 flex-wrap justify-center mt-5 text-[10px] font-bold text-secondary">
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-primary" /> Menstrual</span>
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#e2d9f3]" /> Follicular</span>
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#ffdce3]" /> Ovulation</span>
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#fccdc7]" /> Luteal</span>
+                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-primary" /> {t('rhythms.menstrualShort')}</span>
+                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#e2d9f3]" /> {t('rhythms.follicularShort')}</span>
+                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#ffdce3]" /> {t('rhythms.ovulationShort')}</span>
+                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#fccdc7]" /> {t('rhythms.lutealShort')}</span>
                   </div>
                 </div>
               </div>
@@ -352,13 +365,13 @@ export const OnboardingFlow: React.FC = () => {
                   onClick={handlePrev}
                   className="px-6 py-3 border border-white bg-white/40 rounded-full font-bold text-xs uppercase tracking-wider text-secondary"
                 >
-                  Back
+                  {t('onboarding.back')}
                 </button>
                 <button
                   onClick={handleNext}
                   className="px-8 py-3 bg-primary text-on-primary rounded-full font-bold text-xs uppercase tracking-wider shadow-md shadow-primary/20"
                 >
-                  Continue
+                  {t('onboarding.continue')}
                 </button>
               </div>
             </motion.div>
@@ -371,16 +384,16 @@ export const OnboardingFlow: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <h3 className="font-headline-md text-xl sm:text-headline-md text-primary mb-2">Period Length</h3>
+              <h3 className="font-headline-md text-xl sm:text-headline-md text-primary mb-2">{t('onboarding.periodLengthTitle')}</h3>
               <p className="text-secondary text-xs sm:text-sm mb-6 sm:mb-8">
-                How many days does active menstrual bleeding typically continue?
+                {t('onboarding.periodLengthDesc')}
               </p>
 
               <div className="flex flex-col gap-6 sm:gap-8 items-center justify-center py-2 sm:py-4">
                 <div className="text-center bg-white/40 border border-white/70 rounded-3xl p-4 sm:p-6 shadow-sm w-full max-w-xs">
                   <span className="text-5xl sm:text-6xl font-extrabold text-primary">{onboarding.periodLength}</span>
                   <span className="block text-xs font-bold uppercase tracking-widest text-secondary mt-2">
-                    Days Bleeding
+                    {t('onboarding.daysBleeding')}
                   </span>
                 </div>
 
@@ -394,9 +407,9 @@ export const OnboardingFlow: React.FC = () => {
                     className="w-full accent-primary h-2 bg-white/50 rounded-lg cursor-pointer"
                   />
                   <div className="flex justify-between text-xs font-bold text-secondary px-1 mt-2">
-                    <span>2 Days</span>
-                    <span>5 Days (Avg)</span>
-                    <span>10 Days</span>
+                    <span>2 {t('onboarding.days')}</span>
+                    <span>5 {t('onboarding.daysVal', { days: 5 })} (Avg)</span>
+                    <span>10 {t('onboarding.days')}</span>
                   </div>
                 </div>
 
@@ -425,13 +438,13 @@ export const OnboardingFlow: React.FC = () => {
                   onClick={handlePrev}
                   className="px-6 py-3 border border-white bg-white/40 rounded-full font-bold text-xs uppercase tracking-wider text-secondary"
                 >
-                  Back
+                  {t('onboarding.back')}
                 </button>
                 <button
                   onClick={handleNext}
                   className="px-8 py-3 bg-primary text-on-primary rounded-full font-bold text-xs uppercase tracking-wider shadow-md shadow-primary/20"
                 >
-                  Continue
+                  {t('onboarding.continue')}
                 </button>
               </div>
             </motion.div>
@@ -444,19 +457,19 @@ export const OnboardingFlow: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <h3 className="font-headline-md text-xl sm:text-headline-md text-primary mb-2">Health Goals</h3>
+              <h3 className="font-headline-md text-xl sm:text-headline-md text-primary mb-2">{t('onboarding.healthGoalsTitle')}</h3>
               <p className="text-secondary text-xs sm:text-sm mb-6 sm:mb-8">
-                Select your focus parameters for cycle tracking.
+                {t('onboarding.healthGoalsDesc')}
               </p>
 
               <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
                 {[
-                  { id: 'Track Periods', label: 'Track Periods', icon: 'calendar_month' },
-                  { id: 'Understand Symptoms', label: 'Understand Symptoms', icon: 'psychology' },
-                  { id: 'Improve Wellness', label: 'Improve Wellness', icon: 'spa' },
-                  { id: 'Learn Body Patterns', label: 'Learn Body Patterns', icon: 'analytics' },
-                  { id: 'Predict Ovulation', label: 'Predict Ovulation', icon: 'wb_sunny' },
-                  { id: 'Improve Energy', label: 'Improve Energy', icon: 'electric_bolt' }
+                  { id: 'Track Periods', label: t('onboarding.trackPeriods'), icon: 'calendar_month' },
+                  { id: 'Understand Symptoms', label: t('onboarding.understandSymptoms'), icon: 'psychology' },
+                  { id: 'Improve Wellness', label: t('onboarding.improveWellness'), icon: 'spa' },
+                  { id: 'Learn Body Patterns', label: t('onboarding.learnBodyPatterns'), icon: 'analytics' },
+                  { id: 'Predict Ovulation', label: t('onboarding.predictOvulation'), icon: 'wb_sunny' },
+                  { id: 'Improve Energy', label: t('onboarding.improveEnergy'), icon: 'electric_bolt' }
                 ].map((goal) => {
                   const isSelected = onboarding.healthGoals.includes(goal.id);
                   const toggleGoal = () => {
@@ -497,13 +510,13 @@ export const OnboardingFlow: React.FC = () => {
                   onClick={handlePrev}
                   className="px-6 py-3 border border-white bg-white/40 rounded-full font-bold text-xs uppercase tracking-wider text-secondary"
                 >
-                  Back
+                  {t('onboarding.back')}
                 </button>
                 <button
                   onClick={handleNext}
                   className="px-8 py-3 bg-primary text-on-primary rounded-full font-bold text-xs uppercase tracking-wider shadow-md shadow-primary/20"
                 >
-                  Continue
+                  {t('onboarding.continue')}
                 </button>
               </div>
             </motion.div>
@@ -516,89 +529,117 @@ export const OnboardingFlow: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <h3 className="font-headline-md text-xl sm:text-headline-md text-primary mb-2">Lifestyle Information</h3>
+              <h3 className="font-headline-md text-xl sm:text-headline-md text-primary mb-2">{t('onboarding.lifestyleTitle')}</h3>
               <p className="text-secondary text-xs sm:text-sm mb-6 sm:mb-8">
-                Calibrate daily wellness inputs to correlate sleep and mood patterns.
+                {t('onboarding.lifestyleDesc')}
               </p>
 
               <div className="flex flex-col gap-4 sm:gap-6">
                 {/* Sleep Quality */}
                 <div>
-                  <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">Sleep Quality</label>
+                  <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">{t('onboarding.sleepQuality')}</label>
                   <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                    {['Restorative', 'Fragmented', 'Insufficient'].map((option) => (
-                      <button
-                        key={option}
-                        onClick={() => updateOnboarding({ lifestyle: { ...onboarding.lifestyle, sleep: option } })}
-                        className={`py-2 px-1 sm:py-3.5 sm:px-4 rounded-full text-[10px] sm:text-xs font-bold border transition-all ${
-                          onboarding.lifestyle.sleep === option
-                            ? 'bg-primary text-on-primary shadow-md border-primary'
-                            : 'bg-white/40 border-white hover:bg-white/80 text-secondary'
-                        }`}
-                      >
-                        {option}
-                      </button>
-                    ))}
+                    {['Restorative', 'Fragmented', 'Insufficient'].map((option) => {
+                      const labelMap: Record<string, string> = {
+                        Restorative: t('onboarding.restorative'),
+                        Fragmented: t('onboarding.fragmented'),
+                        Insufficient: t('onboarding.insufficient')
+                      };
+                      return (
+                        <button
+                          key={option}
+                          onClick={() => updateOnboarding({ lifestyle: { ...onboarding.lifestyle, sleep: option } })}
+                          className={`py-2 px-1 sm:py-3.5 sm:px-4 rounded-full text-[10px] sm:text-xs font-bold border transition-all ${
+                            onboarding.lifestyle.sleep === option
+                              ? 'bg-primary text-on-primary shadow-md border-primary'
+                              : 'bg-white/40 border-white hover:bg-white/80 text-secondary'
+                          }`}
+                        >
+                          {labelMap[option] || option}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* Stress Level */}
                 <div>
-                  <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">Stress Level</label>
+                  <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">{t('onboarding.stressLevel')}</label>
                   <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                    {['Low', 'Moderate', 'High'].map((option) => (
-                      <button
-                        key={option}
-                        onClick={() => updateOnboarding({ lifestyle: { ...onboarding.lifestyle, stress: option } })}
-                        className={`py-2 px-1 sm:py-3.5 sm:px-4 rounded-full text-[10px] sm:text-xs font-bold border transition-all ${
-                          onboarding.lifestyle.stress === option
-                            ? 'bg-primary text-on-primary shadow-md border-primary'
-                            : 'bg-white/40 border-white hover:bg-white/80 text-secondary'
-                        }`}
-                      >
-                        {option}
-                      </button>
-                    ))}
+                    {['Low', 'Moderate', 'High'].map((option) => {
+                      const labelMap: Record<string, string> = {
+                        Low: t('onboarding.low'),
+                        Moderate: t('onboarding.moderate'),
+                        High: t('onboarding.high')
+                      };
+                      return (
+                        <button
+                          key={option}
+                          onClick={() => updateOnboarding({ lifestyle: { ...onboarding.lifestyle, stress: option } })}
+                          className={`py-2 px-1 sm:py-3.5 sm:px-4 rounded-full text-[10px] sm:text-xs font-bold border transition-all ${
+                            onboarding.lifestyle.stress === option
+                              ? 'bg-primary text-on-primary shadow-md border-primary'
+                              : 'bg-white/40 border-white hover:bg-white/80 text-secondary'
+                          }`}
+                        >
+                          {labelMap[option] || option}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* Activity Level */}
                 <div>
-                  <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">Activity Level</label>
+                  <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">{t('onboarding.activityLevel')}</label>
                   <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                    {['Sedentary', 'Active', 'Athletic'].map((option) => (
-                      <button
-                        key={option}
-                        onClick={() => updateOnboarding({ lifestyle: { ...onboarding.lifestyle, activity: option } })}
-                        className={`py-2 px-1 sm:py-3.5 sm:px-4 rounded-full text-[10px] sm:text-xs font-bold border transition-all ${
-                          onboarding.lifestyle.activity === option
-                            ? 'bg-primary text-on-primary shadow-md border-primary'
-                            : 'bg-white/40 border-white hover:bg-white/80 text-secondary'
-                        }`}
-                      >
-                        {option}
-                      </button>
-                    ))}
+                    {['Sedentary', 'Active', 'Athletic'].map((option) => {
+                      const labelMap: Record<string, string> = {
+                        Sedentary: t('onboarding.sedentary'),
+                        Active: t('onboarding.active'),
+                        Athletic: t('onboarding.athletic')
+                      };
+                      return (
+                        <button
+                          key={option}
+                          onClick={() => updateOnboarding({ lifestyle: { ...onboarding.lifestyle, activity: option } })}
+                          className={`py-2 px-1 sm:py-3.5 sm:px-4 rounded-full text-[10px] sm:text-xs font-bold border transition-all ${
+                            onboarding.lifestyle.activity === option
+                              ? 'bg-primary text-on-primary shadow-md border-primary'
+                              : 'bg-white/40 border-white hover:bg-white/80 text-secondary'
+                          }`}
+                        >
+                          {labelMap[option] || option}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* Hydration */}
                 <div>
-                  <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">Hydration</label>
+                  <label className="block text-[10px] sm:text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">{t('onboarding.hydration')}</label>
                   <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                    {['Optimal', 'Average', 'Low'].map((option) => (
-                      <button
-                        key={option}
-                        onClick={() => updateOnboarding({ lifestyle: { ...onboarding.lifestyle, hydration: option } })}
-                        className={`py-2 px-1 sm:py-3.5 sm:px-4 rounded-full text-[10px] sm:text-xs font-bold border transition-all ${
-                          onboarding.lifestyle.hydration === option
-                            ? 'bg-primary text-on-primary shadow-md border-primary'
-                            : 'bg-white/40 border-white hover:bg-white/80 text-secondary'
-                        }`}
-                      >
-                        {option}
-                      </button>
-                    ))}
+                    {['Optimal', 'Average', 'Low'].map((option) => {
+                      const labelMap: Record<string, string> = {
+                        Optimal: t('onboarding.optimal'),
+                        Average: t('onboarding.average'),
+                        Low: t('onboarding.low')
+                      };
+                      return (
+                        <button
+                          key={option}
+                          onClick={() => updateOnboarding({ lifestyle: { ...onboarding.lifestyle, hydration: option } })}
+                          className={`py-2 px-1 sm:py-3.5 sm:px-4 rounded-full text-[10px] sm:text-xs font-bold border transition-all ${
+                            onboarding.lifestyle.hydration === option
+                              ? 'bg-primary text-on-primary shadow-md border-primary'
+                              : 'bg-white/40 border-white hover:bg-white/80 text-secondary'
+                          }`}
+                        >
+                          {labelMap[option] || option}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -608,13 +649,13 @@ export const OnboardingFlow: React.FC = () => {
                   onClick={handlePrev}
                   className="px-6 py-3 border border-white bg-white/40 rounded-full font-bold text-xs uppercase tracking-wider text-secondary"
                 >
-                  Back
+                  {t('onboarding.back')}
                 </button>
                 <button
                   onClick={handleNext}
                   className="px-8 py-3 bg-primary text-on-primary rounded-full font-bold text-xs uppercase tracking-wider shadow-md shadow-primary/20"
                 >
-                  Continue
+                  {t('onboarding.continue')}
                 </button>
               </div>
             </motion.div>
@@ -627,17 +668,17 @@ export const OnboardingFlow: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <h3 className="font-headline-md text-xl sm:text-headline-md text-primary mb-2">Notifications</h3>
+              <h3 className="font-headline-md text-xl sm:text-headline-md text-primary mb-2">{t('onboarding.notificationsTitle')}</h3>
               <p className="text-secondary text-xs sm:text-sm mb-6 sm:mb-8">
-                Choose the alerts you'd like to receive on your intelligence stream.
+                {t('onboarding.notificationsDesc')}
               </p>
 
               <div className="flex flex-col gap-3 sm:gap-4">
                 {[
-                  { key: 'period', label: 'Period Reminders', desc: 'Predictive alert 2 days prior to cycle commencement.' },
-                  { key: 'ovulation', label: 'Ovulation Alerts', desc: 'Alerts at peak luteinizing hormone and fertility window opening.' },
-                  { key: 'insights', label: 'Insight Updates', desc: 'Weekly biological metrics analysis report.' },
-                  { key: 'wellnessTips', label: 'Daily Wellness Tips', desc: 'Personalized wellness recommendations based on current cycle phase.' }
+                  { key: 'period', label: t('onboarding.periodLabel'), desc: t('onboarding.periodDesc') },
+                  { key: 'ovulation', label: t('onboarding.ovulationLabel'), desc: t('onboarding.ovulationDesc') },
+                  { key: 'insights', label: t('onboarding.insightsLabel'), desc: t('onboarding.insightsDesc') },
+                  { key: 'wellnessTips', label: t('onboarding.wellnessTipsLabel'), desc: t('onboarding.wellnessTipsDesc') }
                 ].map((item) => {
                   const typedKey = item.key as keyof typeof onboarding.notifications;
                   const isActive = onboarding.notifications[typedKey];
@@ -679,13 +720,13 @@ export const OnboardingFlow: React.FC = () => {
                   onClick={handlePrev}
                   className="px-6 py-3 border border-white bg-white/40 rounded-full font-bold text-xs uppercase tracking-wider text-secondary"
                 >
-                  Back
+                  {t('onboarding.back')}
                 </button>
                 <button
                   onClick={handleNext}
                   className="px-8 py-3 bg-primary text-on-primary rounded-full font-bold text-xs uppercase tracking-wider shadow-md shadow-primary/20"
                 >
-                  Continue
+                  {t('onboarding.continue')}
                 </button>
               </div>
             </motion.div>
@@ -707,24 +748,24 @@ export const OnboardingFlow: React.FC = () => {
                 </div>
               </div>
 
-              <h2 className="font-headline-lg text-2xl sm:text-headline-lg text-primary mb-3">Profile Calibrated</h2>
+              <h2 className="font-headline-lg text-2xl sm:text-headline-lg text-primary mb-3">{t('onboarding.profileReadyTitle')}</h2>
               <p className="text-secondary text-xs sm:text-sm mb-6 sm:mb-8 max-w-md mx-auto">
-                Your biological parameters are synchronized. Here is your cycle intelligence core baseline:
+                {t('onboarding.profileReadyDesc')}
               </p>
 
               <div className="grid grid-cols-3 gap-2.5 mb-8">
                 <div className="bg-white/50 border border-white/60 p-2.5 sm:p-4 rounded-2xl">
-                  <span className="block text-[8px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">Cycle Length</span>
-                  <span className="text-sm sm:text-xl font-bold text-primary">{onboarding.cycleLength} Days</span>
+                  <span className="block text-[8px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">{t('onboarding.cycleLength')}</span>
+                  <span className="text-sm sm:text-xl font-bold text-primary">{t('onboarding.daysVal', { days: onboarding.cycleLength })}</span>
                 </div>
                 <div className="bg-white/50 border border-white/60 p-2.5 sm:p-4 rounded-2xl">
-                  <span className="block text-[8px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">Period Length</span>
-                  <span className="text-sm sm:text-xl font-bold text-primary">{onboarding.periodLength} Days</span>
+                  <span className="block text-[8px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">{t('onboarding.periodLength')}</span>
+                  <span className="text-sm sm:text-xl font-bold text-primary">{t('onboarding.daysVal', { days: onboarding.periodLength })}</span>
                 </div>
                 <div className="bg-white/50 border border-white/60 p-2.5 sm:p-4 rounded-2xl">
-                  <span className="block text-[8px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">Health Focus</span>
+                  <span className="block text-[8px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">{t('onboarding.healthFocus')}</span>
                   <span className="text-xs sm:text-sm font-bold text-primary truncate max-w-full block">
-                    {onboarding.healthGoals.length > 0 ? onboarding.healthGoals[0] : 'Wellness'}
+                    {onboarding.healthGoals.length > 0 ? t(goalKeyMap[onboarding.healthGoals[0]] || 'onboarding.improveWellness') : t('onboarding.improveWellness')}
                   </span>
                 </div>
               </div>
@@ -736,7 +777,7 @@ export const OnboardingFlow: React.FC = () => {
                   whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(165, 53, 86, 0.4)' }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  Enter Dashboard
+                  {t('onboarding.enterDashboard')}
                   <span className="material-symbols-outlined text-[18px]">space_dashboard</span>
                 </motion.button>
               </div>
