@@ -38,6 +38,7 @@ export interface DailyLog {
   stress: number; // 1 to 10
   hydration?: number; // cups (1 to 8)
   flowType?: 'NONE' | 'SPOTTING' | 'LIGHT' | 'MEDIUM' | 'HEAVY';
+  hrv?: number; // Heart Rate Variability (ms)
 }
 
 interface AppContextType {
@@ -113,6 +114,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           stress: log.stressFactor,
           hydration: log.hydrationCups,
           flowType: log.flowType || 'NONE',
+          hrv: log.hrv,
         };
       });
       setDailyLogs(mappedLogs);
@@ -146,6 +148,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           stress: data.log.stress,
           hydration: data.log.hydration,
           flowType: data.log.flowType || 'NONE',
+          hrv: data.log.hrv,
         }
       }));
     });
@@ -217,6 +220,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         stress: log.stressFactor,
         hydration: log.hydrationCups,
         flowType: log.flowType || 'NONE',
+        hrv: log.hrv,
       };
     });
     setDailyLogs(mappedLogs);
@@ -277,6 +281,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       symptoms: log.symptoms,
       hydration: log.hydration || 4,
       flowType: log.flowType || 'NONE',
+      hrv: log.hrv,
     };
     
     await api.logs.save(dbPayload);

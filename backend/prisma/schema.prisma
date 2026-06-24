@@ -22,6 +22,7 @@ model User {
   partnerSyncInitiator PartnerSync[] @relation("UserInitiated")
   partnerSyncReceiver  PartnerSync[] @relation("UserReceived")
   notifications        Notification[]
+  cycleHistory         CycleHistory[]
 
   @@unique([firstName, lastName])
 }
@@ -60,6 +61,7 @@ model DailyLog {
   symptoms      String[]  // e.g., ["Cramps", "Bloating", "Headache"]
   hydrationCups Int       @default(4)   // 1 to 8 cups
   flowType      MenstrualFlow @default(NONE)
+  hrv           Int?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -89,6 +91,18 @@ model Notification {
   read        Boolean   @default(false)
   triggerTime DateTime
   createdAt   DateTime  @default(now())
+}
+
+// Completed Cycles Ledger
+model CycleHistory {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startDate   String   // YYYY-MM-DD
+  endDate     String?  // YYYY-MM-DD
+  cycleLength Int?     // Calculated length of this cycle
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 // Enums

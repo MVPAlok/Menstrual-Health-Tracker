@@ -31,6 +31,8 @@ export interface CycleForecast {
   };
   focusState: string;
   hrvBaseline: string;
+  currentCycleDay: number;
+  currentPhase: 'menstrual' | 'follicular' | 'ovulation' | 'luteal';
 }
 
 // Add days to date helper
@@ -40,7 +42,7 @@ const addDays = (dateStr: string, days: number): string => {
   return date.toISOString().split('T')[0];
 };
 
-export const calculatePredictions = async (userId: string): Promise<CycleForecast> => {
+export const calculatePredictions = async (userId: string, offsetDays: number = 0): Promise<CycleForecast> => {
   // Retrieve user calibration data
   const onboarding = await prisma.onboarding.findUnique({
     where: { userId },
@@ -54,29 +56,35 @@ export const calculatePredictions = async (userId: string): Promise<CycleForecas
   let baselineCycleLength = onboarding.cycleLength;
   let lastKnownPeriodStart = onboarding.lastPeriodDate;
 
-  // Query actual daily log history to adjust predictions dynamically
-  const logs = await prisma.dailyLog.findMany({
-    where: { userId },
+  // Optimizations: Query counts and averages directly rather than loading all logs.
+  // 1. Total logs count
+  const totalLogsCount = await prisma.dailyLog.count({
+    where: { userId }
+  });
+
+  // 2. Fetch the latest period start log date (which is newer than onboarding lastPeriodDate)
+  const latestPeriodStartLog = await prisma.dailyLog.findFirst({
+    where: {
+      userId,
+      OR: [
+        { symptoms: { hasSome: ['Healthy Flow', 'Cramps'] } },
+        { flowType: { not: 'NONE' } }
+      ]
+    },
     orderBy: { date: 'desc' },
   });
 
-  const totalLogsCount = logs.length;
-
-  // Dynamic Calculation: If the user has logged a period flow recently, adapt to it
-  // Look for logs containing 'Healthy Flow' or 'Cramps' or flowType !== NONE
-  const periodStartLogs = logs
-    .filter((log: any) => log.symptoms.includes('Healthy Flow') || log.symptoms.includes('Cramps') || log.flowType !== 'NONE')
-    .sort((a: any, b: any) => b.date.localeCompare(a.date));
-
-  if (periodStartLogs.length > 0) {
-    if (periodStartLogs[0].date > lastKnownPeriodStart) {
-      lastKnownPeriodStart = periodStartLogs[0].date;
-    }
+  if (latestPeriodStartLog && latestPeriodStartLog.date > lastKnownPeriodStart) {
+    lastKnownPeriodStart = latestPeriodStartLog.date;
   }
 
   // Calculate dates
   const todayStr = new Date().toISOString().split('T')[0];
-  const today = new Date(todayStr);
+  let today = new Date(todayStr);
+  if (offsetDays > 0) {
+    today = new Date(addDays(todayStr, offsetDays));
+  }
+  
   const lastPeriod = new Date(lastKnownPeriodStart);
 
   const diffTime = Math.abs(today.getTime() - lastPeriod.getTime());
@@ -96,9 +104,9 @@ export const calculatePredictions = async (userId: string): Promise<CycleForecas
   const projectedEnergySpike = addDays(lastKnownPeriodStart, ovulationPeakOffset - 4); // Estrogen rise starts
   const projectedRecoveryHigh = addDays(lastKnownPeriodStart, baselineCycleLength - 2); // Transitioning to recovery
 
-  // 1. Calculate accuracy and confidence dynamically based on log counts (Audit verification guidelines)
-  let confidenceRate = 50; // 0-6 logs: 50%
-  let accuracyRate = 50;   // 0-6 logs: 50%
+  // 1. Calculate accuracy and confidence dynamically based on log counts
+  let confidenceRate = 50;
+  let accuracyRate = 50;
 
   if (totalLogsCount >= 7 && totalLogsCount <= 13) {
     confidenceRate = 70;
@@ -111,45 +119,27 @@ export const calculatePredictions = async (userId: string): Promise<CycleForecas
     accuracyRate = 98;
   }
 
-  // 2. Calculate true average cycle length if multiple cycles exist
+  // 2. Fetch Average Cycle Length from CycleHistory ledger
   let averageCycleLength: number | null = null;
-  const periodStarts: string[] = [];
-  if (onboarding.lastPeriodDate) {
-    periodStarts.push(onboarding.lastPeriodDate);
+  const avgCycleAgg = await prisma.cycleHistory.aggregate({
+    where: { userId, cycleLength: { not: null } },
+    _avg: { cycleLength: true }
+  });
+  if (avgCycleAgg._avg.cycleLength) {
+    averageCycleLength = Math.round(avgCycleAgg._avg.cycleLength);
   }
 
-  // Parse logs in chronological order to group cycle start events (at least 15 days apart)
-  const cronLogs = [...logs].sort((a: any, b: any) => a.date.localeCompare(b.date));
-  const cronPeriodLogs = cronLogs.filter((log: any) =>
-    log.symptoms.includes('Healthy Flow') || log.symptoms.includes('Cramps') || log.flowType !== 'NONE'
-  );
-
-  for (const log of cronPeriodLogs) {
-    const logDate = new Date(log.date);
-    const tooClose = periodStarts.some((pDateStr) => {
-      const pDate = new Date(pDateStr);
-      const diffDays = Math.abs(logDate.getTime() - pDate.getTime()) / (1000 * 60 * 60 * 24);
-      return diffDays < 15;
-    });
-    if (!tooClose) {
-      periodStarts.push(log.date);
+  // 3. Compute dynamic Insights from logging history (optimized select)
+  const insightLogs = await prisma.dailyLog.findMany({
+    where: { userId },
+    select: {
+      date: true,
+      sleepHours: true,
+      hydrationCups: true,
+      stressFactor: true
     }
-  }
+  });
 
-  periodStarts.sort();
-
-  if (periodStarts.length >= 2) {
-    let totalDays = 0;
-    for (let i = 0; i < periodStarts.length - 1; i++) {
-      const d1 = new Date(periodStarts[i]);
-      const d2 = new Date(periodStarts[i + 1]);
-      const diff = Math.abs(d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24);
-      totalDays += diff;
-    }
-    averageCycleLength = Math.round(totalDays / (periodStarts.length - 1));
-  }
-
-  // 3. Compute dynamic Insights from logging history
   const getCycleDay = (logDateStr: string, refDateStr: string, cLength: number): number => {
     const logDate = new Date(logDateStr);
     const refDate = new Date(refDateStr);
@@ -168,7 +158,7 @@ export const calculatePredictions = async (userId: string): Promise<CycleForecas
   let lowHydrationStressSum = 0;
   let lowHydrationStressCount = 0;
 
-  for (const log of logs) {
+  for (const log of insightLogs) {
     const cycleDay = getCycleDay(log.date, lastKnownPeriodStart, baselineCycleLength);
     const isFollicular = cycleDay > onboarding.periodLength && cycleDay < (baselineCycleLength - 14 - 2);
 
@@ -216,6 +206,31 @@ export const calculatePredictions = async (userId: string): Promise<CycleForecas
   // 4. Simulate hormone parameters dynamically based on cycleDay
   const hormoneData = simulateHormones(currentCycleDay, baselineCycleLength, onboarding.periodLength);
 
+  // 5. Calculate Real HRV Baseline from user logs (rolling past 30 days)
+  let hrvBaseline = "Calibrating (3 logs required)";
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+
+  const hrvAgg = await prisma.dailyLog.aggregate({
+    where: {
+      userId,
+      date: { gte: thirtyDaysAgoStr },
+      hrv: { not: null }
+    },
+    _avg: { hrv: true },
+    _count: { hrv: true }
+  });
+
+  if (hrvAgg._count.hrv >= 3 && hrvAgg._avg.hrv !== null) {
+    const avgHrv = Math.round(hrvAgg._avg.hrv);
+    let category = "Varying";
+    if (avgHrv >= 80) category = "Optimal";
+    else if (avgHrv >= 70) category = "Relaxed";
+    else if (avgHrv >= 60) category = "Elevated";
+    hrvBaseline = `${category} (${avgHrv}ms)`;
+  }
+
   return {
     nextCycleDate,
     daysRemaining: daysRemaining > 0 ? daysRemaining : 0,
@@ -245,6 +260,14 @@ export const calculatePredictions = async (userId: string): Promise<CycleForecas
       fsh: hormoneData.fsh,
     },
     focusState: hormoneData.focusState,
-    hrvBaseline: hormoneData.hrvBaseline,
+    hrvBaseline,
+    currentCycleDay,
+    currentPhase: currentCycleDay <= onboarding.periodLength
+      ? 'menstrual'
+      : currentCycleDay < ovulationPeakOffset - 2
+      ? 'follicular'
+      : currentCycleDay <= ovulationPeakOffset + 1
+      ? 'ovulation'
+      : 'luteal',
   };
 };

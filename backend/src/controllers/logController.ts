@@ -37,6 +37,7 @@ export const getLogsRange = async (req: AuthenticatedRequest, res: Response) => 
       symptoms: log.symptoms,
       hydration: log.hydrationCups,
       flowType: log.flowType,
+      hrv: log.hrv,
     }));
 
     return res.status(200).json(mappedLogs);
@@ -47,7 +48,7 @@ export const getLogsRange = async (req: AuthenticatedRequest, res: Response) => 
 
 export const saveLog = async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.userId;
-  const { date, mood, sleep, energy, stress, symptoms, hydration, flowType } = req.body;
+  const { date, mood, sleep, energy, stress, symptoms, hydration, flowType, hrv } = req.body;
 
   if (!userId) {
     return res.status(401).json({ error: 'Unauthorized.' });
@@ -87,6 +88,7 @@ export const saveLog = async (req: AuthenticatedRequest, res: Response) => {
         symptoms: symptoms || [],
         hydrationCups: hydration !== undefined ? Number(hydration) : 4,
         flowType: resolvedFlow,
+        hrv: hrv !== undefined && hrv !== null ? Number(hrv) : null,
       },
       create: {
         userId,
@@ -98,8 +100,49 @@ export const saveLog = async (req: AuthenticatedRequest, res: Response) => {
         symptoms: symptoms || [],
         hydrationCups: hydration !== undefined ? Number(hydration) : 4,
         flowType: resolvedFlow,
+        hrv: hrv !== undefined && hrv !== null ? Number(hrv) : null,
       },
     });
+
+    // CycleHistory Completion Ledger Hook
+    if (resolvedFlow === MenstrualFlow.LIGHT || resolvedFlow === MenstrualFlow.MEDIUM || resolvedFlow === MenstrualFlow.HEAVY) {
+      const fifteenDaysAgo = new Date(new Date(date).getTime() - 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const recentCycle = await prisma.cycleHistory.findFirst({
+        where: {
+          userId,
+          startDate: { gte: fifteenDaysAgo },
+        },
+      });
+
+      if (!recentCycle) {
+        // Close active cycle
+        const openCycle = await prisma.cycleHistory.findFirst({
+          where: { userId, endDate: null },
+        });
+
+        if (openCycle) {
+          const startDateObj = new Date(openCycle.startDate);
+          const logDateObj = new Date(date);
+          const diffDays = Math.max(1, Math.round((logDateObj.getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24)));
+
+          await prisma.cycleHistory.update({
+            where: { id: openCycle.id },
+            data: {
+              endDate: date,
+              cycleLength: diffDays,
+            },
+          });
+        }
+
+        // Open new cycle
+        await prisma.cycleHistory.create({
+          data: {
+            userId,
+            startDate: date,
+          },
+        });
+      }
+    }
 
     return res.status(200).json({
       message: 'Daily telemetry log saved successfully.',
@@ -112,6 +155,7 @@ export const saveLog = async (req: AuthenticatedRequest, res: Response) => {
         symptoms: log.symptoms,
         hydration: log.hydrationCups,
         flowType: log.flowType,
+        hrv: log.hrv,
       },
     });
   } catch (error) {

@@ -37,10 +37,13 @@ export const Dashboard: React.FC = () => {
   const [loggedStress, setLoggedStress] = useState<number>(3);
   const [loggedHydration, setLoggedHydration] = useState<number>(4); // cups (1-8)
   const [loggedFlow, setLoggedFlow] = useState<'NONE' | 'SPOTTING' | 'LIGHT' | 'MEDIUM' | 'HEAVY'>('NONE');
+  const [loggedHrv, setLoggedHrv] = useState<number>(75);
   const [logSaved, setLogSaved] = useState<boolean>(false);
 
   // Interactive Timeline state for Prediction Lab (+0, +3, +7, +14, +21)
   const [selectedTimelineOffset, setSelectedTimelineOffset] = useState<number>(0);
+  const [labForecast, setLabForecast] = useState<any>(null);
+  const [labLoading, setLabLoading] = useState<boolean>(false);
 
   // API states
   const [forecast, setForecast] = useState<any>(null);
@@ -72,6 +75,23 @@ export const Dashboard: React.FC = () => {
       fetchDashboardData();
     }
   }, [user.isLoggedIn, onboarding]);
+
+  // Fetch dynamic lab projections when offset changes
+  useEffect(() => {
+    const fetchLabProjections = async () => {
+      if (!user.isLoggedIn) return;
+      try {
+        setLabLoading(true);
+        const fc = await api.predictions.getForecast(selectedTimelineOffset);
+        setLabForecast(fc);
+      } catch (e) {
+        console.error('Failed to load predictions lab forecast:', e);
+      } finally {
+        setLabLoading(false);
+      }
+    };
+    fetchLabProjections();
+  }, [selectedTimelineOffset, user.isLoggedIn, dailyLogs]);
 
   // Calculate cycle parameters
   const today = new Date();
@@ -161,6 +181,7 @@ export const Dashboard: React.FC = () => {
       setLoggedStress(log.stress);
       setLoggedHydration(log.hydration || 4);
       setLoggedFlow(log.flowType || 'NONE');
+      setLoggedHrv(log.hrv || 75);
     }
   }, [dailyLogs]);
 
@@ -176,6 +197,7 @@ export const Dashboard: React.FC = () => {
         stress: loggedStress,
         hydration: loggedHydration,
         flowType: loggedFlow,
+        hrv: loggedHrv,
       });
       setLogSaved(true);
       setTimeout(() => setLogSaved(false), 3000);
@@ -624,27 +646,50 @@ export const Dashboard: React.FC = () => {
                   </div>
 
                   {/* Interactive Projections */}
-                  <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-                    {[
-                      { type: 'Period Flow', status: selectedTimelineOffset === 0 ? 'Active bleeding' : selectedTimelineOffset < 5 ? 'Resting Phase' : selectedTimelineOffset < 20 ? 'Follicular Transition' : 'Next Cycle Starting', icon: 'water_drop', score: `${forecast.accuracyRate}%` },
-                      { type: 'Ovulation', status: selectedTimelineOffset < 5 ? 'Developing follicle' : selectedTimelineOffset < 10 ? 'High fertility window' : 'Completed cycle shift', icon: 'wb_sunny', score: `${forecast.accuracyRate - 3}%` },
-                      { type: 'Mood Tendency', status: selectedTimelineOffset < 7 ? 'Radiant & Social' : 'Reflective & Grounded', icon: 'sentiment_satisfied', score: `${forecast.accuracyRate - 5}%` },
-                      { type: 'Physical Energy', status: selectedTimelineOffset < 7 ? 'High Peak Stamina' : 'Moderate Inward Flow', icon: 'bolt', score: `${forecast.accuracyRate - 7}%` },
-                      { type: 'Sleep Recovery', status: selectedTimelineOffset < 14 ? 'Optimal Rest Duration' : 'Slightly Fragmented REM', icon: 'bedtime', score: `${forecast.accuracyRate - 4}%` },
-                      { type: 'Stress Resilience', status: selectedTimelineOffset < 7 ? 'High Resilience' : 'Moderate Sensitivity', icon: 'spa', score: `${forecast.accuracyRate - 6}%` }
-                    ].map((pred) => (
-                      <div key={pred.type} className="bg-white/40 border border-white/60 p-3 sm:p-5 rounded-2xl flex flex-col justify-between gap-3 shadow-inner">
-                        <div className="flex justify-between items-center">
-                          <span className="material-symbols-outlined text-primary text-base sm:text-lg">{pred.icon}</span>
-                          <span className="text-[8px] sm:text-[9px] font-bold text-primary">{pred.score} Conf.</span>
-                        </div>
-                        <div>
-                          <span className="block text-[8px] sm:text-[10px] font-bold text-secondary uppercase mb-0.5">{pred.type}</span>
-                          <span className="text-[11px] sm:text-xs font-bold text-primary leading-tight">{pred.status}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  {labLoading ? (
+                    <div className="text-center py-10 w-full flex flex-col items-center justify-center min-h-[200px]">
+                      <span className="material-symbols-outlined text-primary animate-spin text-3xl">sync</span>
+                      <span className="mt-2 text-xs font-bold text-secondary">Computing dynamic projections...</span>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+                      {(() => {
+                        const targetForecast = labForecast || forecast;
+                        if (!targetForecast) return null;
+                        const phase = targetForecast.currentPhase || 'follicular';
+                        const accuracy = targetForecast.accuracyRate || 50;
+                        const lh = targetForecast.hormones?.lh || 50;
+
+                        // Dynamic status calculation based on simulated hormones & phases
+                        const flowStatus = phase === 'menstrual' ? 'Active bleeding' : phase === 'follicular' ? 'Resting Phase' : phase === 'ovulation' ? 'Follicular Transition' : 'Next Cycle Starting';
+                        const ovulationStatus = phase === 'ovulation' ? 'Peak ovulation surge' : (phase === 'follicular' && lh > 30) ? 'High fertility window' : (phase === 'follicular') ? 'Developing follicle' : 'Completed cycle shift';
+                        const moodStatus = phase === 'menstrual' ? 'Restful & Reflective' : phase === 'follicular' ? 'Radiant & Social' : phase === 'ovulation' ? 'High Social Stamina' : 'Reflective Detail Focus';
+                        const energyStatus = phase === 'menstrual' ? 'Resting / Recovery' : phase === 'follicular' ? 'High Peak Stamina' : phase === 'ovulation' ? 'Peak Metabolic Energy' : 'Moderate Inward Flow';
+                        const sleepStatus = phase === 'menstrual' ? 'Extended Rest Quality' : phase === 'follicular' ? 'Optimal Rest Duration' : phase === 'ovulation' ? 'Deep Slow-Wave Rest' : 'Slightly Fragmented REM';
+                        const stressStatus = phase === 'menstrual' ? 'Moderate Sensitivity' : phase === 'follicular' ? 'High Resilience' : phase === 'ovulation' ? 'Calm Stability' : 'Varying Resilience';
+
+                        return [
+                          { type: 'Period Flow', status: flowStatus, icon: 'water_drop', score: `${accuracy}%` },
+                          { type: 'Ovulation', status: ovulationStatus, icon: 'wb_sunny', score: `${Math.max(50, accuracy - 3)}%` },
+                          { type: 'Mood Tendency', status: moodStatus, icon: 'sentiment_satisfied', score: `${Math.max(50, accuracy - 5)}%` },
+                          { type: 'Physical Energy', status: energyStatus, icon: 'bolt', score: `${Math.max(50, accuracy - 7)}%` },
+                          { type: 'Sleep Recovery', status: sleepStatus, icon: 'bedtime', score: `${Math.max(50, accuracy - 4)}%` },
+                          { type: 'Stress Resilience', status: stressStatus, icon: 'spa', score: `${Math.max(50, accuracy - 6)}%` }
+                        ].map((pred) => (
+                          <div key={pred.type} className="bg-white/40 border border-white/60 p-3 sm:p-5 rounded-2xl flex flex-col justify-between gap-3 shadow-inner">
+                            <div className="flex justify-between items-center">
+                              <span className="material-symbols-outlined text-primary text-base sm:text-lg">{pred.icon}</span>
+                              <span className="text-[8px] sm:text-[9px] font-bold text-primary">{pred.score} Conf.</span>
+                            </div>
+                            <div>
+                              <span className="block text-[8px] sm:text-[10px] font-bold text-secondary uppercase mb-0.5">{pred.type}</span>
+                              <span className="text-[11px] sm:text-xs font-bold text-primary leading-tight">{pred.status}</span>
+                            </div>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  )}
 
                   <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center justify-between text-xs">
                     <span className="font-bold text-primary flex items-center gap-1.5">
@@ -971,11 +1016,29 @@ export const Dashboard: React.FC = () => {
                   </div>
                 </div>
 
+                {/* HRV Tracker */}
+                <div>
+                  <label className="block text-xs font-bold text-primary tracking-wider uppercase mb-2 ml-1">Heart Rate Variability ({loggedHrv} ms)</label>
+                  <input
+                    type="range"
+                    min={20}
+                    max={150}
+                    value={loggedHrv}
+                    onChange={(e) => setLoggedHrv(parseInt(e.target.value))}
+                    className="w-full accent-primary h-2 bg-white/60 rounded-full"
+                  />
+                  <div className="flex justify-between text-[10px] text-secondary font-bold mt-1.5">
+                    <span>Low (20ms)</span>
+                    <span>Average (75ms)</span>
+                    <span>High (150ms)</span>
+                  </div>
+                </div>
+
                 {/* Living Summary Feedback Block */}
                 <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl">
                   <span className="block text-[10px] font-bold text-primary uppercase mb-1">Today's signals indicate</span>
                   <p className="text-xs font-bold text-secondary">
-                    {loggedMood} mood • {loggedSleep}h rest quality • {loggedEnergy >= 7 ? 'High energy capacity' : 'Slight energy rest'} • {loggedStress <= 4 ? 'Low baseline stress' : 'Mild alert triggers'} • {loggedHydration >= 6 ? 'Optimal hydration' : 'Need more water'} • Flow: {loggedFlow}
+                    {loggedMood} mood • {loggedSleep}h rest quality • {loggedEnergy >= 7 ? 'High energy capacity' : 'Slight energy rest'} • {loggedStress <= 4 ? 'Low baseline stress' : 'Mild alert triggers'} • {loggedHydration >= 6 ? 'Optimal hydration' : 'Need more water'} • Flow: {loggedFlow} • HRV: {loggedHrv}ms
                   </p>
                 </div>
 

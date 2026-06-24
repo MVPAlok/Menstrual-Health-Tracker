@@ -73,7 +73,7 @@ export const api = {
   },
   // Predictions
   predictions: {
-    getForecast: () => request<any>('/predictions/forecast'),
+    getForecast: (offset?: number) => request<any>(`/predictions/forecast${offset !== undefined ? `?offset=${offset}` : ''}`),
   },
   // Partner Syncing
   partner: {
