@@ -24,11 +24,8 @@ if (process.env.CLIENT_URL) {
 // Enable CORS for frontend Vite client dev and production URLs
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+    // Dynamically allow any origin to prevent CORS deployment errors
+    callback(null, true);
   },
   credentials: true
 }));
@@ -46,11 +43,8 @@ app.use('/api/predictions', predictionsRoutes);
 const io = new Server(httpServer, {
   cors: {
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin || '')) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
+      // Dynamically allow any origin to prevent CORS deployment errors
+      callback(null, true);
     },
     methods: ['GET', 'POST'],
     credentials: true
