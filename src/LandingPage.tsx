@@ -618,7 +618,7 @@ export default function LandingPage() {
 </motion.nav>
 
 {/* ═══════════════ HERO SECTION ═══════════════ */}
-<section className="fixed top-0 left-0 w-full h-screen flex items-center justify-center pt-24 overflow-hidden z-0">
+<section className="fixed top-0 left-0 w-full flex items-center justify-center pt-16 sm:pt-24 overflow-hidden z-0" style={{ height: '100dvh' }}>
   {/* Shader Background */}
   <div className="absolute inset-0 pointer-events-none" style={{ width: '100%', height: '100%' }}>
     <div className="absolute inset-0 w-full h-full" style={{ display: 'block' }}>
@@ -645,9 +645,9 @@ export default function LandingPage() {
     />
   </motion.div>
 
-  <div className="relative z-10 text-center max-w-5xl px-container-padding-mobile mx-auto mt-10">
+  <div className="relative z-10 text-center max-w-5xl px-container-padding-mobile mx-auto mt-4 sm:mt-10">
     <motion.h1
-      className="font-hero-display-mobile md:font-hero-display text-hero-display-mobile md:text-hero-display mb-6 tracking-tighter text-on-background drop-shadow-sm"
+      className="font-hero-display-mobile md:font-hero-display text-[32px] xs:text-[38px] sm:text-5xl md:text-hero-display mb-4 sm:mb-6 tracking-tighter text-on-background drop-shadow-sm"
       initial={{ opacity: 0, y: 60 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.4 }}
@@ -664,7 +664,7 @@ export default function LandingPage() {
     </motion.h1>
 
     <motion.p
-      className="font-body-lg text-body-lg text-secondary max-w-2xl mx-auto mb-12 opacity-90"
+      className="font-body-lg text-sm sm:text-base md:text-body-lg text-secondary max-w-2xl mx-auto mb-8 sm:mb-12 opacity-90"
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.9 }}
@@ -673,13 +673,13 @@ export default function LandingPage() {
     </motion.p>
 
     <motion.div
-      className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
+      className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-8 sm:mb-16"
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 1.1 }}
     >
       <motion.button
-        className="bg-primary text-on-primary px-6 py-3 md:px-10 md:py-5 rounded-full font-bold text-base md:text-lg border border-primary/50 w-full sm:w-auto"
+        className="bg-primary text-on-primary px-5 py-2.5 sm:px-6 sm:py-3 md:px-10 md:py-5 rounded-full font-bold text-sm sm:text-base md:text-lg border border-primary/50 w-full sm:w-auto"
         whileHover={{ scale: 1.05, boxShadow: '0 0 40px rgba(165,53,86,0.5)' }}
         whileTap={{ scale: 0.95 }}
         onClick={() => navigate('/welcome')}
@@ -688,7 +688,7 @@ export default function LandingPage() {
         {t('hero.startTracking')}
       </motion.button>
       <motion.button
-        className="glass px-6 py-3 md:px-10 md:py-5 rounded-full font-bold text-base md:text-lg text-primary w-full sm:w-auto"
+        className="glass px-5 py-2.5 sm:px-6 sm:py-3 md:px-10 md:py-5 rounded-full font-bold text-sm sm:text-base md:text-lg text-primary w-full sm:w-auto"
         whileHover={{ scale: 1.05, backgroundColor: 'rgba(255,255,255,0.9)', boxShadow: '0 8px 30px rgba(0,0,0,0.05)' }}
         whileTap={{ scale: 0.95 }}
         onClick={(e) => handleNavClick(e, 'experience')}
@@ -700,7 +700,7 @@ export default function LandingPage() {
 
     {/* Floating Glass Pills */}
     <motion.div
-      className="flex flex-wrap justify-center gap-2 md:gap-4 px-2 md:px-0"
+      className="flex flex-wrap justify-center gap-1.5 sm:gap-2 md:gap-4 px-2 md:px-0"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, delay: 1.3 }}
@@ -712,13 +712,13 @@ export default function LandingPage() {
       ].map((pill, i) => (
         <motion.div
           key={pill.label}
-          className="glass px-4 md:px-6 py-2 md:py-3 rounded-full flex items-center gap-2 cursor-default"
+          className="glass px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 rounded-full flex items-center gap-1.5 sm:gap-2 cursor-default text-[10px] sm:text-xs md:text-sm"
           animate={{ y: [0, -12, 0] }}
           transition={{ duration: 6 + i * 2, repeat: Infinity, ease: 'easeInOut', delay: i * 0.5 }}
           whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.6)' }}
         >
-          <span className="material-symbols-outlined text-primary text-sm md:text-base">{pill.icon}</span>
-          <span className="font-semibold text-secondary text-xs md:text-sm uppercase tracking-wider">{pill.label}</span>
+          <span className="material-symbols-outlined text-primary text-xs sm:text-sm md:text-base">{pill.icon}</span>
+          <span className="font-semibold text-secondary tracking-wider">{pill.label}</span>
         </motion.div>
       ))}
     </motion.div>
@@ -726,7 +726,7 @@ export default function LandingPage() {
 </section>
 
 {/* ═══════════════ CONTENT WRAPPER ═══════════════ */}
-<div className="relative z-10 bg-[#fffdfd] mt-[100vh] rounded-t-[3rem] md:rounded-t-[4rem] shadow-[0_-40px_80px_rgba(165,53,86,0.08)] border-t border-white/50" style={{ isolation: 'isolate' }}>
+<div className="relative z-10 bg-[#fffdfd] rounded-t-[3rem] md:rounded-t-[4rem] shadow-[0_-40px_80px_rgba(165,53,86,0.08)] border-t border-white/50" style={{ isolation: 'isolate', marginTop: '100dvh' }}>
 
 {/* ═══════════════ SECTION 2: LIVING RHYTHM ═══════════════ */}
 <section id="rhythms" className="py-16 sm:py-20 md:py-section-gap relative min-h-[80vh] md:min-h-screen flex flex-col items-center justify-center bg-[#fffdfd] overflow-hidden">
