@@ -729,14 +729,14 @@ export default function LandingPage() {
 <div className="relative z-10 bg-[#fffdfd] mt-[100vh] rounded-t-[3rem] md:rounded-t-[4rem] shadow-[0_-40px_80px_rgba(165,53,86,0.08)] border-t border-white/50" style={{ isolation: 'isolate' }}>
 
 {/* ═══════════════ SECTION 2: LIVING RHYTHM ═══════════════ */}
-<section id="rhythms" className="py-section-gap relative min-h-screen flex flex-col items-center justify-center bg-[#fffdfd] overflow-hidden">
-  <RevealOnScroll className="text-center max-w-3xl mx-auto mb-20 px-container-padding-mobile">
-    <h2 className="text-6xl md:text-7xl font-black mb-6 tracking-tighter text-on-background">{t('rhythms.title')}</h2>
-    <p className="text-xl text-secondary">{t('rhythms.desc')}</p>
+<section id="rhythms" className="py-16 sm:py-20 md:py-section-gap relative min-h-[80vh] md:min-h-screen flex flex-col items-center justify-center bg-[#fffdfd] overflow-hidden">
+  <RevealOnScroll className="text-center max-w-3xl mx-auto mb-10 md:mb-20 px-container-padding-mobile">
+    <h2 className="text-4xl sm:text-5xl md:text-7xl font-black mb-4 md:mb-6 tracking-tighter text-on-background">{t('rhythms.title')}</h2>
+    <p className="text-base sm:text-lg md:text-xl text-secondary">{t('rhythms.desc')}</p>
   </RevealOnScroll>
 
   {/* Giant Interactive Cycle Ring */}
-  <RevealOnScroll className="relative w-full max-w-4xl aspect-square flex items-center justify-center px-container-padding-mobile" variants={scaleIn}>
+  <RevealOnScroll className="relative w-full max-w-[320px] sm:max-w-[420px] md:max-w-4xl aspect-square flex items-center justify-center px-4 sm:px-container-padding-mobile" variants={scaleIn}>
     {/* SVG Ring */}
     <svg className="absolute inset-0 w-full h-full -rotate-90 drop-shadow-[0_0_24px_rgba(165,53,86,0.1)]" viewBox="0 0 100 100">
       <defs>
@@ -809,9 +809,9 @@ export default function LandingPage() {
           transition={{ duration: 0.3 }}
           className="flex flex-col items-center"
         >
-          <span className="text-primary font-black text-[10px] md:text-xs tracking-[0.3em] uppercase mb-2 md:mb-3">{phaseData[activePhase].num}</span>
-          <h3 className="text-3xl sm:text-4xl md:text-5xl font-black text-on-background mb-2 md:mb-4">{t('rhythms.' + activePhase + 'Short')}</h3>
-          <p className="text-secondary text-xs sm:text-sm md:text-base leading-relaxed max-w-sm hidden sm:block">{phaseData[activePhase].desc}</p>
+          <span className="text-primary font-black text-[9px] sm:text-[10px] md:text-xs tracking-[0.2em] sm:tracking-[0.3em] uppercase mb-1 sm:mb-2 md:mb-3">{phaseData[activePhase].num}</span>
+          <h3 className="text-xl sm:text-3xl md:text-5xl font-black text-on-background mb-1 sm:mb-2 md:mb-4">{t('rhythms.' + activePhase + 'Short')}</h3>
+          <p className="text-secondary text-[10px] sm:text-sm md:text-base leading-relaxed max-w-sm hidden sm:block">{phaseData[activePhase].desc}</p>
         </motion.div>
       </AnimatePresence>
       <div className="absolute bottom-4 md:bottom-10 glass px-4 py-1.5 md:px-6 md:py-2.5 rounded-full shadow-sm">
@@ -861,24 +861,45 @@ export default function LandingPage() {
 </section>
 
 {/* ═══════════════ SECTION 3: INVISIBLE SHIFTS ═══════════════ */}
-<section id="science" className="py-section-gap px-container-padding-mobile md:px-container-padding-desktop overflow-hidden bg-[#fffdfd]">
-  <div className="grid lg:grid-cols-2 gap-32 items-center max-w-7xl mx-auto">
+<section id="science" className="py-16 sm:py-20 md:py-section-gap px-container-padding-mobile md:px-container-padding-desktop overflow-hidden bg-[#fffdfd]">
+  <div className="grid lg:grid-cols-2 gap-12 sm:gap-16 md:gap-24 lg:gap-32 items-center max-w-7xl mx-auto">
     <motion.div
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.3 }}
       variants={staggerContainer}
     >
-      <motion.h2 variants={staggerItem} className="text-6xl font-black tracking-tighter mb-10 leading-none">{t('science.title')}</motion.h2>
-      <motion.p variants={staggerItem} className="text-xl text-secondary leading-relaxed mb-12">{t('science.desc')}</motion.p>
+      <motion.h2 variants={staggerItem} className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tighter mb-6 md:mb-10 leading-none">{t('science.title')}</motion.h2>
+      <motion.p variants={staggerItem} className="text-base sm:text-lg md:text-xl text-secondary leading-relaxed mb-8 md:mb-12">{t('science.desc')}</motion.p>
       <motion.button variants={staggerItem} className="group flex items-center gap-4 font-black text-primary uppercase tracking-widest text-sm" whileHover={{ x: 5 }}>
         {t('science.cta')}
         <motion.span className="material-symbols-outlined" whileHover={{ x: 8 }} transition={{ type: 'spring', stiffness: 300 }}>arrow_forward</motion.span>
       </motion.button>
     </motion.div>
 
+    {/* Mobile Grid (visible only on mobile) */}
+    <div className="grid grid-cols-2 gap-4 w-full md:hidden mt-8">
+      {[
+        { icon: 'healing', title: t('science.recovery'), desc: t('science.recoveryDesc') },
+        { icon: 'bedtime', title: t('science.sleep'), desc: t('science.sleepDesc') },
+        { icon: 'spa', title: t('science.stress'), desc: t('science.stressDesc') },
+        { icon: 'sentiment_satisfied', title: t('science.mood'), desc: t('science.moodDesc') },
+        { icon: 'psychology', title: t('science.focus'), desc: t('science.focusDesc') },
+        { icon: 'bolt', title: t('science.energy'), desc: t('science.energyDesc') },
+      ].map((card) => (
+        <div
+          key={card.title}
+          className="glass p-4 rounded-xl flex flex-col gap-1.5 shadow-md border border-primary/5 text-left"
+        >
+          <span className="material-symbols-outlined text-primary text-xl">{card.icon}</span>
+          <h4 className="font-black text-xs text-on-background">{card.title}</h4>
+          <p className="text-[9px] leading-snug text-secondary">{card.desc}</p>
+        </div>
+      ))}
+    </div>
+
     {/* Floating Panels */}
-    <RevealOnScroll className="relative h-[400px] sm:h-[500px] md:h-[650px] flex items-center justify-center scale-[0.6] sm:scale-[0.8] md:scale-100 origin-center" variants={scaleIn}>
+    <RevealOnScroll className="relative h-[280px] sm:h-[400px] md:h-[650px] w-full flex items-center justify-center scale-[0.45] sm:scale-[0.7] md:scale-100 origin-center hidden md:flex" variants={scaleIn}>
       {/* SVG Lines */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-40" viewBox="0 0 600 600" preserveAspectRatio="none">
         <defs>
@@ -936,14 +957,39 @@ export default function LandingPage() {
 </section>
 
 {/* ═══════════════ SECTION 4: NEURAL MAP ═══════════════ */}
-<section id="neural-map" className="py-section-gap relative overflow-hidden bg-[#fff8fb]">
+<section id="neural-map" className="py-16 sm:py-20 md:py-section-gap relative overflow-hidden bg-[#fff8fb]">
   <div className="px-container-padding-mobile md:px-container-padding-desktop max-w-full mx-auto">
-    <RevealOnScroll className="text-center mb-16">
-      <h2 className="text-6xl font-black tracking-tighter mb-6 text-on-background">{t('neuralMap.title')}</h2>
-      <p className="text-xl text-secondary max-w-2xl mx-auto">{t('neuralMap.desc')}</p>
+    <RevealOnScroll className="text-center mb-8 md:mb-16">
+      <h2 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tighter mb-4 md:mb-6 text-on-background">{t('neuralMap.title')}</h2>
+      <p className="text-base sm:text-lg md:text-xl text-secondary max-w-2xl mx-auto">{t('neuralMap.desc')}</p>
     </RevealOnScroll>
 
-    <RevealOnScroll className="relative h-[300px] sm:h-[450px] md:h-[650px] w-full flex items-center justify-center overflow-hidden max-w-7xl mx-auto scale-[0.35] sm:scale-[0.6] md:scale-100 origin-center neural-map-scale" variants={scaleIn}>
+    {/* Mobile Neural Grid (visible only on mobile) */}
+    <div className="grid grid-cols-2 gap-3 w-full md:hidden mt-6">
+      {[
+        { label: t('neuralMap.stressSync'), desc: t('neuralMap.stressSyncDesc'), color: 'bg-primary' },
+        { label: t('neuralMap.cognitiveFlow'), desc: t('neuralMap.cognitiveFlowDesc'), color: 'bg-[#ff7b9c]' },
+        { label: t('neuralMap.estrogenWave'), desc: t('neuralMap.estrogenWaveDesc'), color: 'bg-[#ae9fc4]' },
+        { label: t('neuralMap.moodBias'), desc: t('neuralMap.moodBiasDesc'), color: 'bg-primary' },
+        { label: t('neuralMap.cravingsShift'), desc: t('neuralMap.cravingsShiftDesc'), color: 'bg-[#ff7b9c]' },
+        { label: t('neuralMap.hrvCorrelation'), desc: t('neuralMap.hrvCorrelationDesc'), color: 'bg-[#ae9fc4]' },
+        { label: t('neuralMap.recoveryIndex'), desc: t('neuralMap.recoveryIndexDesc'), color: 'bg-primary' },
+        { label: t('neuralMap.sleepStage'), desc: t('neuralMap.sleepStageDesc'), color: 'bg-primary' },
+      ].map((node) => (
+        <div
+          key={node.label}
+          className="glass px-3.5 py-3 rounded-xl flex items-center gap-2 shadow-sm border border-primary/5 text-left"
+        >
+          <span className={`w-2 h-2 rounded-full ${node.color} shrink-0`}></span>
+          <div>
+            <span className="font-black text-[10px] text-on-background uppercase tracking-wider block leading-tight">{node.label}</span>
+            <span className="text-[8px] leading-tight text-secondary block mt-0.5">{node.desc}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <RevealOnScroll className="relative h-[250px] sm:h-[380px] md:h-[650px] w-full flex items-center justify-center overflow-hidden max-w-7xl mx-auto scale-[0.3] sm:scale-[0.55] md:scale-100 origin-center neural-map-scale hidden md:flex" variants={scaleIn}>
       {/* SVG Mesh */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-50" viewBox="0 0 1200 600" preserveAspectRatio="none">
         <defs>
@@ -1040,7 +1086,7 @@ export default function LandingPage() {
     {/* Orbiting Sphere Area */}
     <div id="prediction-core-container" className="relative h-[650px] w-full flex items-center justify-center overflow-hidden">
       {/* HUD Rings */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 scale-[0.6] sm:scale-[0.8] md:scale-100">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 scale-[0.45] sm:scale-[0.8] md:scale-100">
         <svg className="absolute w-[680px] h-[680px] opacity-20 animate-spin-slow" viewBox="0 0 200 200">
           <circle cx="100" cy="100" r="95" fill="none" stroke="rgba(255, 93, 143, 0.4)" strokeWidth="0.5" strokeDasharray="10 30" />
           <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(255, 255, 255, 0.15)" strokeWidth="0.75" strokeDasharray="2 6" />
@@ -1056,9 +1102,9 @@ export default function LandingPage() {
       </div>
 
       {/* 3D Orbit Rings */}
-      <div className="absolute w-[440px] h-[440px] md:w-[580px] md:h-[580px] rounded-full border border-white/10 opacity-30 orbit-animation pointer-events-none z-0" style={{ transform: 'rotateX(70deg) rotateY(15deg)' }}></div>
-      <div className="absolute w-[380px] h-[380px] md:w-[500px] md:h-[500px] rounded-full border border-white/20 border-dashed opacity-40 orbit-animation-reverse pointer-events-none z-0" style={{ transform: 'rotateX(70deg) rotateY(-15deg)' }}></div>
-      <div className="absolute w-[320px] h-[320px] md:w-[420px] md:h-[420px] rounded-full border border-primary/25 opacity-50 orbit-animation pointer-events-none z-0" style={{ transform: 'rotateX(25deg) rotateY(70deg)' }}></div>
+      <div className="absolute w-[240px] h-[240px] sm:w-[440px] sm:h-[440px] md:w-[580px] md:h-[580px] rounded-full border border-white/10 opacity-30 orbit-animation pointer-events-none z-0" style={{ transform: 'rotateX(70deg) rotateY(15deg)' }}></div>
+      <div className="absolute w-[200px] h-[200px] sm:w-[380px] sm:h-[380px] md:w-[500px] md:h-[500px] rounded-full border border-white/20 border-dashed opacity-40 orbit-animation-reverse pointer-events-none z-0" style={{ transform: 'rotateX(70deg) rotateY(-15deg)' }}></div>
+      <div className="absolute w-[180px] h-[180px] sm:w-[320px] sm:h-[320px] md:w-[420px] md:h-[420px] rounded-full border border-primary/25 opacity-50 orbit-animation pointer-events-none z-0" style={{ transform: 'rotateX(25deg) rotateY(70deg)' }}></div>
 
       {/* Energy SVG paths */}
       <svg id="energy-svg" className="absolute inset-0 w-full h-full pointer-events-none z-10" style={{ mixBlendMode: 'plus-lighter' }}>
@@ -1083,13 +1129,13 @@ export default function LandingPage() {
       {/* Central Orb */}
       <div id="prediction-center-orb" className="relative z-20 flex items-center justify-center pointer-events-none select-none">
         <motion.div
-          className="absolute w-80 h-80 md:w-[350px] md:h-[350px] rounded-full bg-gradient-to-tr from-primary via-primary-container to-tertiary-container blur-[15px] opacity-70"
+          className="absolute w-44 h-44 sm:w-80 sm:h-80 md:w-[350px] md:h-[350px] rounded-full bg-gradient-to-tr from-primary via-primary-container to-tertiary-container blur-[15px] opacity-70"
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
         />
-        <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-full bg-gradient-to-tr from-primary via-primary-container to-[#ae9fc4] shadow-[0_0_150px_rgba(165,53,86,0.85)] flex items-center justify-center overflow-hidden border border-white/30">
+        <div className="relative w-32 h-32 sm:w-64 sm:h-64 md:w-80 md:h-80 rounded-full bg-gradient-to-tr from-primary via-primary-container to-[#ae9fc4] shadow-[0_0_80px_rgba(165,53,86,0.6)] sm:shadow-[0_0_150px_rgba(165,53,86,0.85)] flex items-center justify-center overflow-hidden border border-white/30">
           <motion.span
-            className="material-symbols-outlined text-[100px] md:text-[130px] text-white/50"
+            className="material-symbols-outlined text-[50px] sm:text-[100px] md:text-[130px] text-white/50"
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
           >
@@ -1108,16 +1154,16 @@ export default function LandingPage() {
       ].map(card => (
         <div key={card.id} id={`prediction-card-${card.id}`} className="orbit-card-wrapper pointer-events-auto" style={{ animation: 'orbit-elliptical 32s linear infinite', animationDelay: card.delay }}>
           <motion.div
-            className="glass border-white/15 p-6 rounded-3xl w-64 text-left shadow-2xl select-none"
+            className="glass border-white/15 p-4 sm:p-6 rounded-2xl sm:rounded-3xl w-44 sm:w-64 text-left shadow-2xl select-none"
             whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.2)' }}
             transition={{ type: 'spring', stiffness: 200, damping: 15 }}
           >
-            <div className="flex items-center gap-2 mb-3">
-              <span className={`w-2 h-2 rounded-full ${card.dotColor}`}></span>
-              <p className="text-white/50 font-black text-[10px] uppercase tracking-widest">{card.badge}</p>
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+              <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${card.dotColor}`}></span>
+              <p className="text-white/50 font-black text-[8px] sm:text-[10px] uppercase tracking-widest">{card.badge}</p>
             </div>
-            <p className="text-white text-lg font-bold">{card.text}</p>
-            <div className="mt-3 flex items-center justify-between text-[11px] text-white/40">
+            <p className="text-white text-xs sm:text-sm md:text-lg font-bold leading-snug">{card.text}</p>
+            <div className="mt-2 sm:mt-3 flex items-center justify-between text-[9px] sm:text-[11px] text-white/40">
               <span>{card.sub1}</span>
               <span>{card.sub2}</span>
             </div>
@@ -1140,23 +1186,23 @@ export default function LandingPage() {
   </RevealOnScroll>
 
   <motion.div
-    className="grid md:grid-cols-2 gap-10 max-w-7xl mx-auto px-container-padding-mobile px-container-padding-desktop"
+    className="grid md:grid-cols-2 gap-6 md:gap-10 max-w-7xl mx-auto px-container-padding-mobile px-container-padding-desktop"
     initial="hidden"
     whileInView="visible"
     viewport={{ once: true, amount: 0.1 }}
     variants={staggerContainer}
   >
     {/* Card 1: Energy */}
-    <motion.div variants={staggerItem} className="glass-card p-10 rounded-[2.5rem] flex flex-col justify-between cursor-pointer" whileHover={{ y: -8, boxShadow: '0 30px 60px -15px rgba(165,53,86,0.1)' }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
+    <motion.div variants={staggerItem} className="glass-card p-6 sm:p-10 rounded-3xl sm:rounded-[2.5rem] flex flex-col justify-between cursor-pointer" whileHover={{ y: -8, boxShadow: '0 30px 60px -15px rgba(165,53,86,0.1)' }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
       <div>
         <div className="flex justify-between items-center mb-6">
           <span className="text-primary font-black text-xs tracking-widest uppercase">{t('biometrics.energyWaveform')}</span>
           <span className="material-symbols-outlined text-primary text-2xl">bolt</span>
         </div>
-        <h3 className="text-3xl font-black text-on-background mb-4">{t('biometrics.energyTitle')}</h3>
-        <p className="text-secondary leading-relaxed mb-8">{t('biometrics.energyDesc')}</p>
+        <h3 className="text-2xl sm:text-3xl font-black text-on-background mb-4">{t('biometrics.energyTitle')}</h3>
+        <p className="text-secondary text-sm sm:text-base leading-relaxed mb-8">{t('biometrics.energyDesc')}</p>
       </div>
-      <div className="glass p-6 rounded-2xl flex items-center justify-between gap-6 border border-primary/5">
+      <div className="glass p-4 sm:p-6 rounded-2xl flex items-center justify-between gap-4 sm:gap-6 border border-primary/5">
         <div className="w-full">
           <div className="flex justify-between text-[11px] text-secondary font-bold uppercase mb-2">
             <span>{t('biometrics.estrogenCurve')}</span>
@@ -1172,16 +1218,16 @@ export default function LandingPage() {
     </motion.div>
 
     {/* Card 2: Mood */}
-    <motion.div variants={staggerItem} className="glass-card p-10 rounded-[2.5rem] flex flex-col justify-between cursor-pointer" whileHover={{ y: -8, boxShadow: '0 30px 60px -15px rgba(165,53,86,0.1)' }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
+    <motion.div variants={staggerItem} className="glass-card p-6 sm:p-10 rounded-3xl sm:rounded-[2.5rem] flex flex-col justify-between cursor-pointer" whileHover={{ y: -8, boxShadow: '0 30px 60px -15px rgba(165,53,86,0.1)' }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
       <div>
         <div className="flex justify-between items-center mb-6">
           <span className="text-primary font-black text-xs tracking-widest uppercase">{t('biometrics.hormonalTemp')}</span>
           <span className="material-symbols-outlined text-primary text-2xl">sentiment_satisfied</span>
         </div>
-        <h3 className="text-3xl font-black text-on-background mb-4">{t('biometrics.moodTitle')}</h3>
-        <p className="text-secondary leading-relaxed mb-8">{t('biometrics.moodDesc')}</p>
+        <h3 className="text-2xl sm:text-3xl font-black text-on-background mb-4">{t('biometrics.moodTitle')}</h3>
+        <p className="text-secondary text-sm sm:text-base leading-relaxed mb-8">{t('biometrics.moodDesc')}</p>
       </div>
-      <div className="glass p-6 rounded-2xl flex flex-col gap-4 border border-primary/5">
+      <div className="glass p-4 sm:p-6 rounded-2xl flex flex-col gap-4 border border-primary/5">
         <div className="flex justify-between text-[11px] text-secondary font-bold uppercase">
           <span>{t('biometrics.autonomicSeasons')}</span>
           <span className="text-primary">{t('biometrics.currentSpring')}</span>
@@ -1196,16 +1242,16 @@ export default function LandingPage() {
     </motion.div>
 
     {/* Card 3: Sleep */}
-    <motion.div variants={staggerItem} className="glass-card p-10 rounded-[2.5rem] flex flex-col justify-between cursor-pointer" whileHover={{ y: -8, boxShadow: '0 30px 60px -15px rgba(165,53,86,0.1)' }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
+    <motion.div variants={staggerItem} className="glass-card p-6 sm:p-10 rounded-3xl sm:rounded-[2.5rem] flex flex-col justify-between cursor-pointer" whileHover={{ y: -8, boxShadow: '0 30px 60px -15px rgba(165,53,86,0.1)' }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
       <div>
         <div className="flex justify-between items-center mb-6">
           <span className="text-primary font-black text-xs tracking-widest uppercase">{t('biometrics.restorativeStage')}</span>
           <span className="material-symbols-outlined text-primary text-2xl">bedtime</span>
         </div>
-        <h3 className="text-3xl font-black text-on-background mb-4">{t('biometrics.sleepTitle')}</h3>
-        <p className="text-secondary leading-relaxed mb-8">{t('biometrics.sleepDesc')}</p>
+        <h3 className="text-2xl sm:text-3xl font-black text-on-background mb-4">{t('biometrics.sleepTitle')}</h3>
+        <p className="text-secondary text-sm sm:text-base leading-relaxed mb-8">{t('biometrics.sleepDesc')}</p>
       </div>
-      <div className="glass p-6 rounded-2xl flex flex-col gap-3 border border-primary/5">
+      <div className="glass p-4 sm:p-6 rounded-2xl flex flex-col gap-3 border border-primary/5">
         <div className="flex justify-between text-[11px] text-secondary font-bold uppercase">
           <span>{t('biometrics.deepSleepQuality')}</span>
           <span className="text-primary">7.8h {t('biometrics.restored').toUpperCase()}</span>
@@ -1223,16 +1269,16 @@ export default function LandingPage() {
     </motion.div>
 
     {/* Card 4: Symptoms */}
-    <motion.div variants={staggerItem} className="glass-card p-10 rounded-[2.5rem] flex flex-col justify-between cursor-pointer" whileHover={{ y: -8, boxShadow: '0 30px 60px -15px rgba(165,53,86,0.1)' }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
+    <motion.div variants={staggerItem} className="glass-card p-6 sm:p-10 rounded-3xl sm:rounded-[2.5rem] flex flex-col justify-between cursor-pointer" whileHover={{ y: -8, boxShadow: '0 30px 60px -15px rgba(165,53,86,0.1)' }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
       <div>
         <div className="flex justify-between items-center mb-6">
           <span className="text-primary font-black text-xs tracking-widest uppercase">{t('biometrics.autonomicCorrelations')}</span>
           <span className="material-symbols-outlined text-primary text-2xl">healing</span>
         </div>
-        <h3 className="text-3xl font-black text-on-background mb-4">{t('biometrics.symptomTitle')}</h3>
-        <p className="text-secondary leading-relaxed mb-8">{t('biometrics.symptomDesc')}</p>
+        <h3 className="text-2xl sm:text-3xl font-black text-on-background mb-4">{t('biometrics.symptomTitle')}</h3>
+        <p className="text-secondary text-sm sm:text-base leading-relaxed mb-8">{t('biometrics.symptomDesc')}</p>
       </div>
-      <div className="glass p-6 rounded-2xl border border-primary/5">
+      <div className="glass p-4 sm:p-6 rounded-2xl border border-primary/5">
         <div className="flex flex-col gap-3 text-xs">
           <div className="flex justify-between items-center border-b border-outline-variant/10 pb-2">
             <span className="font-bold text-secondary">{t('biometrics.caffeineLuteal')}</span>
@@ -1266,7 +1312,7 @@ export default function LandingPage() {
   <div className="px-container-padding-mobile md:px-container-padding-desktop max-w-7xl mx-auto relative z-10">
     <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
       {/* Phone Composition */}
-      <RevealOnScroll className="relative h-[600px] md:h-[800px] w-full flex items-center justify-center [perspective:2000px] group/presentation" variants={scaleIn}>
+      <RevealOnScroll className="relative h-[600px] md:h-[800px] w-full flex items-center justify-center [perspective:2000px] group/presentation iphones-container" variants={scaleIn}>
         {/* Orbit Ellipses */}
         <div className="absolute inset-0 pointer-events-none z-0 flex items-center justify-center scale-[0.6] md:scale-100">
           <svg className="absolute w-[800px] h-[800px] opacity-60 animate-spin-slow" viewBox="0 0 800 800">
@@ -1280,7 +1326,7 @@ export default function LandingPage() {
         </div>
 
         {/* Phones */}
-        <div className="relative w-full max-w-[600px] h-full flex items-center justify-center [transform-style:preserve-3d] group-hover/presentation:rotate-y-[5deg] group-hover/presentation:rotate-x-[2deg] transition-transform duration-[2s] ease-out scale-[0.6] sm:scale-[0.7] md:scale-[0.8] lg:scale-[0.75] xl:scale-[0.85]">
+        <div className="relative w-full max-w-[600px] h-full flex items-center justify-center [transform-style:preserve-3d] group-hover/presentation:rotate-y-[5deg] group-hover/presentation:rotate-x-[2deg] transition-transform duration-[2s] ease-out scale-[0.6] sm:scale-[0.7] md:scale-[0.8] lg:scale-[0.75] xl:scale-[0.85] iphones-scale">
           {/* Left Phone */}
           <motion.div
             className="absolute left-[2%] md:-left-[10%] top-[20%] w-[210px] md:w-[240px] z-10"
@@ -1472,28 +1518,28 @@ export default function LandingPage() {
         viewport={{ once: true, amount: 0.3 }}
         variants={staggerContainer}
       >
-        <motion.h2 variants={staggerItem} className="text-6xl font-black mb-10 tracking-tighter leading-none text-on-background">{t('features.title1')}</motion.h2>
-        <motion.p variants={staggerItem} className="text-xl text-secondary mb-12">{t('features.desc1')}</motion.p>
-        <div className="space-y-10">
+        <motion.h2 variants={staggerItem} className="text-4xl sm:text-5xl md:text-6xl font-black mb-6 md:mb-10 tracking-tighter leading-none text-on-background">{t('features.title1')}</motion.h2>
+        <motion.p variants={staggerItem} className="text-base sm:text-lg md:text-xl text-secondary mb-8 md:mb-12">{t('features.desc1')}</motion.p>
+        <div className="space-y-8 md:space-y-10">
           {[
             { icon: 'calendar_month', title: t('features.calendarTitle'), desc: t('features.calendarDesc') },
             { icon: 'add_notes', title: t('features.loggingTitle'), desc: t('features.loggingDesc') },
             { icon: 'lock_person', title: t('features.vaultTitle'), desc: t('features.vaultDesc') },
           ].map((feature, i) => (
-            <motion.div key={feature.title} variants={staggerItem} className="flex items-start gap-8">
+            <motion.div key={feature.title} variants={staggerItem} className="flex items-start gap-4 sm:gap-8">
               <motion.div
-                className="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center shrink-0"
+                className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-primary/10 flex items-center justify-center shrink-0"
                 whileHover={{ scale: 1.1, backgroundColor: 'rgba(165,53,86,0.15)' }}
                 initial={{ scale: 0.8, opacity: 0 }}
                 whileInView={{ scale: 1, opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15, type: 'spring', stiffness: 200 }}
               >
-                <span className="material-symbols-outlined text-primary text-3xl">{feature.icon}</span>
+                <span className="material-symbols-outlined text-primary text-2xl sm:text-3xl">{feature.icon}</span>
               </motion.div>
               <div>
-                <h5 className="text-2xl font-black mb-2 text-on-background">{feature.title}</h5>
-                <p className="text-secondary text-lg">{feature.desc}</p>
+                <h5 className="text-lg sm:text-2xl font-black mb-2 text-on-background">{feature.title}</h5>
+                <p className="text-secondary text-sm sm:text-lg">{feature.desc}</p>
               </div>
             </motion.div>
           ))}
@@ -1511,27 +1557,27 @@ export default function LandingPage() {
         <motion.span className="material-symbols-outlined text-[16px]" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}>chat</motion.span>
         {t('wisdom.badge')}
       </div>
-      <h2 className="text-4xl md:text-6xl font-black mb-16 tracking-tighter text-on-background">{t('wisdom.title')}</h2>
+      <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-8 md:mb-16 tracking-tighter text-on-background">{t('wisdom.title')}</h2>
     </RevealOnScroll>
 
     <motion.div
-      className="grid md:grid-cols-2 lg:grid-cols-3 gap-10 text-left"
+      className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10 text-left"
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.05 }}
       variants={staggerContainer}
     >
       {/* Card 1: Today's Wisdom */}
-      <motion.div variants={staggerItem} className="glass p-12 rounded-[2.5rem] md:col-span-2 flex flex-col justify-between shadow-xl border border-primary/5 cursor-pointer relative group" whileHover={{ y: -8, backgroundColor: 'rgba(255,255,255,0.7)', boxShadow: '0 30px 60px rgba(165,53,86,0.08)' }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
+      <motion.div variants={staggerItem} className="glass p-6 sm:p-10 md:p-12 rounded-3xl sm:rounded-[2.5rem] md:col-span-2 flex flex-col justify-between shadow-xl border border-primary/5 cursor-pointer relative group" whileHover={{ y: -8, backgroundColor: 'rgba(255,255,255,0.7)', boxShadow: '0 30px 60px rgba(165,53,86,0.08)' }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
         <div>
-          <div className="flex justify-between items-center mb-8">
-            <p className="text-primary font-black uppercase tracking-widest text-xs">{t('wisdom.wisdomTitle')}</p>
-            <span className="px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-[9px] uppercase tracking-wider">{t('rhythms.lutealShort')} • Day 26</span>
+          <div className="flex justify-between items-center mb-6 md:mb-8">
+            <p className="text-primary font-black uppercase tracking-widest text-[10px] sm:text-xs">{t('wisdom.wisdomTitle')}</p>
+            <span className="px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-primary/10 text-primary font-bold text-[8px] sm:text-[9px] uppercase tracking-wider">{t('rhythms.lutealShort')} • Day 26</span>
           </div>
-          <h4 className="text-4xl font-black mb-6 text-on-background group-hover:text-primary transition-colors leading-tight">{t('wisdom.magnesiumTip')}</h4>
-          <p className="text-secondary text-lg leading-relaxed max-w-2xl">{t('wisdom.magnesiumTipDesc')}</p>
+          <h4 className="text-2xl sm:text-3xl md:text-4xl font-black mb-4 md:mb-6 text-on-background group-hover:text-primary transition-colors leading-tight">{t('wisdom.magnesiumTip')}</h4>
+          <p className="text-secondary text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl">{t('wisdom.magnesiumTipDesc')}</p>
         </div>
-        <div className="mt-8 flex items-center gap-3 text-secondary/60 text-xs font-bold uppercase">
+        <div className="mt-6 md:mt-8 flex items-center gap-3 text-secondary/60 text-[10px] sm:text-xs font-bold uppercase">
           <span className="material-symbols-outlined text-primary text-[18px]">info</span>
           <span>{t('wisdom.magnesiumFooter')}</span>
         </div>
@@ -1544,16 +1590,16 @@ export default function LandingPage() {
         { badge: t('wisdom.recoveryTitle'), phase: `${t('rhythms.lutealShort')} • Day 20`, phaseBg: 'bg-[#ecdcff] text-[#413555]', title: t('wisdom.recoveryText'), desc: t('wisdom.recoveryDesc'), icon: 'healing', footer: t('wisdom.recoveryFooter') },
         { badge: t('wisdom.sleepPrepTitle'), phase: `${t('rhythms.menstrualShort')} • Day 2`, phaseBg: 'bg-secondary-container text-secondary', title: t('wisdom.sleepPrepText'), desc: t('wisdom.sleepPrepDesc'), icon: 'bedtime', footer: t('wisdom.sleepPrepFooter') },
       ].map((card) => (
-        <motion.div key={card.badge} variants={staggerItem} className="glass p-12 rounded-[2.5rem] flex flex-col justify-between shadow-xl border border-primary/5 cursor-pointer group" whileHover={{ y: -8, backgroundColor: 'rgba(255,255,255,0.7)', boxShadow: '0 30px 60px rgba(165,53,86,0.08)' }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
+        <motion.div key={card.badge} variants={staggerItem} className="glass p-6 sm:p-10 md:p-12 rounded-3xl sm:rounded-[2.5rem] flex flex-col justify-between shadow-xl border border-primary/5 cursor-pointer group" whileHover={{ y: -8, backgroundColor: 'rgba(255,255,255,0.7)', boxShadow: '0 30px 60px rgba(165,53,86,0.08)' }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}>
           <div>
-            <div className="flex justify-between items-center mb-8">
-              <p className="text-primary font-black uppercase tracking-widest text-xs">{card.badge}</p>
-              <span className={`px-4 py-1.5 rounded-full ${card.phaseBg} font-bold text-[9px] uppercase tracking-wider`}>{card.phase}</span>
+            <div className="flex justify-between items-center mb-6 md:mb-8">
+              <p className="text-primary font-black uppercase tracking-widest text-[10px] sm:text-xs">{card.badge}</p>
+              <span className={`px-3 py-1 sm:px-4 sm:py-1.5 rounded-full ${card.phaseBg} font-bold text-[8px] sm:text-[9px] uppercase tracking-wider`}>{card.phase}</span>
             </div>
-            <h4 className="text-3xl font-black mb-6 text-on-background group-hover:text-primary transition-colors leading-snug">{card.title}</h4>
-            <p className="text-secondary leading-relaxed">{card.desc}</p>
+            <h4 className="text-xl sm:text-2xl font-black mb-4 text-on-background group-hover:text-primary transition-colors leading-snug">{card.title}</h4>
+            <p className="text-secondary text-sm sm:text-base leading-relaxed">{card.desc}</p>
           </div>
-          <div className="mt-8 flex items-center gap-2 text-secondary/60 text-xs font-bold uppercase">
+          <div className="mt-6 md:mt-8 flex items-center gap-2 text-secondary/60 text-[10px] sm:text-xs font-bold uppercase">
             <span className="material-symbols-outlined text-primary text-[18px]">{card.icon}</span>
             <span>{card.footer}</span>
           </div>
@@ -1574,7 +1620,7 @@ export default function LandingPage() {
     </RevealOnScroll>
 
     <motion.div
-      className="flex flex-col md:flex-row justify-center items-stretch gap-10 max-w-6xl mx-auto mb-20"
+      className="flex flex-col md:flex-row justify-center items-stretch gap-6 md:gap-10 max-w-6xl mx-auto mb-20"
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.2 }}
@@ -1588,7 +1634,7 @@ export default function LandingPage() {
         <motion.div
           key={widget.title}
           variants={staggerItem}
-          className="glass-card flex-1 p-10 rounded-[2.5rem] text-left relative overflow-hidden border border-primary/5 shadow-2xl"
+          className="glass-card flex-1 p-6 sm:p-10 rounded-3xl sm:rounded-[2.5rem] text-left relative overflow-hidden border border-primary/5 shadow-2xl"
           whileHover={{ y: -8, boxShadow: '0 30px 60px -15px rgba(165,53,86,0.12)' }}
           transition={{ type: 'spring', stiffness: 200, damping: 20 }}
         >
@@ -1650,17 +1696,16 @@ export default function LandingPage() {
 </section>
 
 {/* ═══════════════ SECTION 10: FINAL CTA ═══════════════ */}
-<section className="relative min-h-[80vh] w-full flex flex-col items-center justify-center overflow-hidden bg-[#1b1c1c] py-24">
-  <div className="absolute inset-0 z-0">
-    <div className="absolute inset-0 bg-gradient-to-br from-[#1b1c1c] via-[#2a1b24] to-[#1b1c1c]"></div>
-    <motion.div className="absolute top-[20%] left-[10%] w-[30rem] h-[30rem] rounded-full bg-primary/10 blur-[120px] pointer-events-none" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }} />
-    <motion.div className="absolute bottom-[10%] right-[10%] w-[40rem] h-[40rem] rounded-full bg-[#ae9fc4]/10 blur-[140px] pointer-events-none" animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 3 }} />
+<section className="relative min-h-[80vh] w-full flex flex-col items-center justify-center overflow-hidden py-16 sm:py-24 trust-section-bg">
+  <div className="absolute inset-0 z-0 pointer-events-none">
+    <motion.div className="absolute top-[20%] left-[10%] w-[15rem] sm:w-[30rem] h-[15rem] sm:h-[30rem] rounded-full bg-primary/5 sm:bg-primary/10 blur-[80px] sm:blur-[120px]" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }} />
+    <motion.div className="absolute bottom-[10%] right-[10%] w-[20rem] sm:w-[40rem] h-[20rem] sm:h-[40rem] rounded-full bg-[#ae9fc4]/5 sm:bg-[#ae9fc4]/10 blur-[90px] sm:blur-[140px]" animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 3 }} />
   </div>
 
-  <div className="relative z-10 text-center px-container-padding-mobile max-w-5xl mx-auto flex flex-col items-center py-20">
+  <div className="relative z-10 text-center px-container-padding-mobile max-w-5xl mx-auto flex flex-col items-center py-10 sm:py-20">
     <RevealOnScroll>
-      <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full glass border border-white/15 text-white font-bold text-xs tracking-[0.2em] mb-8 uppercase select-none">
-        <motion.span className="material-symbols-outlined text-[16px] text-[#ff7b9c]" animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 2, repeat: Infinity }}>favorite</motion.span>
+      <div className="inline-flex items-center gap-3 px-6 py-2 sm:py-2.5 rounded-full glass border border-white/15 text-white font-bold text-xs tracking-[0.2em] mb-6 sm:mb-8 uppercase select-none">
+        <motion.span className="material-symbols-outlined text-[14px] sm:text-[16px] text-[#ff7b9c]" animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 2, repeat: Infinity }}>favorite</motion.span>
         {t('trust.badge')}
       </div>
     </RevealOnScroll>
@@ -1670,7 +1715,7 @@ export default function LandingPage() {
         const titleParts = t('trust.title').split(/[.।]/);
         const sep = i18n.language === 'hi' || i18n.language === 'bn' ? '।' : '.';
         return (
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-6 leading-[1.1] tracking-tighter">
+          <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-white mb-4 sm:mb-6 leading-[1.1] tracking-tighter">
             {titleParts[0]?.trim()}{sep}{' '}
             <motion.span className="text-gradient bg-gradient-to-r from-primary to-primary-container" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.3, duration: 0.8 }}>
               {titleParts[1]?.trim()}{sep}
@@ -1681,15 +1726,15 @@ export default function LandingPage() {
     </RevealOnScroll>
 
     <RevealOnScroll custom={1}>
-      <p className="font-body-lg text-base md:text-lg text-white/70 max-w-2xl mx-auto mb-10 leading-relaxed">
+      <p className="font-body-lg text-sm sm:text-base md:text-lg text-white/70 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed">
         {t('trust.desc')}
       </p>
     </RevealOnScroll>
 
-    <RevealOnScroll custom={2} className="w-full max-w-md mb-16">
+    <RevealOnScroll custom={2} className="w-full max-w-md mb-12 sm:mb-16">
       <motion.button
         onClick={() => navigate('/welcome')}
-        className="relative overflow-hidden group w-full sm:w-auto bg-white hover:bg-transparent text-on-background hover:text-white px-12 py-5 rounded-full font-black text-xl border-2 border-white transition-all duration-500 shadow-xl"
+        className="relative overflow-hidden group w-full sm:w-auto bg-white hover:bg-transparent text-on-background hover:text-white px-8 py-4 sm:px-12 sm:py-5 rounded-full font-black text-lg sm:text-xl border-2 border-white transition-all duration-500 shadow-xl"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
@@ -1700,7 +1745,7 @@ export default function LandingPage() {
 
     {/* Trust Cards */}
     <motion.div
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl w-full text-left"
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-5xl w-full text-left"
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.1 }}
@@ -1717,7 +1762,7 @@ export default function LandingPage() {
         <motion.div
           key={card.title}
           variants={staggerItem}
-          className="dark-glass p-6 rounded-2xl flex flex-col gap-2 shadow-lg"
+          className="dark-glass p-5 sm:p-6 rounded-2xl flex flex-col gap-2 shadow-lg"
           whileHover={{ y: -4, borderColor: 'rgba(255,93,143,0.25)' }}
           transition={{ type: 'spring', stiffness: 200, damping: 20 }}
         >
@@ -1740,10 +1785,10 @@ export default function LandingPage() {
 
 {/* ═══════════════ FOOTER ═══════════════ */}
 <RevealOnScroll>
-  <footer className="bg-[#fffdfd] border-t border-outline-variant/30 py-24">
+  <footer className="bg-[#fffdfd] border-t border-outline-variant/30 py-16 sm:py-24">
     <div className="px-container-padding-mobile md:px-container-padding-desktop max-w-7xl mx-auto">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-16 mb-24">
-        <div className="col-span-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 sm:gap-16 mb-20 sm:mb-24">
+        <div className="col-span-1 sm:col-span-2">
           <div className="font-headline-md text-3xl text-primary font-black tracking-tighter mb-8">LunaCare</div>
           <p className="text-secondary text-xl max-w-sm mb-10">{t('footer.desc')}</p>
           <div className="flex gap-6">

@@ -170,8 +170,14 @@ html.lenis body {
 }
 @media (max-width: 768px) {
   :root {
-    --orbit-rx: 170px;
-    --orbit-ry: 60px;
+    --orbit-rx: 160px;
+    --orbit-ry: 55px;
+  }
+}
+@media (max-width: 480px) {
+  :root {
+    --orbit-rx: 90px;
+    --orbit-ry: 35px;
   }
 }
 
@@ -198,15 +204,15 @@ html.lenis body {
   }
   50% {
     transform: translate(calc(-50% - var(--orbit-rx)), -50%) scale(1);
-    z-index: 40;
-    filter: blur(0px);
-    opacity: 1;
+    z-index: 10;
+    filter: blur(2px);
+    opacity: 0.45;
   }
   75% {
-    transform: translate(-50%, calc(-50% - var(--orbit-ry))) scale(0.8);
+    transform: translate(-50%, calc(-50% - var(--orbit-ry))) scale(0.9);
     z-index: 10;
-    filter: blur(2.5px);
-    opacity: 0.45;
+    filter: blur(3px);
+    opacity: 0.35;
   }
   100% {
     transform: translate(calc(-50% + var(--orbit-rx)), -50%) scale(1);
@@ -239,41 +245,99 @@ html.lenis body {
 }
 
 /* ─── Responsive Scales ─── */
+
+/* --- Tablet (max 768px) --- */
 @media (max-width: 768px) {
   #prediction-core-container {
-    transform: scale(0.64);
-    transform-origin: center center;
-    margin-top: -110px;
-    margin-bottom: -110px;
+    transform: none !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    height: 480px !important;
   }
+
   .iphones-scale {
-    transform: scale(0.62) !important;
+    transform: scale(0.55) !important;
     transform-origin: center center;
   }
+
   .iphones-container {
     height: 480px !important;
   }
+
+  /* Science section floating cards: responsive grid */
+  .science-floating-panel {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 100% !important;
+  }
+
+  /* Neural map: hide complex SVG, show simplified */
+  .neural-map-scale {
+    transform: scale(0.55) !important;
+    transform-origin: center center;
+    margin-top: -60px;
+    margin-bottom: -60px;
+  }
 }
 
+/* --- Small phones (max 480px) --- */
 @media (max-width: 480px) {
   #prediction-core-container {
-    transform: scale(0.45);
-    transform-origin: center center;
-    margin-top: -170px;
-    margin-bottom: -170px;
+    transform: none !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    height: 380px !important;
   }
+
   .iphones-scale {
-    transform: scale(0.44) !important;
-    transform-origin: center center;
-  }
-  .iphones-container {
-    height: 350px !important;
-  }
-  .neural-map-scale {
     transform: scale(0.42) !important;
     transform-origin: center center;
-    margin-top: -50px;
-    margin-bottom: -50px;
+  }
+
+  .iphones-container {
+    height: 340px !important;
+  }
+
+  .neural-map-scale {
+    transform: scale(0.35) !important;
+    transform-origin: center center;
+    margin-top: -100px;
+    margin-bottom: -100px;
+  }
+}
+
+/* --- Trust Section Background Image --- */
+.trust-section-bg {
+  background-image:
+    linear-gradient(to bottom,
+      rgba(27, 28, 28, 0.65) 0%,
+      rgba(42, 27, 36, 0.55) 30%,
+      rgba(27, 28, 28, 0.6) 70%,
+      rgba(27, 28, 28, 0.85) 100%),
+    url('/trust-bg.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+/* --- Global Mobile Responsive Helpers --- */
+@media (max-width: 640px) {
+  /* Reduce section vertical gaps on mobile */
+  .py-section-gap-mobile {
+    padding-top: 60px !important;
+    padding-bottom: 60px !important;
+  }
+}
+
+section {
+  scroll-margin-top: 80px;
+}
+@media (min-width: 768px) {
+  section {
+    scroll-margin-top: 100px;
   }
 }
 
