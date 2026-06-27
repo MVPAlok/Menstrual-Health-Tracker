@@ -7,6 +7,7 @@ export interface UserProfile {
   name: string;
   email: string;
   isLoggedIn: boolean;
+  profileImage?: string;
 }
 
 export interface OnboardingData {
@@ -117,6 +118,7 @@ interface AppContextType {
   deleteLog: (date: string) => Promise<void>;
   duplicateLog: (date: string) => Promise<void>;
   triggerPartnerAction: (action: string) => void;
+  updateProfileImage: (image: string) => void;
   refreshAnalytics: () => Promise<void>;
   downloadReport: (format: 'csv' | 'pdf') => Promise<void>;
 }
@@ -455,6 +457,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const updateProfileImage = (image: string) => {
+    const updatedUser = { ...user, profileImage: image };
+    setUser(updatedUser);
+    localStorage.setItem('lunacare_user', JSON.stringify(updatedUser));
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -475,6 +483,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deleteLog,
         duplicateLog,
         triggerPartnerAction,
+        updateProfileImage,
         refreshAnalytics,
         downloadReport,
       }}
