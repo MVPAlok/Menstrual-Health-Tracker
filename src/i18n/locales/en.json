@@ -334,7 +334,7 @@
     "generating": "Generating...",
     "syncDescription": "Synchronize your cycles and wellness logs with a partner in real-time. Link your profiles to share biological insights."
   },
-  "mockup": {
+  "landingShowcase": {
     "lutealPhase": "Luteal Phase",
     "day": "Day {{num}}",
     "days": "{{num}} Days",

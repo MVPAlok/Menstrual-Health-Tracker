@@ -1342,15 +1342,15 @@ export default function LandingPage() {
                   <span className="material-symbols-outlined text-[10px] text-primary">wifi</span>
                 </div>
                 <div className="flex-grow flex flex-col items-center justify-center text-center mt-4">
-                  <span className="text-primary font-black text-[8px] tracking-widest uppercase mb-1">{t('mockup.lutealPhase')}</span>
-                  <h4 className="text-xl font-black text-on-background mb-3">{t('mockup.day', { num: 22 })}</h4>
+                  <span className="text-primary font-black text-[8px] tracking-widest uppercase mb-1">{t('landingShowcase.lutealPhase')}</span>
+                  <h4 className="text-xl font-black text-on-background mb-3">{t('landingShowcase.day', { num: 22 })}</h4>
                   <div className="relative w-24 h-24 flex items-center justify-center mb-4">
                     <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
                       <circle cx="18" cy="18" r="16" fill="none" stroke="#f3ded9" strokeWidth="2.5"></circle>
                       <circle cx="18" cy="18" r="16" fill="none" stroke="#a53556" strokeWidth="2.5" strokeDasharray="100" strokeDashoffset="30" strokeLinecap="round"></circle>
                     </svg>
                     <div className="absolute text-center">
-                      <span className="font-black text-[10px] text-primary">{t('mockup.days', { num: 4 })}</span>
+                      <span className="font-black text-[10px] text-primary">{t('landingShowcase.days', { num: 4 })}</span>
                     </div>
                   </div>
                 </div>
@@ -1369,19 +1369,19 @@ export default function LandingPage() {
               <div className="absolute top-3 left-1/2 -translate-x-1/2 w-16 h-4 bg-black rounded-full z-50"></div>
               <div className="w-full h-full rounded-[32px] bg-[#fffdfd] overflow-hidden relative p-4 flex flex-col justify-between iphone-reflection">
                 <div className="flex justify-between items-center text-[9px] text-secondary font-black">
-                  <span>{t('mockup.logging')}</span>
-                  <span className="text-secondary/60">{t('mockup.active')}</span>
+                  <span>{t('landingShowcase.logging')}</span>
+                  <span className="text-secondary/60">{t('landingShowcase.active')}</span>
                 </div>
                 <div className="flex-grow flex flex-col text-left mt-6">
-                  <h4 className="text-base font-black text-on-background mb-4">{t('mockup.logBiometrics')}</h4>
+                  <h4 className="text-base font-black text-on-background mb-4">{t('landingShowcase.logBiometrics')}</h4>
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-secondary/10 text-[8px] font-bold">
                       <span className="text-secondary flex items-center gap-1.5"><span className="material-symbols-outlined text-primary text-[10px]">bolt</span>{t('logger.energy')}</span>
-                      <span className="bg-[#ffd9df] text-primary px-1.5 py-0.5 rounded-full">{t('mockup.high')}</span>
+                      <span className="bg-[#ffd9df] text-primary px-1.5 py-0.5 rounded-full">{t('landingShowcase.high')}</span>
                     </div>
                     <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-secondary/10 text-[8px] font-bold">
                       <span className="text-secondary flex items-center gap-1.5"><span className="material-symbols-outlined text-primary text-[10px]">healing</span>{t('biometrics.symptomTitle').split(' ')[0]}</span>
-                      <span className="bg-secondary-container text-secondary px-1.5 py-0.5 rounded-full">{t('mockup.none')}</span>
+                      <span className="bg-secondary-container text-secondary px-1.5 py-0.5 rounded-full">{t('landingShowcase.none')}</span>
                     </div>
                   </div>
                 </div>
@@ -1409,13 +1409,13 @@ export default function LandingPage() {
                   <h4 className="text-2xl font-black text-on-background mb-5">Clara</h4>
                   <div className="glass bg-white/80 p-4 rounded-2xl mb-4 border border-primary/10 shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-full blur-xl"></div>
-                    <span className="text-primary font-black text-[9px] uppercase tracking-wider mb-2 block">{t('mockup.dailySanctuary')}</span>
-                    <p className="text-[11px] text-on-background font-bold leading-relaxed">{t('mockup.estrogenMsg')}</p>
+                    <span className="text-primary font-black text-[9px] uppercase tracking-wider mb-2 block">{t('landingShowcase.dailySanctuary')}</span>
+                    <p className="text-[11px] text-on-background font-bold leading-relaxed">{t('landingShowcase.estrogenMsg')}</p>
                   </div>
                   <div className="bg-white p-4 rounded-2xl border border-secondary/5 flex flex-col gap-3 shadow-sm">
                     <div className="flex justify-between text-[9px] font-bold text-secondary">
-                      <span>{t('mockup.focusState')}</span>
-                      <span className="text-primary">{t('mockup.optimized')}</span>
+                      <span>{t('landingShowcase.focusState')}</span>
+                      <span className="text-primary">{t('landingShowcase.optimized')}</span>
                     </div>
                     <div className="h-10 flex items-end gap-1.5 justify-between px-1">
                       <div className="w-full h-[30%] bg-secondary-fixed rounded-sm"></div>
@@ -1448,10 +1448,10 @@ export default function LandingPage() {
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <span className="material-symbols-outlined text-primary text-[14px]">calendar_month</span>
                 </div>
-                <span className="text-[9px] font-black uppercase tracking-widest text-primary">{t('mockup.prediction')}</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-primary">{t('landingShowcase.prediction')}</span>
               </div>
-              <p className="text-on-background font-black text-sm md:text-base leading-tight relative z-10">{t('mockup.ovulationTime')}</p>
-              <p className="text-[10px] text-secondary mt-1 font-semibold relative z-10">{t('mockup.confidence', { rate: 98.4 })}</p>
+              <p className="text-on-background font-black text-sm md:text-base leading-tight relative z-10">{t('landingShowcase.ovulationTime')}</p>
+              <p className="text-[10px] text-secondary mt-1 font-semibold relative z-10">{t('landingShowcase.confidence', { rate: 98.4 })}</p>
             </motion.div>
 
             <motion.div
@@ -1466,9 +1466,9 @@ export default function LandingPage() {
                 <div className="w-8 h-8 rounded-full bg-[#ae9fc4]/20 flex items-center justify-center">
                   <span className="material-symbols-outlined text-[#413555] text-[14px]">sentiment_satisfied</span>
                 </div>
-                <span className="text-[9px] font-black uppercase tracking-widest text-[#413555]">{t('mockup.insight')}</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-[#413555]">{t('landingShowcase.insight')}</span>
               </div>
-              <p className="text-on-background font-black text-sm leading-tight relative z-10">{t('mockup.sereneFocus')}</p>
+              <p className="text-on-background font-black text-sm leading-tight relative z-10">{t('landingShowcase.sereneFocus')}</p>
               <div className="w-full h-1.5 bg-secondary-container mt-3 rounded-full overflow-hidden relative z-10">
                 <div className="w-[85%] h-full bg-[#ae9fc4] rounded-full shadow-[0_0_8px_#ae9fc4]"></div>
               </div>
@@ -1486,8 +1486,8 @@ export default function LandingPage() {
                 <span className="material-symbols-outlined text-primary text-[20px] drop-shadow-[0_0_5px_rgba(165,53,86,0.5)]">bolt</span>
                 <span className="text-primary font-black text-sm md:text-base">88%</span>
               </div>
-              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-primary block mt-1 relative z-10">{t('mockup.energyWave')}</span>
-              <p className="text-[10px] md:text-[11px] font-bold text-on-background mt-0.5 relative z-10">{t('mockup.peakStamina')}</p>
+              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-primary block mt-1 relative z-10">{t('landingShowcase.energyWave')}</span>
+              <p className="text-[10px] md:text-[11px] font-bold text-on-background mt-0.5 relative z-10">{t('landingShowcase.peakStamina')}</p>
             </motion.div>
 
             <motion.div
@@ -1497,7 +1497,7 @@ export default function LandingPage() {
               whileHover={{ scale: 1.05, x: -3 }}
               style={{ transform: 'translateZ(100px) rotateY(12deg)' }}
             >
-              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-secondary block mb-2">{t('mockup.trackedInput')}</span>
+              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-secondary block mb-2">{t('landingShowcase.trackedInput')}</span>
               <div className="flex gap-2 relative z-10">
                 <motion.div className="w-7 h-7 rounded-full bg-[#ffd9df] flex items-center justify-center border border-[#ffb1c1] shadow-[0_4px_10px_rgba(165,53,86,0.2)]" whileHover={{ scale: 1.15 }}>
                   <span className="material-symbols-outlined text-[14px] text-primary">healing</span>

@@ -518,7 +518,7 @@ export const Dashboard: React.FC = () => {
   const confidenceDetails = getConfidenceReason(profileStats?.predictionAccuracy || 50);
 
   return (
-    <div className="min-h-screen w-full bg-background pb-40 relative text-on-background selection:bg-primary/20 overflow-x-hidden">
+    <div className="min-h-screen w-full bg-background pb-40 relative text-on-background selection:bg-primary/20">
       {/* Real-time Toast Notifications */}
       <AnimatePresence>
         {partnerLogUpdate && (
@@ -561,12 +561,14 @@ export const Dashboard: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Background elements */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-primary/5 to-transparent blur-[120px] pointer-events-none rounded-full" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-primary-container/5 to-transparent blur-[120px] pointer-events-none rounded-full" />
+      {/* Background elements wrapped to prevent overflow-x without breaking sticky */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-0 right-[-100px] sm:right-0 w-[400px] sm:w-[500px] h-[400px] sm:h-[500px] bg-gradient-to-bl from-primary/5 to-transparent blur-[100px] sm:blur-[120px] rounded-full" />
+        <div className="absolute bottom-0 left-[-100px] sm:left-0 w-[400px] sm:w-[500px] h-[400px] sm:h-[500px] bg-gradient-to-tr from-primary-container/5 to-transparent blur-[100px] sm:blur-[120px] rounded-full" />
+      </div>
 
       {/* Main Header */}
-      <header className="fixed top-0 left-0 right-0 w-full max-w-7xl mx-auto px-4 py-4 sm:px-6 sm:py-6 flex justify-between items-center border-b border-outline/5 z-50 bg-background/90 backdrop-blur-xl shadow-sm">
+      <header className="sticky top-0 w-full max-w-7xl mx-auto px-4 py-4 sm:px-6 sm:py-6 flex justify-between items-center border-b border-outline/5 z-50 bg-background/90 backdrop-blur-xl shadow-sm">
         <div className="flex items-center gap-3">
           <span className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
             <span className="material-symbols-outlined text-[18px]">spa</span>
@@ -598,7 +600,7 @@ export const Dashboard: React.FC = () => {
       </header>
 
       {/* TAB CONTENT VIEWS */}
-      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 pt-24 sm:pt-32">
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 relative z-10">
         <AnimatePresence mode="wait">
           
           {/* ═══════════════ DASHBOARD HOME ═══════════════ */}
@@ -1074,26 +1076,28 @@ export const Dashboard: React.FC = () => {
                     </div>
 
                     {calendarMode === 'months' && (
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
                         <button 
                           onClick={() => setCalendarMonthOffset(prev => prev - 1)}
-                          className="px-3 py-1.5 bg-white/60 hover:bg-white rounded-full text-[10px] font-black uppercase text-primary border border-slate-200 transition-all flex items-center gap-1 shadow-sm"
+                          className="px-2 sm:px-3 py-1.5 bg-white/60 hover:bg-white rounded-full text-[8.5px] sm:text-[10px] font-black uppercase text-primary border border-slate-200 transition-all flex items-center justify-center gap-0.5 sm:gap-1 shadow-sm flex-1 sm:flex-none"
                         >
                           <span className="material-symbols-outlined text-[12px]">chevron_left</span>
-                          Previous Month
+                          <span className="hidden xs:inline">Prev Month</span>
+                          <span className="inline xs:hidden">Prev</span>
                         </button>
-                        <span className="text-xs font-black text-primary min-w-[110px] text-center capitalize">{currentMonthData.monthName}</span>
+                        <span className="text-xs font-black text-primary min-w-[90px] sm:min-w-[110px] text-center capitalize shrink-0">{currentMonthData.monthName}</span>
                         <button
                           onClick={() => setCalendarMonthOffset(0)}
-                          className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 rounded-full text-[10px] font-black uppercase transition-all shadow-sm"
+                          className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 rounded-full text-[8.5px] sm:text-[10px] font-black uppercase transition-all shadow-sm shrink-0"
                         >
                           Today
                         </button>
                         <button 
                           onClick={() => setCalendarMonthOffset(prev => prev + 1)}
-                          className="px-3 py-1.5 bg-white/60 hover:bg-white rounded-full text-[10px] font-black uppercase text-primary border border-slate-200 transition-all flex items-center gap-1 shadow-sm"
+                          className="px-2 sm:px-3 py-1.5 bg-white/60 hover:bg-white rounded-full text-[8.5px] sm:text-[10px] font-black uppercase text-primary border border-slate-200 transition-all flex items-center justify-center gap-0.5 sm:gap-1 shadow-sm flex-1 sm:flex-none"
                         >
-                          Next Month
+                          <span className="hidden xs:inline">Next Month</span>
+                          <span className="inline xs:hidden">Next</span>
                           <span className="material-symbols-outlined text-[12px]">chevron_right</span>
                         </button>
                       </div>
@@ -1103,12 +1107,12 @@ export const Dashboard: React.FC = () => {
                   {calendarMode === 'months' ? (
                     /* Monthly Grid */
                     <div className="flex flex-col gap-6">
-                      <div className="glass-card p-5 sm:p-8 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4">
-                        <div className="grid grid-cols-7 gap-1 text-center font-black text-[10px] text-secondary tracking-wider uppercase border-b border-outline/5 pb-2">
+                      <div className="glass-card p-3 sm:p-5 md:p-8 rounded-[1.5rem] sm:rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-3 sm:gap-4">
+                        <div className="grid grid-cols-7 gap-1 text-center font-black text-[9px] sm:text-[10px] text-secondary tracking-wider uppercase border-b border-outline/5 pb-2">
                           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <span key={d}>{d}</span>)}
                         </div>
                         
-                        <div className="grid grid-cols-7 gap-2.5 text-center">
+                        <div className="grid grid-cols-7 gap-1 sm:gap-2 md:gap-2.5 text-center">
                           {currentMonthData.days.map((cell, idx) => {
                             if (cell === null) {
                               return <div key={`empty-${idx}`} className="aspect-square opacity-0 pointer-events-none" />;
@@ -1157,14 +1161,16 @@ export const Dashboard: React.FC = () => {
                               <button
                                 key={`day-${day}`}
                                 onClick={() => setSelectedDateStr(dateStr)}
-                                className={`aspect-square rounded-2xl flex flex-col items-stretch justify-between p-1.5 text-xs font-bold relative transition-all ${cellStyle}`}
+                                className={`aspect-square min-h-[44px] rounded-[1.25rem] sm:rounded-[2.5rem] flex flex-col items-center justify-center gap-0.5 sm:gap-1.5 p-1 text-xs font-bold relative transition-all ${cellStyle}`}
                                 title={`Date: ${dateStr}, Phase: ${dayStats.currentPhase}, Cycle Day: ${dayStats.currentCycleDay}`}
                               >
-                                <div className="flex justify-between w-full">
-                                  <span className={`text-[10px] leading-none ${dateStr === todayStr ? 'bg-primary text-white w-4 h-4 rounded-full flex items-center justify-center' : ''}`}>{day}</span>
-                                  <span className="text-[7.5px] font-black text-secondary/60 leading-none">CD{dayStats.currentCycleDay}</span>
+                                <span className="text-[6.5px] sm:text-[8px] font-black text-secondary/60 leading-none">CD{dayStats.currentCycleDay}</span>
+                                <span className={`text-[12px] sm:text-[16px] font-extrabold leading-none ${dateStr === todayStr ? 'bg-primary text-white w-5 h-5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-md' : 'text-secondary/90'}`}>
+                                  {day}
+                                </span>
+                                <div className="h-2 sm:h-3 flex items-center justify-center transform-gpu scale-75 sm:scale-100">
+                                  {getDayIndicator(dateStr)}
                                 </div>
-                                {getDayIndicator(dateStr)}
                               </button>
                             );
                           })}
@@ -1182,12 +1188,12 @@ export const Dashboard: React.FC = () => {
                           const lastPeriod = new Date(onboarding.lastPeriodDate);
                           const cycleStart = new Date(lastPeriod.getTime() + cycleIndex * cycleLength * 24 * 60 * 60 * 1000);
                           return (
-                            <div key={cycleIndex} className="glass-card p-5 sm:p-7 rounded-[2rem] border border-white/60 shadow-sm">
-                              <h4 className="font-extrabold text-primary text-sm uppercase tracking-wider mb-4">
+                            <div key={cycleIndex} className="glass-card p-3 sm:p-5 md:p-7 rounded-[1.5rem] sm:rounded-[2rem] border border-white/60 shadow-sm">
+                              <h4 className="font-extrabold text-primary text-xs sm:text-sm uppercase tracking-wider mb-3 sm:mb-4">
                                 Cycle sequence {cycleIndex + 1} ({cycleStart.toLocaleDateString(i18n.language, { month: 'long', year: 'numeric' })})
                               </h4>
 
-                              <div className="grid grid-cols-7 gap-2.5 text-center">
+                              <div className="grid grid-cols-7 gap-1 sm:gap-2 md:gap-2.5 text-center">
                                 {Array.from({ length: cycleLength }).map((_, dayIndex) => {
                                   const dayNum = dayIndex + 1;
                                   const targetDate = new Date(cycleStart.getTime() + dayIndex * 24 * 60 * 60 * 1000);
@@ -1234,14 +1240,16 @@ export const Dashboard: React.FC = () => {
                                     <button
                                       key={dayNum}
                                       onClick={() => setSelectedDateStr(cellDateStr)}
-                                      className={`aspect-square rounded-2xl flex flex-col items-stretch justify-between p-1.5 text-xs font-bold relative transition-all ${cellStyle}`}
+                                      className={`aspect-square min-h-[44px] rounded-[1.25rem] sm:rounded-[2.5rem] flex flex-col items-center justify-center gap-0.5 sm:gap-1.5 p-1 text-xs font-bold relative transition-all ${cellStyle}`}
                                       title={`Cycle Day: ${dayNum}, Date: ${cellDateStr}`}
                                     >
-                                      <div className="flex justify-between w-full">
-                                        <span className={`text-[10px] leading-none ${cellDateStr === todayStr ? 'bg-primary text-white w-4 h-4 rounded-full flex items-center justify-center' : ''}`}>{dayNum}</span>
-                                        <span className="text-[7.5px] font-black text-secondary/60 leading-none">CD{dayNum}</span>
+                                      <span className="text-[6.5px] sm:text-[8px] font-black text-secondary/60 leading-none">CD{dayNum}</span>
+                                      <span className={`text-[12px] sm:text-[16px] font-extrabold leading-none ${cellDateStr === todayStr ? 'bg-primary text-white w-5 h-5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-md' : 'text-secondary/90'}`}>
+                                        {dayNum}
+                                      </span>
+                                      <div className="h-2 sm:h-3 flex items-center justify-center transform-gpu scale-75 sm:scale-100">
+                                        {getDayIndicator(cellDateStr)}
                                       </div>
-                                      {getDayIndicator(cellDateStr)}
                                     </button>
                                   );
                                 })}
@@ -1881,35 +1889,35 @@ export const Dashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Structured Clinical Insights (Observation -> Reason -> Rec -> Outcome) */}
-                    <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-6 bg-gradient-to-tr from-primary/5 via-transparent to-[#ae9fc4]/10">
-                      <div className="flex items-center gap-2 border-b border-slate-200/50 pb-2">
-                        <span className="material-symbols-outlined text-primary text-xl">auto_awesome</span>
-                        <h4 className="font-extrabold text-primary text-sm uppercase tracking-wider">Clinical Insight: Hydration & Autonomic Recovery</h4>
+                    {/* Dynamic Clinical Insights */}
+                    {forecast?.insights && (forecast.insights.stress || forecast.insights.sleep) && (
+                      <div className="flex flex-col gap-4">
+                        {forecast.insights.stress && (
+                          <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4 bg-gradient-to-tr from-primary/5 via-transparent to-blue-500/5">
+                            <div className="flex items-center gap-2 border-b border-slate-200/50 pb-2">
+                              <span className="material-symbols-outlined text-primary text-xl">auto_awesome</span>
+                              <h4 className="font-extrabold text-primary text-sm uppercase tracking-wider">Clinical Insight: Hydration & Stress</h4>
+                            </div>
+                            <div className="bg-white/60 p-4 rounded-2xl border border-white/80">
+                              <span className="text-[9px] font-black text-secondary uppercase block mb-1">AI Observation</span>
+                              <p className="text-primary font-bold leading-normal">{forecast.insights.stress}</p>
+                            </div>
+                          </div>
+                        )}
+                        {forecast.insights.sleep && (
+                          <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4 bg-gradient-to-tr from-primary/5 via-transparent to-purple-500/5">
+                            <div className="flex items-center gap-2 border-b border-slate-200/50 pb-2">
+                              <span className="material-symbols-outlined text-primary text-xl">psychology</span>
+                              <h4 className="font-extrabold text-primary text-sm uppercase tracking-wider">Clinical Insight: Hormones & Sleep</h4>
+                            </div>
+                            <div className="bg-white/60 p-4 rounded-2xl border border-white/80">
+                              <span className="text-[9px] font-black text-secondary uppercase block mb-1">AI Observation</span>
+                              <p className="text-primary font-bold leading-normal">{forecast.insights.sleep}</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
-                        <div className="bg-white/60 p-4 rounded-2xl border border-white/80 flex flex-col gap-1">
-                          <span className="text-[9px] font-black text-secondary uppercase">Observation</span>
-                          <p className="text-primary font-bold leading-normal">Stress parameters drop by 22% on days when hydration exceeds 6 cups.</p>
-                        </div>
-
-                        <div className="bg-white/60 p-4 rounded-2xl border border-white/80 flex flex-col gap-1">
-                          <span className="text-[9px] font-black text-secondary uppercase">Reason</span>
-                          <p className="text-primary font-bold leading-normal">Optimal blood volume stabilizes autonomic vagal tone, protecting HRV in pre-menstrual dips.</p>
-                        </div>
-
-                        <div className="bg-white/60 p-4 rounded-2xl border border-white/80 flex flex-col gap-1">
-                          <span className="text-[9px] font-black text-secondary uppercase">Recommendation</span>
-                          <p className="text-primary font-bold leading-normal">Drink 2 glasses of water before 10 AM, specifically on luteal days 18-24.</p>
-                        </div>
-
-                        <div className="bg-white/60 p-4 rounded-2xl border border-white/80 flex flex-col gap-1">
-                          <span className="text-[9px] font-black text-emerald-800 uppercase">Expected Outcome</span>
-                          <p className="text-emerald-950 font-bold leading-normal">Sleep Recovery score increases by 8% and stress peaks decrease.</p>
-                        </div>
-                      </div>
-                    </div>
+                    )}
                   </>
                 )}
               </motion.div>
