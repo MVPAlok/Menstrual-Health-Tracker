@@ -163,3 +163,111 @@ export const saveLog = async (req: AuthenticatedRequest, res: Response) => {
     return res.status(500).json({ error: 'Server error saving daily metrics.' });
   }
 };
+
+export const deleteLog = async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.userId;
+  const { date } = req.params;
+
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized.' });
+  }
+
+  if (!date) {
+    return res.status(400).json({ error: 'Date parameter is required.' });
+  }
+
+  try {
+    await prisma.dailyLog.delete({
+      where: {
+        userId_date: {
+          userId,
+          date
+        }
+      }
+    });
+
+    return res.status(200).json({ message: 'Daily telemetry log deleted successfully.' });
+  } catch (error: any) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'No log record found for this date.' });
+    }
+    console.error('Error deleting log:', error);
+    return res.status(500).json({ error: 'Server error deleting daily metrics.' });
+  }
+};
+
+export const duplicateLog = async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.userId;
+  const { date } = req.body;
+
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized.' });
+  }
+
+  if (!date) {
+    return res.status(400).json({ error: 'Target date parameter is required.' });
+  }
+
+  try {
+    const precedingLog = await prisma.dailyLog.findFirst({
+      where: {
+        userId,
+        date: { lt: date }
+      },
+      orderBy: { date: 'desc' }
+    });
+
+    if (!precedingLog) {
+      return res.status(404).json({ error: 'No preceding telemetry logs found to duplicate.' });
+    }
+
+    const duplicated = await prisma.dailyLog.upsert({
+      where: {
+        userId_date: {
+          userId,
+          date
+        }
+      },
+      update: {
+        mood: precedingLog.mood,
+        sleepHours: precedingLog.sleepHours,
+        energyRate: precedingLog.energyRate,
+        stressFactor: precedingLog.stressFactor,
+        symptoms: precedingLog.symptoms,
+        hydrationCups: precedingLog.hydrationCups,
+        flowType: precedingLog.flowType,
+        hrv: precedingLog.hrv
+      },
+      create: {
+        userId,
+        date,
+        mood: precedingLog.mood,
+        sleepHours: precedingLog.sleepHours,
+        energyRate: precedingLog.energyRate,
+        stressFactor: precedingLog.stressFactor,
+        symptoms: precedingLog.symptoms,
+        hydrationCups: precedingLog.hydrationCups,
+        flowType: precedingLog.flowType,
+        hrv: precedingLog.hrv
+      }
+    });
+
+    return res.status(200).json({
+      message: 'Telemetry duplicated successfully.',
+      log: {
+        date: duplicated.date,
+        mood: duplicated.mood,
+        sleep: duplicated.sleepHours,
+        energy: duplicated.energyRate,
+        stress: duplicated.stressFactor,
+        symptoms: duplicated.symptoms,
+        hydration: duplicated.hydrationCups,
+        flowType: duplicated.flowType,
+        hrv: duplicated.hrv
+      }
+    });
+  } catch (error: any) {
+    console.error('Error duplicating log:', error);
+    return res.status(500).json({ error: 'Server error duplicating daily metrics.' });
+  }
+};
