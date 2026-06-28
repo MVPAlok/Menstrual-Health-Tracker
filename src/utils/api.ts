@@ -94,6 +94,7 @@ export const api = {
   auth: {
     register: (body: any) => request<any>('/auth/register', { method: 'POST', body: JSON.stringify(body) }),
     login: (body: any) => request<any>('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+    updateProfileImage: (image: string) => request<any>('/auth/profile-image', { method: 'PUT', body: JSON.stringify({ image }) }),
   },
   // Onboarding
   onboarding: {
@@ -124,5 +125,30 @@ export const api = {
     getCode: () => request<any>('/partner/code'),
     pair: (code: string) => request<any>('/partner/pair', { method: 'POST', body: JSON.stringify({ code }) }),
     unlink: () => request<any>('/partner/unlink', { method: 'POST' }),
+  },
+  // Notifications
+  notifications: {
+    get: (params?: { category?: string; isRead?: boolean; limit?: number; offset?: number }) => {
+      const q = new URLSearchParams();
+      if (params) {
+        if (params.category) q.append('category', params.category);
+        if (params.isRead !== undefined) q.append('isRead', String(params.isRead));
+        if (params.limit !== undefined) q.append('limit', String(params.limit));
+        if (params.offset !== undefined) q.append('offset', String(params.offset));
+      }
+      const queryStr = q.toString() ? `?${q.toString()}` : '';
+      return request<any>(`/notifications${queryStr}`);
+    },
+    getUnread: () => request<any>('/notifications/unread'),
+    create: (body: any) => request<any>('/notifications', { method: 'POST', body: JSON.stringify(body) }),
+    markRead: (id: string) => request<any>(`/notifications/${id}/read`, { method: 'PATCH' }),
+    markAllRead: () => request<any>('/notifications/read-all', { method: 'PATCH' }),
+    delete: (id: string) => request<any>(`/notifications/${id}`, { method: 'DELETE' }),
+    clear: () => request<any>('/notifications/clear', { method: 'DELETE' }),
+    getPreferences: () => request<any>('/notification-preferences'),
+    updatePreferences: (body: any) => request<any>('/notification-preferences', { method: 'PATCH', body: JSON.stringify(body) }),
+    getVapidKey: () => request<any>('/notifications/vapid-key'),
+    subscribePush: (subscription: any) => request<any>('/notifications/subscribe', { method: 'POST', body: JSON.stringify({ subscription }) }),
+    unsubscribePush: (endpoint: string) => request<any>('/notifications/unsubscribe', { method: 'POST', body: JSON.stringify({ endpoint }) }),
   }
 };

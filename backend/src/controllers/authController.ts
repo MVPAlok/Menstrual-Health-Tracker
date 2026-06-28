@@ -46,6 +46,7 @@ export const register = async (req: Request, res: Response) => {
         id: user.id,
         name: `${user.firstName} ${user.lastName}`,
         email: '',
+        profileImage: user.profileImage || '',
         isLoggedIn: true,
       },
       onboarding: user.onboarding,
@@ -89,6 +90,7 @@ export const login = async (req: Request, res: Response) => {
         id: user.id,
         name: `${user.firstName} ${user.lastName}`,
         email: '',
+        profileImage: user.profileImage || '',
         isLoggedIn: true,
       },
       onboarding: user.onboarding,
@@ -96,5 +98,31 @@ export const login = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Login error:', error);
     return res.status(500).json({ error: 'Server error encountered during authentication.' });
+  }
+};
+
+import { AuthenticatedRequest } from '../middleware/authMiddleware';
+
+export const updateProfileImage = async (req: AuthenticatedRequest, res: Response) => {
+  const { image } = req.body;
+  const userId = req.userId;
+
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized: User ID not found in request context.' });
+  }
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { profileImage: image || null },
+    });
+
+    return res.status(200).json({
+      message: 'Profile image updated successfully.',
+      profileImage: updatedUser.profileImage || '',
+    });
+  } catch (error) {
+    console.error('Update profile image error:', error);
+    return res.status(500).json({ error: 'Server error encountered while updating profile image.' });
   }
 };

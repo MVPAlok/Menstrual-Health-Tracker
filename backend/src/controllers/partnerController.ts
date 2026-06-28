@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import prisma from '../prisma';
+import { triggerNotification } from '../services/notificationService';
 
 // Helper to generate a unique 6-digit pairing code
 const generateSyncCode = (): string => {
@@ -77,6 +78,37 @@ export const pair = async (req: AuthenticatedRequest, res: Response) => {
         }
       }
     });
+
+    // Trigger Partner Connected Notifications for both users
+    try {
+      const receiverUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { firstName: true, lastName: true }
+      });
+      const receiverName = receiverUser ? `${receiverUser.firstName} ${receiverUser.lastName}` : 'Partner';
+
+      // 1. Alert the receiver (current user)
+      await triggerNotification(
+        userId,
+        'Partner Connected',
+        `Successfully linked with partner ${updatedSync.initiator.firstName} ${updatedSync.initiator.lastName}.`,
+        'SYSTEM_NOTIFICATIONS',
+        'PARTNER_CONNECTED',
+        { icon: 'favorite', priority: 'HIGH' }
+      );
+
+      // 2. Alert the initiator
+      await triggerNotification(
+        pendingSync.initiatorId,
+        'Partner Connected',
+        `Successfully linked with partner ${receiverName}.`,
+        'SYSTEM_NOTIFICATIONS',
+        'PARTNER_CONNECTED',
+        { icon: 'favorite', priority: 'HIGH' }
+      );
+    } catch (err) {
+      console.error('Failed to trigger partner connection notifications:', err);
+    }
 
     return res.status(200).json({
       message: 'Successfully paired with partner.',

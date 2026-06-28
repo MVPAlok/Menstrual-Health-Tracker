@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import prisma from '../prisma';
 import { Mood, MenstrualFlow } from '@prisma/client';
+import { triggerNotification } from '../services/notificationService';
 
 export const getLogsRange = async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.userId;
@@ -103,6 +104,119 @@ export const saveLog = async (req: AuthenticatedRequest, res: Response) => {
         hrv: hrv !== undefined && hrv !== null ? Number(hrv) : null,
       },
     });
+
+    // Trigger dynamic notifications based on log metrics
+    try {
+      const totalLogsCount = await prisma.dailyLog.count({ where: { userId } });
+
+      // Achievement Notifications
+      if (totalLogsCount === 1) {
+        await triggerNotification(
+          userId,
+          'First Log Completed',
+          'Congratulations on registering your first health telemetry log! Your journey begins.',
+          'ACHIEVEMENT_NOTIFICATIONS',
+          'FIRST_LOG_COMPLETED',
+          { icon: 'workspace_premium', priority: 'HIGH' }
+        );
+      } else if (totalLogsCount === 7) {
+        await triggerNotification(
+          userId,
+          '7-Day Streak Active',
+          'Consistent logging unlocked! 7 days of biological history mapped.',
+          'ACHIEVEMENT_NOTIFICATIONS',
+          'STREAK_7_DAY',
+          { icon: 'military_tech', priority: 'HIGH' }
+        );
+      } else if (totalLogsCount === 14) {
+        await triggerNotification(
+          userId,
+          '14-Day Streak Achieved',
+          'Excellent habit! 14 days of cycle intelligence calibration complete.',
+          'ACHIEVEMENT_NOTIFICATIONS',
+          'STREAK_14_DAY',
+          { icon: 'stars', priority: 'HIGH' }
+        );
+      } else if (totalLogsCount === 30) {
+        await triggerNotification(
+          userId,
+          '30-Day Consistency Unlocked',
+          'True sanctuary alignment! 30 days of data calibration.',
+          'ACHIEVEMENT_NOTIFICATIONS',
+          'STREAK_30_DAY',
+          { icon: 'shield_heart', priority: 'HIGH' }
+        );
+      }
+
+      // AI Calibration Notifications
+      if (totalLogsCount === 3) {
+        await triggerNotification(
+          userId,
+          'AI Calibration Calibrated',
+          "Luna Care's neural engine has successfully established your biological baseline.",
+          'AI_NOTIFICATIONS',
+          'AI_CALIBRATION_IMPROVED',
+          { icon: 'psychology', priority: 'HIGH' }
+        );
+      }
+
+      // Health Notifications
+      if (log.hydrationCups < 5) {
+        await triggerNotification(
+          userId,
+          'Hydration Below Goal',
+          `Your water intake is below today's target (${log.hydrationCups} / 8 cups). Consider drinking 2 more cups.`,
+          'HEALTH_NOTIFICATIONS',
+          'HYDRATION_BELOW_GOAL',
+          { icon: 'water_drop', priority: 'MEDIUM' }
+        );
+      } else if (log.hydrationCups >= 8) {
+        await triggerNotification(
+          userId,
+          'Hydration Target Met',
+          'Excellent! You met your hydration goal of 8 cups today.',
+          'HEALTH_NOTIFICATIONS',
+          'RECOVERY_IMPROVEMENT',
+          { icon: 'local_drink', priority: 'LOW' }
+        );
+      }
+
+      if (log.sleepHours < 7.0) {
+        await triggerNotification(
+          userId,
+          'Low Sleep Duration',
+          `Sleep duration registered at ${log.sleepHours} hours is below the recommended 7 hours. Rest is advised.`,
+          'HEALTH_NOTIFICATIONS',
+          'LOW_SLEEP_QUALITY',
+          { icon: 'bedtime', priority: 'MEDIUM' }
+        );
+      }
+
+      if (log.stressFactor >= 7) {
+        await triggerNotification(
+          userId,
+          'High Stress Detected',
+          'Nervous system load indicators register high stress levels. Prioritize grounding routines.',
+          'HEALTH_NOTIFICATIONS',
+          'HIGH_STRESS_TREND',
+          { icon: 'bolt', priority: 'HIGH' }
+        );
+      }
+
+      if (log.hrv && log.hrv < 50) {
+        await triggerNotification(
+          userId,
+          'Low HRV Baseline',
+          `HRV baseline dropped to ${log.hrv}ms today. Your body is calling for active recovery.`,
+          'HEALTH_NOTIFICATIONS',
+          'LOW_HRV',
+          { icon: 'heart_pulse', priority: 'HIGH' }
+        );
+      }
+
+    } catch (err) {
+      console.error('Failed to trigger log-related notifications:', err);
+    }
 
     // CycleHistory Completion Ledger Hook
     if (resolvedFlow === MenstrualFlow.LIGHT || resolvedFlow === MenstrualFlow.MEDIUM || resolvedFlow === MenstrualFlow.HEAVY) {

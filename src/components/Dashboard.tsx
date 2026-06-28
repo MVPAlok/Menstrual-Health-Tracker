@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
 import { api } from '../utils/api';
+import { NotificationCenter } from './NotificationCenter';
+import { NotificationSettings } from './NotificationSettings';
 import { 
   Sparkles, 
   HeartPulse, 
@@ -392,6 +394,15 @@ export const Dashboard: React.FC = () => {
   const selectedLog = dailyLogs[selectedDateStr];
   const selectedDayStats = getCycleStatsForDate(selectedDateStr);
 
+  // Recovery Score Calculation
+  const calculateRecoveryScore = (log: any) => {
+    if (!log) return null;
+    const sleepWeight = Math.min(10, log.sleep) * 6; // up to 60 pts
+    const stressWeight = (10 - log.stress) * 3; // up to 30 pts
+    const hydrationWeight = Math.min(8, log.hydration || 4) * 1.25; // up to 10 pts
+    return Math.round(sleepWeight + stressWeight + hydrationWeight);
+  };
+
   // Dynamic biological recommendations for Diagnostic Ledger
   const getBioRecommendation = (dayNum: number, phase: string, log: any) => {
     const defaultRecs = {
@@ -443,14 +454,6 @@ export const Dashboard: React.FC = () => {
 
   const bioLedger = getBioRecommendation(selectedDayStats.currentCycleDay, selectedDayStats.currentPhase, selectedLog);
 
-  // Recovery Score Calculation
-  const calculateRecoveryScore = (log: any) => {
-    if (!log) return null;
-    const sleepWeight = Math.min(10, log.sleep) * 6; // up to 60 pts
-    const stressWeight = (10 - log.stress) * 3; // up to 30 pts
-    const hydrationWeight = Math.min(8, log.hydration || 4) * 1.25; // up to 10 pts
-    return Math.round(sleepWeight + stressWeight + hydrationWeight);
-  };
   const recoveryScore = calculateRecoveryScore(selectedLog);
 
   // Today's Actionable Priority Action
@@ -587,6 +590,7 @@ export const Dashboard: React.FC = () => {
             <span className="block text-xs font-bold text-secondary">{t('dashboard.bodyCalibrated')}</span>
             <span className="text-sm font-bold text-primary">{user.name || 'Elena Ross'}</span>
           </div>
+          <NotificationCenter />
           <button
             onClick={() => {
               logoutUser();
@@ -2235,6 +2239,11 @@ export const Dashboard: React.FC = () => {
 
                     {partnerError && <p className="text-[10px] text-red-600 font-bold mt-2 ml-1">{partnerError}</p>}
                     {partnerSuccess && <p className="text-[10px] text-emerald-600 font-bold mt-2 ml-1">{partnerSuccess}</p>}
+                  </div>
+
+                  {/* Notification Settings */}
+                  <div className="bg-white/40 border border-white/60 p-6 rounded-[2.0rem] shadow-sm">
+                    <NotificationSettings />
                   </div>
                 </div>
               </div>

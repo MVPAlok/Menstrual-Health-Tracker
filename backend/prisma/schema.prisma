@@ -10,19 +10,22 @@ generator client {
 
 // User Profile Table
 model User {
-  id                   String        @id @default(uuid())
-  firstName            String
-  lastName             String
-  passwordHash         String
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
+  id                      String                  @id @default(uuid())
+  firstName               String
+  lastName                String
+  passwordHash            String
+  profileImage            String?
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
   
-  onboarding           Onboarding?
-  dailyLogs            DailyLog[]
-  partnerSyncInitiator PartnerSync[] @relation("UserInitiated")
-  partnerSyncReceiver  PartnerSync[] @relation("UserReceived")
-  notifications        Notification[]
-  cycleHistory         CycleHistory[]
+  onboarding              Onboarding?
+  dailyLogs               DailyLog[]
+  partnerSyncInitiator    PartnerSync[]           @relation("UserInitiated")
+  partnerSyncReceiver     PartnerSync[]           @relation("UserReceived")
+  notifications           Notification[]
+  notificationPreferences NotificationPreference?
+  pushSubscriptions       PushSubscription[]
+  cycleHistory            CycleHistory[]
 
   @@unique([firstName, lastName])
 }
@@ -83,14 +86,54 @@ model PartnerSync {
 
 // Real-Time Notification Log
 model Notification {
-  id          String    @id @default(uuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type        String    // e.g., "PERIOD_REMINDER", "OVULATION_ALERT", "WELLNESS_TIP"
-  message     String
-  read        Boolean   @default(false)
-  triggerTime DateTime
-  createdAt   DateTime  @default(now())
+  id             String    @id @default(uuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title          String
+  message        String
+  category       String    // e.g. "DAILY_REMINDERS", "CYCLE_NOTIFICATIONS", "HEALTH_NOTIFICATIONS", "AI_NOTIFICATIONS", "ACHIEVEMENT_NOTIFICATIONS", "SYSTEM_NOTIFICATIONS"
+  type           String    // e.g. "DAILY_LOG_REMINDER", etc.
+  priority       String    @default("MEDIUM") // "LOW", "MEDIUM", "HIGH"
+  icon           String?
+  isRead         Boolean   @default(false)
+  deliveryMethod String    @default("IN_APP") // "IN_APP", "PUSH", "BOTH"
+  actionUrl      String?
+  scheduledFor   DateTime?
+  sentAt         DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+// User preferences configuration for notifications
+model NotificationPreference {
+  userId                  String   @id
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyReminder           Boolean  @default(true)
+  cycleReminder           Boolean  @default(true)
+  hydrationReminder       Boolean  @default(true)
+  sleepReminder           Boolean  @default(true)
+  stressReminder          Boolean  @default(true)
+  achievementNotification Boolean  @default(true)
+  insightNotification     Boolean  @default(true)
+  browserPushEnabled      Boolean  @default(false)
+  emailEnabled            Boolean  @default(false)
+  preferredReminderTime   String   @default("09:00") // "HH:MM" format
+  timezone                String   @default("UTC")
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+}
+
+// User browser push subscription registrations
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Completed Cycles Ledger

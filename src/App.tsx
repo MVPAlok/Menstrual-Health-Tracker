@@ -18,20 +18,8 @@ function AppRoutes() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={
-          user.isLoggedIn ? (
-            onboarding.onboardingCompleted ? <Navigate to="/dashboard" replace /> : <Navigate to="/onboarding" replace />
-          ) : (
-            <Navigate to="/landingpage" replace />
-          )
-        } />
-        <Route path="/landingpage" element={
-          user.isLoggedIn ? (
-            onboarding.onboardingCompleted ? <Navigate to="/dashboard" replace /> : <Navigate to="/onboarding" replace />
-          ) : (
-            <LandingPage />
-          )
-        } />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/landingpage" element={<LandingPage />} />
         <Route path="/welcome" element={
           user.isLoggedIn ? (
             onboarding.onboardingCompleted ? <Navigate to="/dashboard" replace /> : <Navigate to="/onboarding" replace />
@@ -57,11 +45,7 @@ function AppRoutes() {
           user.isLoggedIn ? <SuccessScreen /> : <Navigate to="/welcome" replace />
         } />
         <Route path="/onboarding" element={
-          user.isLoggedIn ? (
-            onboarding.onboardingCompleted ? <Navigate to="/dashboard" replace /> : <OnboardingFlow />
-          ) : (
-            <Navigate to="/welcome" replace />
-          )
+          user.isLoggedIn ? <OnboardingFlow /> : <Navigate to="/welcome" replace />
         } />
         <Route path="/dashboard" element={
           user.isLoggedIn ? (

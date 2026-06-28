@@ -8,8 +8,12 @@ import onboardingRoutes from './routes/onboardingRoutes';
 import logRoutes from './routes/logRoutes';
 import partnerRoutes from './routes/partnerRoutes';
 import predictionsRoutes from './routes/predictionsRoutes';
+import notificationRoutes from './routes/notificationRoutes';
+import { getNotificationPreferences, updateNotificationPreferences } from './controllers/notificationController';
+import { authenticateToken } from './middleware/authMiddleware';
 import { registerSocketHandlers } from './sockets/syncSocket';
 import { startNotificationScheduler } from './services/notificationEngine';
+import { setSocketIoInstance } from './services/notificationService';
 
 dotenv.config();
 
@@ -38,6 +42,9 @@ app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/partner', partnerRoutes);
 app.use('/api/predictions', predictionsRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.get('/api/notification-preferences', authenticateToken, getNotificationPreferences);
+app.patch('/api/notification-preferences', authenticateToken, updateNotificationPreferences);
 
 // Socket.io initialization with custom ping configurations for quick reconnections
 const io = new Server(httpServer, {
@@ -55,6 +62,7 @@ const io = new Server(httpServer, {
 
 // Bind WebSocket event listeners
 registerSocketHandlers(io);
+setSocketIoInstance(io);
 
 // Initialize background cron for real-time notification alerts
 startNotificationScheduler(io);

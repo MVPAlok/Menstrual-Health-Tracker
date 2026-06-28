@@ -30,6 +30,36 @@ export interface OnboardingData {
   onboardingCompleted: boolean;
 }
 
+export interface AppNotification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  category: string;
+  type: string;
+  priority: string;
+  icon?: string;
+  isRead: boolean;
+  deliveryMethod: string;
+  actionUrl?: string;
+  createdAt: string;
+}
+
+export interface AppNotificationPreference {
+  userId: string;
+  dailyReminder: boolean;
+  cycleReminder: boolean;
+  hydrationReminder: boolean;
+  sleepReminder: boolean;
+  stressReminder: boolean;
+  achievementNotification: boolean;
+  insightNotification: boolean;
+  browserPushEnabled: boolean;
+  emailEnabled: boolean;
+  preferredReminderTime: string;
+  timezone: string;
+}
+
 export interface DailyLog {
   date: string; // YYYY-MM-DD
   mood: string; // 'Radiant' | 'Balanced' | 'Sensitive' | 'Low Energy' | 'Anxious'
@@ -118,9 +148,22 @@ interface AppContextType {
   deleteLog: (date: string) => Promise<void>;
   duplicateLog: (date: string) => Promise<void>;
   triggerPartnerAction: (action: string) => void;
-  updateProfileImage: (image: string) => void;
+  updateProfileImage: (image: string) => Promise<void>;
   refreshAnalytics: () => Promise<void>;
   downloadReport: (format: 'csv' | 'pdf') => Promise<void>;
+  notificationsList: AppNotification[];
+  unreadCount: number;
+  notificationPreferences: AppNotificationPreference | null;
+  fetchNotifications: () => Promise<void>;
+  fetchUnreadCount: () => Promise<void>;
+  markNotificationRead: (id: string) => Promise<void>;
+  markAllNotificationsRead: () => Promise<void>;
+  deleteNotification: (id: string) => Promise<void>;
+  clearNotifications: () => Promise<void>;
+  fetchPreferences: () => Promise<void>;
+  updatePreferences: (data: Partial<AppNotificationPreference>) => Promise<void>;
+  subscribeBrowserPush: () => Promise<boolean>;
+  unsubscribeBrowserPush: () => Promise<void>;
 }
 
 const defaultOnboarding: OnboardingData = {
@@ -159,6 +202,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [dailyLogs, setDailyLogs] = useState<Record<string, DailyLog>>({});
   const [partnerAction, setPartnerAction] = useState<{ partnerId: string; action: string } | null>(null);
   const [partnerLogUpdate, setPartnerLogUpdate] = useState<{ partnerId: string; date: string; mood: string; symptoms: string[] } | null>(null);
+  
+  const [notificationsList, setNotificationsList] = useState<AppNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [notificationPreferences, setNotificationPreferences] = useState<AppNotificationPreference | null>(null);
   
   const [profileStats, setProfileStats] = useState<ProfileStats | null>(null);
   const [cycleComparison, setCycleComparison] = useState<CycleComparison | null>(null);
@@ -275,6 +322,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setTimeout(() => setPartnerAction(null), 4000);
     });
 
+    socket.on('notification:received', (data: any) => {
+      setNotificationsList((prev) => [data, ...prev]);
+      setUnreadCount((prev) => prev + 1);
+      
+      // Raise browser notification if permitted and window is hidden
+      if (Notification.permission === 'granted' && document.hidden) {
+        navigator.serviceWorker.ready.then((reg) => {
+          reg.showNotification(data.title, {
+            body: data.message,
+            icon: '/favicon.ico',
+            badge: '/favicon.ico',
+            data: { actionUrl: data.actionUrl || '/dashboard' }
+          });
+        });
+      }
+    });
+
     socketRef.current = socket;
   };
 
@@ -288,17 +352,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (data) {
             setOnboarding(data);
             localStorage.setItem('lunacare_onboarding', JSON.stringify(data));
+          } else {
+            setOnboarding(defaultOnboarding);
+            localStorage.setItem('lunacare_onboarding', JSON.stringify(defaultOnboarding));
           }
         })
         .catch((err) => {
           if (err.status === 401) {
             logoutUser();
+          } else {
+            setOnboarding(defaultOnboarding);
+            localStorage.setItem('lunacare_onboarding', JSON.stringify(defaultOnboarding));
           }
         });
       fetchRecentLogs();
       refreshAnalytics();
+      fetchNotifications();
+      fetchPreferences();
     } else if (!token && user.isLoggedIn) {
       logoutUser();
+    }
+  }, []);
+
+  // Register service worker on mount
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then((reg) => console.log('🚀 Service Worker registered:', reg.scope))
+        .catch((err) => console.error('❌ Service Worker registration failed:', err));
     }
   }, []);
 
@@ -313,7 +394,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (resolved) {
         setOnboarding(resolved);
         localStorage.setItem('lunacare_onboarding', JSON.stringify(resolved));
+      } else {
+        setOnboarding(defaultOnboarding);
+        localStorage.setItem('lunacare_onboarding', JSON.stringify(defaultOnboarding));
       }
+    } else {
+      setOnboarding(defaultOnboarding);
+      localStorage.setItem('lunacare_onboarding', JSON.stringify(defaultOnboarding));
     }
     
     connectSocket(res.token);
@@ -353,7 +440,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (resolved) {
         setOnboarding(resolved);
         localStorage.setItem('lunacare_onboarding', JSON.stringify(resolved));
+      } else {
+        setOnboarding(defaultOnboarding);
+        localStorage.setItem('lunacare_onboarding', JSON.stringify(defaultOnboarding));
       }
+    } else {
+      setOnboarding(defaultOnboarding);
+      localStorage.setItem('lunacare_onboarding', JSON.stringify(defaultOnboarding));
     }
     
     connectSocket(res.token);
@@ -457,10 +550,167 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const updateProfileImage = (image: string) => {
-    const updatedUser = { ...user, profileImage: image };
-    setUser(updatedUser);
-    localStorage.setItem('lunacare_user', JSON.stringify(updatedUser));
+  const updateProfileImage = async (image: string) => {
+    try {
+      const res = await api.auth.updateProfileImage(image);
+      const updatedUser = { ...user, profileImage: res.profileImage };
+      setUser(updatedUser);
+      localStorage.setItem('lunacare_user', JSON.stringify(updatedUser));
+    } catch (err) {
+      console.error("Failed to persist profile image:", err);
+      // Fallback
+      const updatedUser = { ...user, profileImage: image };
+      setUser(updatedUser);
+      localStorage.setItem('lunacare_user', JSON.stringify(updatedUser));
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await api.notifications.get();
+      setNotificationsList(res.notifications || []);
+      const countRes = await api.notifications.getUnread();
+      setUnreadCount(countRes.count || 0);
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
+    }
+  };
+
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await api.notifications.getUnread();
+      setUnreadCount(res.count || 0);
+    } catch (err) {
+      console.error('Failed to fetch unread count:', err);
+    }
+  };
+
+  const markNotificationRead = async (id: string) => {
+    try {
+      await api.notifications.markRead(id);
+      setNotificationsList((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch (err) {
+      console.error('Failed to mark notification read:', err);
+    }
+  };
+
+  const markAllNotificationsRead = async () => {
+    try {
+      await api.notifications.markAllRead();
+      setNotificationsList((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+    } catch (err) {
+      console.error('Failed to mark all notifications read:', err);
+    }
+  };
+
+  const deleteNotification = async (id: string) => {
+    try {
+      await api.notifications.delete(id);
+      const isUnread = notificationsList.find((n) => n.id === id && !n.isRead);
+      setNotificationsList((prev) => prev.filter((n) => n.id !== id));
+      if (isUnread) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch (err) {
+      console.error('Failed to delete notification:', err);
+    }
+  };
+
+  const clearNotifications = async () => {
+    try {
+      await api.notifications.clear();
+      setNotificationsList([]);
+      setUnreadCount(0);
+    } catch (err) {
+      console.error('Failed to clear notifications:', err);
+    }
+  };
+
+  const fetchPreferences = async () => {
+    try {
+      const prefs = await api.notifications.getPreferences();
+      setNotificationPreferences(prefs);
+    } catch (err) {
+      console.error('Failed to fetch notification preferences:', err);
+    }
+  };
+
+  const updatePreferences = async (data: Partial<AppNotificationPreference>) => {
+    try {
+      const res = await api.notifications.updatePreferences(data);
+      setNotificationPreferences(res.preferences);
+    } catch (err) {
+      console.error('Failed to update notification preferences:', err);
+    }
+  };
+
+  const subscribeBrowserPush = async (): Promise<boolean> => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      console.warn('Browser push notifications not supported.');
+      return false;
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        console.warn('Notification permission denied.');
+        return false;
+      }
+
+      const registration = await navigator.serviceWorker.ready;
+      const { publicKey } = await api.notifications.getVapidKey();
+
+      const padding = '='.repeat((4 - (publicKey.length % 4)) % 4);
+      const base64 = (publicKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: outputArray
+      });
+
+      await api.notifications.subscribePush(subscription);
+
+      if (notificationPreferences) {
+        setNotificationPreferences({
+          ...notificationPreferences,
+          browserPushEnabled: true
+        });
+      }
+      return true;
+    } catch (err) {
+      console.error('Failed to subscribe browser push notifications:', err);
+      return false;
+    }
+  };
+
+  const unsubscribeBrowserPush = async () => {
+    if (!('serviceWorker' in navigator)) return;
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      if (subscription) {
+        await subscription.unsubscribe();
+        await api.notifications.unsubscribePush(subscription.endpoint);
+      }
+      if (notificationPreferences) {
+        setNotificationPreferences({
+          ...notificationPreferences,
+          browserPushEnabled: false
+        });
+      }
+    } catch (err) {
+      console.error('Failed to unsubscribe push notifications:', err);
+    }
   };
 
   return (
@@ -486,6 +736,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateProfileImage,
         refreshAnalytics,
         downloadReport,
+        notificationsList,
+        unreadCount,
+        notificationPreferences,
+        fetchNotifications,
+        fetchUnreadCount,
+        markNotificationRead,
+        markAllNotificationsRead,
+        deleteNotification,
+        clearNotifications,
+        fetchPreferences,
+        updatePreferences,
+        subscribeBrowserPush,
+        unsubscribeBrowserPush,
       }}
     >
       {children}
