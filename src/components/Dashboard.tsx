@@ -2255,7 +2255,7 @@ export const Dashboard: React.FC = () => {
 
       {/* ═══════════════ BOTTOM NAV BAR ═══════════════ */}
       <nav className="fixed bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-40 w-[95%] max-w-lg">
-        <div className="glass shadow-[0_24px_50px_rgba(165,53,86,0.12)] border border-white/70 p-1.5 sm:p-3 rounded-full flex justify-between items-center gap-1">
+        <div className="bg-white/95 backdrop-blur-3xl shadow-[0_24px_50px_rgba(165,53,86,0.12)] border border-white/70 p-1.5 sm:p-3 rounded-full flex justify-between items-center gap-1">
           {[
             { id: 'home', label: t('nav.home'), icon: 'space_dashboard' },
             { id: 'lab', label: t('nav.lab'), icon: 'science' },
