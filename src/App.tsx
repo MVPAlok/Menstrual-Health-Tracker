@@ -45,7 +45,11 @@ function AppRoutes() {
           user.isLoggedIn ? <SuccessScreen /> : <Navigate to="/welcome" replace />
         } />
         <Route path="/onboarding" element={
-          user.isLoggedIn ? <OnboardingFlow /> : <Navigate to="/welcome" replace />
+          user.isLoggedIn ? (
+            onboarding.onboardingCompleted ? <Navigate to="/dashboard" replace /> : <OnboardingFlow />
+          ) : (
+            <Navigate to="/welcome" replace />
+          )
         } />
         <Route path="/dashboard" element={
           user.isLoggedIn ? (

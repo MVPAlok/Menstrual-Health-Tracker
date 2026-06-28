@@ -360,9 +360,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .catch((err) => {
           if (err.status === 401) {
             logoutUser();
-          } else {
+          } else if (err.status === 404) {
             setOnboarding(defaultOnboarding);
             localStorage.setItem('lunacare_onboarding', JSON.stringify(defaultOnboarding));
+          } else {
+            console.warn('Failed to refresh onboarding from server (server/network error). Keeping cached onboarding:', err);
           }
         });
       fetchRecentLogs();
