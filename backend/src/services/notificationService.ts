@@ -95,6 +95,7 @@ export const triggerNotification = async (
   options: TriggerOptions = {}
 ) => {
   const prefs = await getOrCreatePreferences(userId);
+  if (!prefs) return null;
 
   // 1. Verify user preferences allow this category
   if (!isNotificationEnabled(prefs, category)) {

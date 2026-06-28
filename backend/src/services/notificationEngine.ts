@@ -104,11 +104,12 @@ export const startNotificationScheduler = (io: Server) => {
 
         for (const onboarding of onboardings) {
           const userId = onboarding.userId;
-          let prefs = preferencesMap.get(userId);
+          let prefs = preferencesMap.get(userId) || null;
           
           if (!prefs) {
             prefs = await getOrCreatePreferences(userId);
           }
+          if (!prefs) continue;
 
           const localTime = getUserLocalTime(prefs.timezone);
           const [prefHour, prefMin] = prefs.preferredReminderTime.split(':').map(Number);
