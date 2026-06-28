@@ -477,9 +477,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateOnboarding = async (data: Partial<OnboardingData>) => {
     const updated = { ...onboarding, ...data };
-    const res = await api.onboarding.calibrate(updated);
-    setOnboarding(res.onboarding);
-    localStorage.setItem('lunacare_onboarding', JSON.stringify(res.onboarding));
+    setOnboarding(updated);
+    localStorage.setItem('lunacare_onboarding', JSON.stringify(updated));
+    try {
+      const res = await api.onboarding.calibrate(updated);
+      if (res.onboarding) {
+        setOnboarding(res.onboarding);
+        localStorage.setItem('lunacare_onboarding', JSON.stringify(res.onboarding));
+      }
+    } catch (err) {
+      console.error('Failed to sync onboarding with backend, kept local state.', err);
+    }
     await refreshAnalytics();
   };
 
