@@ -32,6 +32,7 @@ export const NotificationSettings: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [permissionState, setPermissionState] = useState<string>(
     'default'
   );
@@ -93,6 +94,7 @@ export const NotificationSettings: React.FC = () => {
 
   const handlePushSubscriptionChange = async () => {
     setLoading(true);
+    setErrorMsg(null);
     if (notificationPreferences.browserPushEnabled) {
       await unsubscribeBrowserPush();
       setPermissionState(Notification.permission);
@@ -101,7 +103,7 @@ export const NotificationSettings: React.FC = () => {
       if (ok) {
         setPermissionState('granted');
       } else {
-        alert('Could not enable browser push. Check browser permissions.');
+        setErrorMsg('Could not register browser push. Ensure notifications are allowed in browser settings and the server is fully deployed.');
       }
     }
     setLoading(false);
@@ -180,6 +182,15 @@ export const NotificationSettings: React.FC = () => {
                 <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <span className="text-[10px] text-amber-600 leading-normal font-bold">
                   Browser push permission is currently blocked. To enable, reset notifications permission in your browser address bar settings.
+                </span>
+              </div>
+            )}
+
+            {errorMsg && (
+              <div className="p-3 bg-rose-50 rounded-xl border border-rose-200 flex gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                <span className="text-[10px] text-rose-600 leading-normal font-bold">
+                  {errorMsg}
                 </span>
               </div>
             )}
