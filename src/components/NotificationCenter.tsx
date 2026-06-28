@@ -136,10 +136,10 @@ export const NotificationCenter: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 15, scale: 0.95 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute right-[-50px] sm:right-0 mt-3 w-[calc(100vw-20px)] max-w-[360px] sm:w-96 sm:max-w-none rounded-3xl border border-white/90 shadow-[0_24px_50px_rgba(165,53,86,0.25)] bg-white/95 backdrop-blur-3xl overflow-hidden flex flex-col max-h-[80vh] sm:max-h-[500px]"
+            className="absolute right-[-50px] sm:right-0 mt-3 w-[calc(100vw-20px)] max-w-[360px] sm:w-96 sm:max-w-none rounded-3xl border border-slate-200 shadow-[0_24px_50px_rgba(165,53,86,0.18)] bg-white overflow-hidden flex flex-col max-h-[80vh] sm:max-h-[500px]"
           >
             {/* Header */}
-            <div className="p-4 border-b border-outline/10 flex justify-between items-center bg-white/30">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <div className="flex items-center gap-1.5">
                 <Bell className="w-4 h-4 text-primary" />
                 <span className="font-extrabold text-primary text-xs uppercase tracking-wider">Sanctuary Stream</span>
@@ -169,7 +169,7 @@ export const NotificationCenter: React.FC = () => {
             </div>
 
             {/* Local Search Bar */}
-            <div className="px-4 py-2 border-b border-outline/5 bg-white/20 flex items-center gap-2">
+            <div className="px-4 py-2 border-b border-slate-100 bg-white flex items-center gap-2">
               <Search className="w-3.5 h-3.5 text-secondary" />
               <input
                 type="text"
@@ -186,7 +186,7 @@ export const NotificationCenter: React.FC = () => {
             </div>
 
             {/* Category Filter Tabs */}
-            <div className="flex gap-1.5 overflow-x-auto p-2 border-b border-outline/5 bg-white/10 no-scrollbar select-none">
+            <div data-lenis-prevent="true" className="flex gap-1.5 overflow-x-auto p-2 border-b border-slate-100 bg-slate-50/50 no-scrollbar select-none">
               {categories.map((cat) => {
                 const isActive = activeTab === cat;
                 const count = cat === 'ALL' 
@@ -202,7 +202,7 @@ export const NotificationCenter: React.FC = () => {
                     className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider whitespace-nowrap transition-all ${
                       isActive
                         ? 'bg-primary text-on-primary shadow-sm'
-                        : 'bg-white/40 text-secondary hover:bg-white/60'
+                        : 'bg-slate-200/50 text-secondary hover:bg-slate-200'
                     }`}
                   >
                     {cat === 'ALL' ? 'All' : getCategoryLabel(cat)} ({count})
@@ -212,7 +212,7 @@ export const NotificationCenter: React.FC = () => {
             </div>
 
             {/* Notifications Scrollable List */}
-            <div className="flex-1 overflow-y-auto max-h-[320px] divide-y divide-outline/5 no-scrollbar">
+            <div data-lenis-prevent="true" className="flex-1 overflow-y-auto max-h-[360px] divide-y divide-slate-100 custom-scrollbar">
               <AnimatePresence initial={false}>
                 {filteredNotifications.length > 0 ? (
                   filteredNotifications.map((notification) => {

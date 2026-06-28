@@ -538,7 +538,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (res.log) {
       setDailyLogs((prev) => ({
         ...prev,
-        [date]: {
+        [res.log.date]: {
           date: res.log.date,
           mood: res.log.mood,
           sleep: res.log.sleep,

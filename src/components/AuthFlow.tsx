@@ -188,41 +188,6 @@ export const LoginScreen: React.FC = () => {
         </motion.button>
       </form>
 
-      {/* Social Login Separator */}
-      <div className="relative my-5 sm:my-8 text-center">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-outline/10"></div>
-        </div>
-        <span className="relative bg-transparent px-3 text-[10px] font-bold uppercase tracking-widest text-outline-variant">
-          {t('auth.orContinueWith')}
-        </span>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <motion.button
-          onClick={() => {
-            loginUser('Google', 'Wellness', 'google_dummy_password');
-            navigate('/dashboard');
-          }}
-          className="flex items-center justify-center gap-2 py-3 bg-white/50 border border-white hover:bg-white/80 rounded-full text-secondary font-bold text-xs tracking-wider"
-          whileHover={{ y: -2 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          {/* Simple premium mock Google icon */}
-          <span className="w-2.5 h-2.5 rounded-full bg-red-400" /> Google
-        </motion.button>
-        <motion.button
-          onClick={() => {
-            loginUser('Apple', 'Intelligence', 'apple_dummy_password');
-            navigate('/dashboard');
-          }}
-          className="flex items-center justify-center gap-2 py-3 bg-white/50 border border-white hover:bg-white/80 rounded-full text-secondary font-bold text-xs tracking-wider"
-          whileHover={{ y: -2 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <span className="w-2.5 h-2.5 rounded-full bg-slate-800" /> Apple
-        </motion.button>
-      </div>
 
       <div className="mt-8 text-center text-sm text-secondary font-medium">
         {t('auth.noAccount')}{' '}

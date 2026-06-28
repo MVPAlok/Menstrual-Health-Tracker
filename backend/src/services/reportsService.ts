@@ -37,8 +37,25 @@ export const generateDoctorHTMLReport = async (userId: string): Promise<string> 
   const logs = await prisma.dailyLog.findMany({
     where: { userId },
     orderBy: { date: 'desc' },
-    take: 15
+    take: 200
   });
+
+  // Calculate top symptoms in report from all user logs
+  const symptomCounts: Record<string, number> = {};
+  const allUserLogsForSymptoms = await prisma.dailyLog.findMany({
+    where: { userId },
+    select: { symptoms: true }
+  });
+  allUserLogsForSymptoms.forEach(l => {
+    l.symptoms.forEach(s => {
+      symptomCounts[s] = (symptomCounts[s] || 0) + 1;
+    });
+  });
+  const topSymptomsList = Object.entries(symptomCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([symptom, count]) => `<span class="symptom-tag">${symptom} (${count}x)</span>`)
+    .join(' ');
 
   const onboarding = await prisma.onboarding.findUnique({
     where: { userId }
@@ -242,6 +259,26 @@ export const generateDoctorHTMLReport = async (userId: string): Promise<string> 
       color: var(--secondary);
       font-style: italic;
     }
+    .symptom-tag {
+      background-color: #fff;
+      border: 1px solid var(--border);
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      margin-right: 6px;
+      margin-bottom: 6px;
+      display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .symptom-list-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 10px;
+    }
     .footer {
       margin-top: 40px;
       border-top: 1px solid var(--border);
@@ -382,7 +419,14 @@ export const generateDoctorHTMLReport = async (userId: string): Promise<string> 
       </div>
 
       <div class="card full-width">
-        <div class="card-title">Recent Daily Log History (Last 15 Records)</div>
+        <div class="card-title">Top Logged Symptoms Highlights</div>
+        <div class="symptom-list-container">
+          ${topSymptomsList || '<span class="text-secondary" style="font-style: italic; font-size: 13px;">No symptoms logged yet.</span>'}
+        </div>
+      </div>
+
+      <div class="card full-width">
+        <div class="card-title">Recent Daily Log History (Last 200 Records)</div>
         <table>
           <thead>
             <tr>

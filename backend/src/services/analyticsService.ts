@@ -86,15 +86,13 @@ export const calculateStreaks = (logDates: string[]): { currentStreak: number; l
   }
 
   // Check if current streak is active (ends today or yesterday)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
+  const todayUTC = new Date(new Date().toISOString().split('T')[0]);
+  const yesterdayUTC = new Date(todayUTC);
+  yesterdayUTC.setUTCDate(yesterdayUTC.getUTCDate() - 1);
 
   const lastDate = new Date(uniqueDates[uniqueDates.length - 1]);
-  lastDate.setHours(0, 0, 0, 0);
 
-  if (lastDate.getTime() === today.getTime() || lastDate.getTime() === yesterday.getTime()) {
+  if (lastDate.getTime() === todayUTC.getTime() || lastDate.getTime() === yesterdayUTC.getTime()) {
     // Current streak is active and is equal to the last block length
     // Let's count backwards from the last logged date
     let tempCurrent = 1;

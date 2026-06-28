@@ -21,7 +21,8 @@ import {
   Trash2,
   Copy,
   Edit3,
-  ChevronRight
+  ChevronRight,
+  Activity
 } from 'lucide-react';
 
 /* ═══════════════ MAIN DASHBOARD SCREEN ═══════════════ */
@@ -50,7 +51,6 @@ export const Dashboard: React.FC = () => {
     partnerLogUpdate, 
     triggerPartnerAction,
     profileStats,
-    cycleComparison,
     recentChanges,
     downloadReport,
     refreshAnalytics,
@@ -58,9 +58,23 @@ export const Dashboard: React.FC = () => {
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'home' | 'lab' | 'calendar' | 'log' | 'insights' | 'profile'>('home');
+  const [insightsTimeframe, setInsightsTimeframe] = useState<'7days' | '30days' | 'all'>('7days');
+
+  // Local date helpers to avoid UTC timezone off-by-one shifts
+  const getLocalDateString = (dateObj: Date = new Date()) => {
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const parseLocalDate = (dateStr: string) => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
 
   // Interactive Selected Day for Calendar
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getLocalDateString();
   const [selectedDateStr, setSelectedDateStr] = useState<string>(todayStr);
 
   // Logging values (interactive state)
@@ -1125,7 +1139,7 @@ export const Dashboard: React.FC = () => {
                             const { day, dateStr } = cell;
                             const isSelected = selectedDateStr === dateStr;
                             const dayStats = getCycleStatsForDate(dateStr);
-                            const isFuture = new Date(dateStr).getTime() > new Date(todayStr).getTime();
+                            const isFuture = dateStr > todayStr;
                             const cellLog = dailyLogs[dateStr];
 
                             let cellStyle = 'bg-white text-secondary border border-slate-100';
@@ -1155,7 +1169,7 @@ export const Dashboard: React.FC = () => {
                             }
 
                             // Missed Log check
-                            const isPastDay = new Date(dateStr).getTime() < new Date(todayStr).getTime();
+                            const isPastDay = dateStr < todayStr;
                             const isMissedDay = isPastDay && !cellLog && dayStats.currentPhase !== 'menstrual';
                             if (isMissedDay) {
                               cellStyle += ' border border-dashed border-slate-350';
@@ -1189,8 +1203,9 @@ export const Dashboard: React.FC = () => {
                     <div className="flex flex-col gap-6">
                       <div className="flex flex-col gap-6">
                         {[0, 1].map((cycleIndex) => {
-                          const lastPeriod = new Date(onboarding.lastPeriodDate);
-                          const cycleStart = new Date(lastPeriod.getTime() + cycleIndex * cycleLength * 24 * 60 * 60 * 1000);
+                          const lastPeriod = parseLocalDate(onboarding.lastPeriodDate);
+                          const cycleStart = new Date(lastPeriod);
+                          cycleStart.setDate(lastPeriod.getDate() + cycleIndex * cycleLength);
                           return (
                             <div key={cycleIndex} className="glass-card p-3 sm:p-5 md:p-7 rounded-[1.5rem] sm:rounded-[2rem] border border-white/60 shadow-sm">
                               <h4 className="font-extrabold text-primary text-xs sm:text-sm uppercase tracking-wider mb-3 sm:mb-4">
@@ -1200,10 +1215,11 @@ export const Dashboard: React.FC = () => {
                               <div className="grid grid-cols-7 gap-1 sm:gap-2 md:gap-2.5 text-center">
                                 {Array.from({ length: cycleLength }).map((_, dayIndex) => {
                                   const dayNum = dayIndex + 1;
-                                  const targetDate = new Date(cycleStart.getTime() + dayIndex * 24 * 60 * 60 * 1000);
-                                  const cellDateStr = targetDate.toISOString().split('T')[0];
+                                  const targetDate = new Date(cycleStart);
+                                  targetDate.setDate(cycleStart.getDate() + dayIndex);
+                                  const cellDateStr = getLocalDateString(targetDate);
                                   const isSelected = selectedDateStr === cellDateStr;
-                                  const isFuture = targetDate.getTime() > new Date(todayStr).getTime();
+                                  const isFuture = cellDateStr > todayStr;
                                   const dayStats = getCycleStatsForDate(cellDateStr);
                                   const cellLog = dailyLogs[cellDateStr];
 
@@ -1234,7 +1250,7 @@ export const Dashboard: React.FC = () => {
                                   }
 
                                   // Missed Log check
-                                  const isPastDay = targetDate.getTime() < new Date(todayStr).getTime();
+                                  const isPastDay = cellDateStr < todayStr;
                                   const isMissedDay = isPastDay && !cellLog && dayStats.currentPhase !== 'menstrual';
                                   if (isMissedDay) {
                                     cellStyle += ' border border-dashed border-slate-350';
@@ -1275,7 +1291,7 @@ export const Dashboard: React.FC = () => {
                   <div className="flex flex-col gap-1 border-b border-slate-100 pb-4">
                     <span className="text-[10px] font-black text-secondary uppercase tracking-widest leading-none">Diagnostic Ledger</span>
                     <h3 className="font-extrabold text-primary text-xl tracking-tight mt-1">
-                      {new Date(selectedDateStr).toLocaleDateString(i18n.language, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                      {parseLocalDate(selectedDateStr).toLocaleDateString(i18n.language, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                     </h3>
                     <div className="inline-flex items-center gap-1.5 mt-2 bg-primary/10 border border-primary/20 text-primary font-black text-[10px] px-2.5 py-0.5 rounded-full w-fit">
                       Cycle Day {selectedDayStats.currentCycleDay}
@@ -1356,51 +1372,53 @@ export const Dashboard: React.FC = () => {
                   </div>
 
                   {/* Section 5: Quick Actions */}
-                  <div className="flex flex-col gap-2">
-                    <span className="text-[9px] font-black text-secondary uppercase tracking-wider">Quick Actions</span>
-                    <div className="grid grid-cols-3 gap-2 bg-white/40 p-2 rounded-2xl border border-white/80">
-                      <button
-                        onClick={() => {
-                          setActiveTab('log');
-                        }}
-                        className="py-2.5 bg-white hover:bg-slate-50 text-primary border border-slate-200 rounded-xl font-bold text-[9px] uppercase tracking-wider flex flex-col items-center gap-1 shadow-sm transition-all"
-                        title="Edit Log"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                        Edit Log
-                      </button>
+                  {selectedDateStr <= todayStr && (
+                    <div className="flex flex-col gap-2">
+                      <span className="text-[9px] font-black text-secondary uppercase tracking-wider">Quick Actions</span>
+                      <div className="grid grid-cols-3 gap-2 bg-white/40 p-2 rounded-2xl border border-white/80">
+                        <button
+                          onClick={() => {
+                            setActiveTab('log');
+                          }}
+                          className="py-2.5 bg-white hover:bg-slate-50 text-primary border border-slate-200 rounded-xl font-bold text-[9px] uppercase tracking-wider flex flex-col items-center gap-1 shadow-sm transition-all"
+                          title="Edit Log"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          Edit Log
+                        </button>
 
-                      <button
-                        onClick={async () => {
-                          if (selectedLog) {
-                            if (!window.confirm('Delete daily log details?')) return;
-                            await deleteLog(selectedDateStr);
-                          }
-                        }}
-                        disabled={!selectedLog}
-                        className="py-2.5 bg-white hover:bg-red-50 text-red-650 border border-red-200 rounded-xl font-bold text-[9px] uppercase tracking-wider flex flex-col items-center gap-1 shadow-sm disabled:opacity-40 transition-all"
-                        title="Delete Log"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        Delete Log
-                      </button>
+                        <button
+                          onClick={async () => {
+                            if (selectedLog) {
+                              if (!window.confirm('Delete daily log details?')) return;
+                              await deleteLog(selectedDateStr);
+                            }
+                          }}
+                          disabled={!selectedLog}
+                          className="py-2.5 bg-white hover:bg-red-50 text-red-650 border border-red-200 rounded-xl font-bold text-[9px] uppercase tracking-wider flex flex-col items-center gap-1 shadow-sm disabled:opacity-40 transition-all"
+                          title="Delete Log"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Delete Log
+                        </button>
 
-                      <button
-                        onClick={async () => {
-                          try {
-                            await duplicateLog(selectedDateStr);
-                          } catch (e) {
-                            alert('No preceding logs found to duplicate.');
-                          }
-                        }}
-                        className="py-2.5 bg-white hover:bg-blue-50 text-blue-650 border border-blue-200 rounded-xl font-bold text-[9px] uppercase tracking-wider flex flex-col items-center gap-1 shadow-sm transition-all"
-                        title="Duplicate last logged day details"
-                      >
-                        <Copy className="w-3.5 h-3.5" />
-                        Duplicate
-                      </button>
+                        <button
+                          onClick={async () => {
+                            try {
+                              await duplicateLog(selectedDateStr);
+                            } catch (e) {
+                              alert('No preceding logs found to duplicate.');
+                            }
+                          }}
+                          className="py-2.5 bg-white hover:bg-blue-50 text-blue-650 border border-blue-200 rounded-xl font-bold text-[9px] uppercase tracking-wider flex flex-col items-center gap-1 shadow-sm transition-all"
+                          title="Duplicate last logged day details"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          Duplicate
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Section 6: Recovery Score */}
                   {recoveryScore !== null && (
@@ -1728,18 +1746,167 @@ export const Dashboard: React.FC = () => {
 
           {/* ═══════════════ VISUAL INSIGHTS TAB ═══════════════ */}
           {activeTab === 'insights' && (() => {
-            const getLast7DaysEnergy = () => {
-              const energyVals = [];
-              for (let i = 6; i >= 0; i--) {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                const dStr = d.toISOString().split('T')[0];
-                const log = dailyLogs[dStr];
-                energyVals.push(log ? log.energy : null);
-              }
-              return energyVals;
+            // Get cut-off date string for selected timeframe
+            const logsArray = Object.values(dailyLogs).sort((a, b) => b.date.localeCompare(a.date));
+
+            let cutOffDateStr = '';
+            if (insightsTimeframe === '7days') {
+              const d = new Date();
+              d.setDate(d.getDate() - 6);
+              cutOffDateStr = getLocalDateString(d);
+            } else if (insightsTimeframe === '30days') {
+              const d = new Date();
+              d.setDate(d.getDate() - 29);
+              cutOffDateStr = getLocalDateString(d);
+            }
+
+            const filteredLogs = cutOffDateStr 
+              ? logsArray.filter(log => log.date >= cutOffDateStr)
+              : logsArray;
+
+            const totalLoggedDays = filteredLogs.length;
+
+            // Biometric Averages
+            const avgSleep = totalLoggedDays > 0 
+              ? Math.round((filteredLogs.reduce((acc, log) => acc + log.sleep, 0) / totalLoggedDays) * 10) / 10 
+              : (onboarding?.lifestyle?.sleep === 'Restorative' ? 8.0 : onboarding?.lifestyle?.sleep === 'Fragmented' ? 6.5 : 5.0);
+
+            const avgStress = totalLoggedDays > 0 
+              ? Math.round((filteredLogs.reduce((acc, log) => acc + log.stress, 0) / totalLoggedDays) * 10) / 10 
+              : (onboarding?.lifestyle?.stress === 'Low' ? 2 : onboarding?.lifestyle?.stress === 'Moderate' ? 5 : 8);
+
+            const avgEnergy = totalLoggedDays > 0 
+              ? Math.round((filteredLogs.reduce((acc, log) => acc + log.energy, 0) / totalLoggedDays) * 10) / 10 
+              : 7.0;
+
+            const avgHydration = totalLoggedDays > 0 
+              ? Math.round((filteredLogs.reduce((acc, log) => acc + (log.hydration || 0), 0) / totalLoggedDays) * 10) / 10 
+              : (onboarding?.lifestyle?.hydration === 'Optimal' ? 8 : onboarding?.lifestyle?.hydration === 'Average' ? 5 : 3);
+
+            const hrvLogs = filteredLogs.filter(log => log.hrv);
+            const avgHrv = hrvLogs.length > 0 
+              ? Math.round(hrvLogs.reduce((acc, log) => acc + (log.hrv || 0), 0) / hrvLogs.length) 
+              : 72;
+
+            // Mood Distribution
+            const moodDistribution: Record<string, number> = {
+              Radiant: 0,
+              Balanced: 0,
+              Sensitive: 0,
+              'Low Energy': 0,
+              Anxious: 0
             };
-            const last7DaysEnergy = getLast7DaysEnergy();
+            filteredLogs.forEach(log => {
+              const m = log.mood === 'LowEnergy' ? 'Low Energy' : log.mood;
+              if (m in moodDistribution) {
+                moodDistribution[m]++;
+              }
+            });
+            const moodTotal = Object.values(moodDistribution).reduce((a, b) => a + b, 0);
+            const moodPercentages = Object.entries(moodDistribution).map(([mood, count]) => {
+              const pct = moodTotal > 0 ? Math.round((count / moodTotal) * 100) : 0;
+              return { mood, pct };
+            });
+
+            // Symptoms Frequency
+            const symptomCounts: Record<string, number> = {};
+            filteredLogs.forEach(log => {
+              log.symptoms.forEach(sym => {
+                symptomCounts[sym] = (symptomCounts[sym] || 0) + 1;
+              });
+            });
+            const sortedSymptoms = Object.entries(symptomCounts)
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 5);
+            const maxSymptomCount = sortedSymptoms.length > 0 ? Math.max(...sortedSymptoms.map(s => s[1])) : 1;
+
+            // Correlation Computations
+            const highStressLogs = filteredLogs.filter(log => log.stress >= 6);
+            const lowStressLogs = filteredLogs.filter(log => log.stress < 6);
+            const avgSleepHighStress = highStressLogs.length > 0 ? (highStressLogs.reduce((acc, l) => acc + l.sleep, 0) / highStressLogs.length) : null;
+            const avgSleepLowStress = lowStressLogs.length > 0 ? (lowStressLogs.reduce((acc, l) => acc + l.sleep, 0) / lowStressLogs.length) : null;
+            const sleepDiff = (avgSleepHighStress !== null && avgSleepLowStress !== null) ? (avgSleepLowStress - avgSleepHighStress).toFixed(1) : null;
+
+            const highHydrationLogs = filteredLogs.filter(log => (log.hydration || 0) >= 6);
+            const lowHydrationLogs = filteredLogs.filter(log => (log.hydration || 0) < 6);
+            const avgEnergyHighHyd = highHydrationLogs.length > 0 ? (highHydrationLogs.reduce((acc, l) => acc + l.energy, 0) / highHydrationLogs.length) : null;
+            const avgEnergyLowHyd = lowHydrationLogs.length > 0 ? (lowHydrationLogs.reduce((acc, l) => acc + l.energy, 0) / lowHydrationLogs.length) : null;
+            const energyDiffPct = (avgEnergyHighHyd !== null && avgEnergyLowHyd !== null && avgEnergyLowHyd > 0) ? Math.round(((avgEnergyHighHyd - avgEnergyLowHyd) / avgEnergyLowHyd) * 100) : null;
+
+            const highSleepLogs = filteredLogs.filter(log => log.sleep >= 7.5 && log.hrv);
+            const lowSleepLogs = filteredLogs.filter(log => log.sleep < 7.5 && log.hrv);
+            const avgHrvHighSleep = highSleepLogs.length > 0 ? Math.round(highSleepLogs.reduce((acc, l) => acc + (l.hrv || 0), 0) / highSleepLogs.length) : null;
+            const avgHrvLowSleep = lowSleepLogs.length > 0 ? Math.round(lowSleepLogs.reduce((acc, l) => acc + (l.hrv || 0), 0) / lowSleepLogs.length) : null;
+            const hrvDiff = (avgHrvHighSleep !== null && avgHrvLowSleep !== null) ? (avgHrvHighSleep - avgHrvLowSleep) : null;
+
+            // SVG Hormone Curve Calculations
+            const getHormoneCurvePoints = () => {
+              const estrogenPts: {x: number, y: number}[] = [];
+              const progesteronePts: {x: number, y: number}[] = [];
+              const lhPts: {x: number, y: number}[] = [];
+              const cycleLen = onboarding?.cycleLength || 28;
+              const periodLen = onboarding?.periodLength || 5;
+              const ovulationDay = cycleLen - 14;
+
+              for (let day = 1; day <= cycleLen; day++) {
+                let estrogen = 10;
+                let progesterone = 5;
+                let lh = 10;
+
+                if (day <= periodLen) {
+                  const t = day / periodLen;
+                  estrogen = 10 + t * 8;
+                  progesterone = 5 + t * 2;
+                  lh = 8 + t * 4;
+                } else if (day < ovulationDay - 2) {
+                  const startDay = periodLen + 1;
+                  const endDay = ovulationDay - 3;
+                  const t = (day - startDay) / Math.max(1, endDay - startDay);
+                  estrogen = 18 + t * 62;
+                  progesterone = 7 + t * 5;
+                  lh = 12 + t * 18;
+                } else if (day <= ovulationDay + 1) {
+                  const t = (day - (ovulationDay - 2)) / 3;
+                  estrogen = 85 + Math.sin(t * Math.PI) * 10;
+                  progesterone = 12 + t * 13;
+                  if (day === ovulationDay) {
+                    lh = 100;
+                  } else {
+                    lh = 70 + Math.sin(t * Math.PI) * 15;
+                  }
+                } else {
+                  const startDay = ovulationDay + 2;
+                  const t = (day - startDay) / Math.max(1, cycleLen - startDay);
+                  estrogen = 30 + Math.sin(t * Math.PI) * 20 - t * 20;
+                  progesterone = 15 + Math.sin(t * Math.PI) * 70;
+                  lh = Math.max(5, 10 - t * 8);
+                }
+
+                const x = ((day - 1) / (cycleLen - 1)) * 100;
+                const yEst = 35 - (estrogen / 100) * 30;
+                const yProg = 35 - (progesterone / 100) * 30;
+                const yLh = 35 - (lh / 100) * 30;
+
+                estrogenPts.push({ x, y: yEst });
+                progesteronePts.push({ x, y: yProg });
+                lhPts.push({ x, y: yLh });
+              }
+
+              return { estrogenPts, progesteronePts, lhPts, cycleLen };
+            };
+
+            const { estrogenPts, progesteronePts, lhPts, cycleLen } = getHormoneCurvePoints();
+
+            const buildPath = (pts: {x: number, y: number}[]) => {
+              return pts.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+            };
+
+            const estrogenPath = buildPath(estrogenPts);
+            const progesteronePath = buildPath(progesteronePts);
+            const lhPath = buildPath(lhPts);
+
+            const currentCycleDay = forecast?.currentCycleDay || 1;
+            const markerX = ((currentCycleDay - 1) / (cycleLen - 1)) * 100;
 
             return (
               <motion.div
@@ -1749,9 +1916,34 @@ export const Dashboard: React.FC = () => {
                 exit={{ opacity: 0, y: -15 }}
                 className="flex flex-col gap-10"
               >
-                <div>
-                  <h2 className="font-headline-md text-headline-md text-primary font-black mb-1">{t('dashboardExtra.bioInsightsTitle')}</h2>
-                  <p className="text-secondary font-body-md">{t('dashboardExtra.bioInsightsDesc')}</p>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <h2 className="font-headline-md text-headline-md text-primary font-black mb-1">{t('dashboardExtra.bioInsightsTitle')}</h2>
+                    <p className="text-secondary font-body-md">{t('dashboardExtra.bioInsightsDesc')}</p>
+                  </div>
+
+                  {/* Timeframe Selector */}
+                  {forecast && forecast.totalLogsCount >= 3 && (
+                    <div className="flex bg-white/40 border border-white/60 p-1 rounded-full w-fit gap-1 select-none shadow-sm">
+                      {[
+                        { id: '7days', label: 'Last 7 Days' },
+                        { id: '30days', label: 'Last 30 Days' },
+                        { id: 'all', label: 'All-Time Stats' }
+                      ].map(tf => (
+                        <button
+                          key={tf.id}
+                          onClick={() => setInsightsTimeframe(tf.id as any)}
+                          className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
+                            insightsTimeframe === tf.id
+                              ? 'bg-primary text-on-primary shadow-sm'
+                              : 'text-secondary hover:text-primary hover:bg-white/40'
+                          }`}
+                        >
+                          {tf.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {(!forecast || forecast.totalLogsCount < 3) ? (
@@ -1772,123 +1964,226 @@ export const Dashboard: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    {/* Cycle Comparison Card */}
-                    {cycleComparison && (
-                      <div className="glass-card p-6 sm:p-8 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-6">
-                        <div className="flex items-center gap-2">
-                          <TrendingUp className="w-5 h-5 text-primary" />
-                          <h3 className="font-extrabold text-primary text-sm uppercase tracking-wider">Cycle Comparison (Current vs. Previous)</h3>
-                        </div>
-
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                          {[
-                            { label: 'Sleep Quality', cur: `${cycleComparison.current.sleep}h`, prev: `${cycleComparison.previous?.sleep || '--'}h`, diff: cycleComparison.comparison?.sleepDiff, type: 'higher' },
-                            { label: 'Stress Load', cur: `${cycleComparison.current.stress}/10`, prev: `${cycleComparison.previous?.stress || '--'}/10`, diff: cycleComparison.comparison?.stressDiff, type: 'lower' },
-                            { label: 'Hydration Cups', cur: `${cycleComparison.current.hydration}c`, prev: `${cycleComparison.previous?.hydration || '--'}c`, diff: cycleComparison.comparison?.hydrationDiff, type: 'higher' },
-                            { label: 'Autonomic HRV', cur: `${cycleComparison.current.hrv}ms`, prev: `${cycleComparison.previous?.hrv || '--'}ms`, diff: cycleComparison.comparison?.hrvDiff, type: 'higher' },
-                          ].map((item, idx) => {
-                            const isPositive = item.type === 'higher' ? (item.diff || 0) > 0 : (item.diff || 0) < 0;
-                            const showDiff = item.diff !== undefined && item.diff !== 0;
-                            return (
-                              <div key={idx} className="bg-white/50 border border-white/60 p-4 rounded-2xl flex flex-col justify-between min-h-[90px]">
-                                <span className="text-[10px] font-bold text-secondary uppercase">{item.label}</span>
-                                <div className="flex items-baseline justify-between mt-2">
-                                  <span className="text-base font-black text-primary">{item.cur}</span>
-                                  <span className="text-[10px] text-secondary">prev: {item.prev}</span>
-                                </div>
-                                {showDiff && (
-                                  <span className={`text-[9px] font-extrabold mt-1 ${isPositive ? 'text-emerald-600' : 'text-red-500'}`}>
-                                    {item.diff! > 0 ? `+${item.diff}` : item.diff} ({isPositive ? 'Improved' : 'Regressed'})
-                                  </span>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
+                    {/* Biometrics Summary Grid */}
+                    <div className="glass-card p-6 sm:p-8 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-6">
+                      <div className="flex items-center gap-2">
+                        <Activity className="w-5 h-5 text-primary" />
+                        <h3 className="font-extrabold text-primary text-xs uppercase tracking-widest">
+                          Biometric Averages ({insightsTimeframe === '7days' ? 'Last 7 Days' : insightsTimeframe === '30days' ? 'Last 30 Days' : 'All-Time'})
+                        </h3>
                       </div>
-                    )}
 
-                    {/* Graphical Charts */}
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                        {[
+                          { label: 'Sleep Duration', val: `${avgSleep} hrs`, desc: 'Target: 7-9 hrs', icon: 'bedtime' },
+                          { label: 'Stress Level', val: `${avgStress}/10`, desc: avgStress >= 7 ? 'High Stress' : avgStress >= 4 ? 'Moderate' : 'Low Stress', icon: 'psychology' },
+                          { label: 'Physical Energy', val: `${avgEnergy}/10`, desc: avgEnergy >= 7 ? 'Vibrant' : avgEnergy >= 4 ? 'Moderate' : 'Low Energy', icon: 'bolt' },
+                          { label: 'Hydration Intake', val: `${avgHydration} cups`, desc: 'Target: 8 cups', icon: 'water_drop' },
+                          { label: 'Autonomic HRV', val: `${avgHrv} ms`, desc: 'Autonomic balance', icon: 'favorite' }
+                        ].map((item, idx) => (
+                          <div key={idx} className="bg-white/50 border border-white/60 p-4 rounded-2xl flex flex-col justify-between min-h-[105px]">
+                            <div className="flex justify-between items-start">
+                              <span className="text-[9px] font-black text-secondary uppercase tracking-wider">{item.label}</span>
+                              <span className="material-symbols-outlined text-[16px] text-primary/70">{item.icon}</span>
+                            </div>
+                            <div className="mt-3">
+                              <span className="text-xl font-black text-primary block leading-none">{item.val}</span>
+                              <span className="text-[9px] text-slate-400 font-bold block mt-1">{item.desc}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Charts Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {/* Mood Trends */}
+                      {/* Mood Distribution Card */}
                       <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4">
-                        <div className="flex justify-between items-center">
-                          <span className="font-bold text-primary text-xs uppercase tracking-widest">{t('dashboardExtra.moodTrends')}</span>
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                          <span className="font-extrabold text-primary text-xs uppercase tracking-wider">Mood Distribution</span>
                           <span className="material-symbols-outlined text-primary text-base">sentiment_satisfied</span>
                         </div>
-                        <div className="h-32 w-full pt-4 relative">
-                          {(() => {
-                            const getLast7DaysMood = () => {
-                              const moodMap: Record<string, number> = {
-                                'Radiant': 5,
-                                'Balanced': 4,
-                                'Sensitive': 3,
-                                'Low Energy': 2,
-                                'Anxious': 1,
-                              };
-                              const moodVals = [];
-                              const dayLabels = [];
-                              for (let i = 6; i >= 0; i--) {
-                                const d = new Date();
-                                d.setDate(d.getDate() - i);
-                                const dStr = d.toISOString().split('T')[0];
-                                const log = dailyLogs[dStr];
-                                const val = log ? moodMap[log.mood] || null : null;
-                                moodVals.push(val);
-                                dayLabels.push(d.toLocaleDateString(i18n.language, { weekday: 'short' }));
-                              }
-                              return { moodVals, dayLabels };
-                            };
-                            const { moodVals, dayLabels } = getLast7DaysMood();
-                            const points = moodVals.map((val, idx) => {
-                              if (val === null) return null;
-                              const x = idx * (100 / 6);
-                              const y = 40 - (val / 5) * 30;
-                              return { x, y };
-                            }).filter((p): p is {x: number, y: number} => p !== null);
-                            
-                            const linePath = points.length > 0 ? points.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ') : '';
-                            const areaPath = points.length > 0 ? `M ${points[0].x} 40 ${points.map(p => `L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ')} L ${points[points.length-1].x} 40 Z` : '';
-                            
-                            return (
-                              <>
-                                <svg className="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
-                                  <defs>
-                                    <linearGradient id="mood-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                                      <stop offset="0%" stopColor="#ff7b9c" stopOpacity="0.4" />
-                                      <stop offset="100%" stopColor="#ff7b9c" stopOpacity="0.0" />
-                                    </linearGradient>
-                                  </defs>
-                                  <path d={areaPath} fill="url(#mood-grad)" />
-                                  <path d={linePath} fill="none" stroke="#ff7b9c" strokeWidth="1.5" />
-                                </svg>
-                                <div className="flex justify-between text-[9px] text-secondary font-bold mt-2">
-                                  {dayLabels.map((lbl, idx) => (
-                                    <span key={idx}>{idx === 6 ? t('dashboardExtra.today') : lbl}</span>
-                                  ))}
-                                </div>
-                              </>
-                            );
-                          })()}
+                        <div className="flex flex-col gap-3 mt-2">
+                          {moodPercentages.map((item, idx) => (
+                            <div key={idx} className="flex items-center gap-3 text-xs">
+                              <span className="w-20 font-bold text-secondary text-[10px] uppercase tracking-wider">{item.mood}</span>
+                              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-primary transition-all duration-500" 
+                                  style={{ width: `${item.pct}%` }} 
+                                />
+                              </div>
+                              <span className="w-8 text-right font-black text-primary">{item.pct}%</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
 
-                      {/* Energy chart */}
+                      {/* Symptoms Frequency Card */}
                       <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4">
-                        <div className="flex justify-between items-center">
-                          <span className="font-bold text-primary text-xs uppercase tracking-widest">{t('dashboardExtra.energyFluctuations')}</span>
-                          <span className="material-symbols-outlined text-primary text-base">bolt</span>
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                          <span className="font-extrabold text-primary text-xs uppercase tracking-wider">Top Logged Symptoms</span>
+                          <span className="material-symbols-outlined text-primary text-base">healing</span>
                         </div>
-                        <div className="h-32 w-full flex items-end justify-between px-2 pt-4">
-                          {last7DaysEnergy.map((val, idx) => (
-                            <div key={idx} className="flex flex-col items-center gap-1.5 w-full">
-                              <div className="w-4 bg-primary/5 border border-primary/10 rounded-t-md relative overflow-hidden" style={{ height: val === null ? '15%' : `${val * 10}%` }}>
-                                {val !== null && <div className="absolute inset-0 bg-primary w-full" style={{ height: '100%', transform: `scaleY(${val/10})`, transformOrigin: 'bottom' }} />}
-                                {val === null && <div className="absolute inset-0 flex items-center justify-center text-[6px] text-secondary font-bold rotate-[-90deg]">{t('dashboardExtra.noData')}</div>}
-                              </div>
-                              <span className="text-[9px] text-secondary font-bold">D{idx+1}</span>
+                        <div className="flex flex-col gap-3 mt-2">
+                          {sortedSymptoms.length > 0 ? (
+                            sortedSymptoms.map(([symptom, count], idx) => {
+                              const pct = Math.round((count / maxSymptomCount) * 100);
+                              return (
+                                <div key={idx} className="flex items-center gap-3 text-xs">
+                                  <span className="w-24 font-bold text-secondary text-[10px] uppercase tracking-wider truncate" title={symptom}>{symptom}</span>
+                                  <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                    <div 
+                                      className="h-full bg-rose-400 transition-all duration-500" 
+                                      style={{ width: `${pct}%` }} 
+                                    />
+                                  </div>
+                                  <span className="w-10 text-right font-black text-primary">{count}x</span>
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <div className="py-8 text-center text-xs text-secondary font-medium italic">
+                              No symptoms logged in this timeframe.
                             </div>
-                          ))}
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Correlations Panel */}
+                    <div className="glass-card p-6 sm:p-8 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-6">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-primary" />
+                        <h3 className="font-extrabold text-primary text-xs uppercase tracking-widest">Telemetry Correlations & Discoveries</h3>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Correlation 1: Sleep vs Stress */}
+                        <div className="bg-white/50 border border-white/60 p-4 rounded-2xl flex flex-col gap-3">
+                          <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[20px] text-indigo-500">bedtime</span>
+                            <span className="text-[10px] font-black text-secondary uppercase tracking-wider">Sleep & Stress Correlation</span>
+                          </div>
+                          {(avgSleepHighStress !== null && avgSleepLowStress !== null) ? (
+                            <div>
+                              <p className="text-[11px] text-secondary font-medium leading-relaxed">
+                                On high stress days, your sleep averages <strong className="text-primary font-bold">{avgSleepHighStress.toFixed(1)} hrs</strong>, compared to <strong className="text-primary font-bold">{avgSleepLowStress.toFixed(1)} hrs</strong> on lower stress days.
+                              </p>
+                              {Number(sleepDiff) > 0 && (
+                                <span className="inline-block mt-2 px-2 py-0.5 bg-rose-500/10 text-rose-600 rounded text-[9px] font-black uppercase">
+                                  -{sleepDiff} hrs sleep drop under stress
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="text-[11px] text-slate-400 italic">Log more days with varying stress to see correlation details.</p>
+                          )}
+                        </div>
+
+                        {/* Correlation 2: Hydration vs Energy */}
+                        <div className="bg-white/50 border border-white/60 p-4 rounded-2xl flex flex-col gap-3">
+                          <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[20px] text-sky-500">water_drop</span>
+                            <span className="text-[10px] font-black text-secondary uppercase tracking-wider">Hydration & Energy Correlation</span>
+                          </div>
+                          {(avgEnergyHighHyd !== null && avgEnergyLowHyd !== null) ? (
+                            <div>
+                              <p className="text-[11px] text-secondary font-medium leading-relaxed">
+                                Drinking 6+ cups of water averages <strong className="text-primary font-bold">{avgEnergyHighHyd.toFixed(1)}/10 energy</strong>, compared to <strong className="text-primary font-bold">{avgEnergyLowHyd.toFixed(1)}/10</strong> on lower hydration days.
+                              </p>
+                              {energyDiffPct !== null && energyDiffPct > 0 && (
+                                <span className="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 text-emerald-600 rounded text-[9px] font-black uppercase">
+                                  +{energyDiffPct}% higher energy with hydration
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="text-[11px] text-slate-400 italic">Log water intake and physical energy to map this trend.</p>
+                          )}
+                        </div>
+
+                        {/* Correlation 3: HRV vs Sleep */}
+                        <div className="bg-white/50 border border-white/60 p-4 rounded-2xl flex flex-col gap-3">
+                          <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[20px] text-emerald-500">favorite</span>
+                            <span className="text-[10px] font-black text-secondary uppercase tracking-wider">HRV & Sleep Resilience</span>
+                          </div>
+                          {(avgHrvHighSleep !== null && avgHrvLowSleep !== null) ? (
+                            <div>
+                              <p className="text-[11px] text-secondary font-medium leading-relaxed">
+                                After getting 7.5+ hrs of restorative sleep, your HRV average is <strong className="text-primary font-bold">{avgHrvHighSleep} ms</strong>, compared to <strong className="text-primary font-bold">{avgHrvLowSleep} ms</strong>.
+                              </p>
+                              {hrvDiff !== null && hrvDiff > 0 && (
+                                <span className="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 text-emerald-600 rounded text-[9px] font-black uppercase">
+                                  +{hrvDiff} ms autonomic recovery surge
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="text-[11px] text-slate-400 italic">Log sleep hours and HRV to calibrate heart rate recovery trends.</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Predicted Hormone Cycles Visualization */}
+                    <div className="glass-card p-6 sm:p-8 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-6">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-5 h-5 text-primary" />
+                          <h3 className="font-extrabold text-primary text-xs uppercase tracking-widest">Hormonal Profile & Surge Forecast</h3>
+                        </div>
+                        <span className="text-[10px] bg-primary/10 text-primary px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider select-none">
+                          Day {currentCycleDay} of {cycleLen}
+                        </span>
+                      </div>
+
+                      <div className="bg-slate-50/50 border border-slate-100 p-5 rounded-2xl">
+                        <div className="h-44 w-full relative">
+                          <svg className="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
+                            {/* Grids */}
+                            <line x1="0" y1="35" x2="100" y2="35" stroke="#e2e8f0" strokeWidth="0.5" strokeDasharray="2" />
+                            <line x1="0" y1="20" x2="100" y2="20" stroke="#e2e8f0" strokeWidth="0.5" strokeDasharray="2" />
+                            <line x1="0" y1="5" x2="100" y2="5" stroke="#e2e8f0" strokeWidth="0.5" strokeDasharray="2" />
+
+                            {/* Estrogen Area & Path */}
+                            <path d={estrogenPath} fill="none" stroke="#ff7b9c" strokeWidth="1.5" strokeLinecap="round" />
+                            {/* Progesterone Path */}
+                            <path d={progesteronePath} fill="none" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round" />
+                            {/* LH Path */}
+                            <path d={lhPath} fill="none" stroke="#6366f1" strokeWidth="1.2" strokeLinecap="round" strokeDasharray="1 1" />
+
+                            {/* You Are Here vertical marker */}
+                            <line x1={markerX} y1="0" x2={markerX} y2="40" stroke="#a53556" strokeWidth="0.8" strokeDasharray="1.5 1.5" />
+                            <circle cx={markerX} cy="20" r="1.5" fill="#a53556" />
+                          </svg>
+
+                          {/* Dotted indicator label */}
+                          <div 
+                            className="absolute top-0 transform -translate-x-1/2 flex flex-col items-center select-none" 
+                            style={{ left: `${markerX}%` }}
+                          >
+                            <span className="text-[8px] bg-primary text-on-primary px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest leading-none shadow-sm mt-1">
+                              You
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Custom Legend */}
+                        <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center text-[10px] font-bold text-secondary mt-3 select-none">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-3 h-0.5 bg-[#ff7b9c] rounded-full inline-block" />
+                            <span>Estrogen (Estradiol)</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-3 h-0.5 bg-[#c084fc] rounded-full inline-block" />
+                            <span>Progesterone (Luteal Peak)</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-3 h-0.5 border-t border-dashed border-[#6366f1] inline-block" />
+                            <span>LH (Ovulatory Surge)</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1900,7 +2195,7 @@ export const Dashboard: React.FC = () => {
                           <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4 bg-gradient-to-tr from-primary/5 via-transparent to-blue-500/5">
                             <div className="flex items-center gap-2 border-b border-slate-200/50 pb-2">
                               <span className="material-symbols-outlined text-primary text-xl">auto_awesome</span>
-                              <h4 className="font-extrabold text-primary text-sm uppercase tracking-wider">Clinical Insight: Hydration & Stress</h4>
+                              <h4 className="font-extrabold text-primary text-xs uppercase tracking-widest">Clinical Insight: Hydration & Stress</h4>
                             </div>
                             <div className="bg-white/60 p-4 rounded-2xl border border-white/80">
                               <span className="text-[9px] font-black text-secondary uppercase block mb-1">AI Observation</span>
@@ -1912,7 +2207,7 @@ export const Dashboard: React.FC = () => {
                           <div className="glass-card p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-4 bg-gradient-to-tr from-primary/5 via-transparent to-purple-500/5">
                             <div className="flex items-center gap-2 border-b border-slate-200/50 pb-2">
                               <span className="material-symbols-outlined text-primary text-xl">psychology</span>
-                              <h4 className="font-extrabold text-primary text-sm uppercase tracking-wider">Clinical Insight: Hormones & Sleep</h4>
+                              <h4 className="font-extrabold text-primary text-xs uppercase tracking-widest">Clinical Insight: Hormones & Sleep</h4>
                             </div>
                             <div className="bg-white/60 p-4 rounded-2xl border border-white/80">
                               <span className="text-[9px] font-black text-secondary uppercase block mb-1">AI Observation</span>
@@ -2270,6 +2565,9 @@ export const Dashboard: React.FC = () => {
                 key={tab.id}
                 onClick={() => {
                   setActiveTab(tab.id as any);
+                  if (tab.id === 'log') {
+                    setSelectedDateStr(todayStr);
+                  }
                   if (tab.id === 'profile' || tab.id === 'calendar' || tab.id === 'insights' || tab.id === 'home') {
                     refreshAnalytics();
                   }
