@@ -34,6 +34,7 @@ export const calibrate = async (req: AuthenticatedRequest, res: Response) => {
     healthGoals,
     lifestyle,
     notifications,
+    onboardingCompleted,
   } = req.body;
 
   if (!userId) {
@@ -66,7 +67,7 @@ export const calibrate = async (req: AuthenticatedRequest, res: Response) => {
         notifyOvulation: notifications?.ovulation !== false,
         notifyInsights: notifications?.insights !== false,
         notifyWellnessTips: notifications?.wellnessTips === true,
-        onboardingCompleted: true,
+        onboardingCompleted: onboardingCompleted === true,
       },
       create: {
         userId,
@@ -82,7 +83,7 @@ export const calibrate = async (req: AuthenticatedRequest, res: Response) => {
         notifyOvulation: notifications?.ovulation !== false,
         notifyInsights: notifications?.insights !== false,
         notifyWellnessTips: notifications?.wellnessTips === true,
-        onboardingCompleted: true,
+        onboardingCompleted: onboardingCompleted === true,
       },
     });
 

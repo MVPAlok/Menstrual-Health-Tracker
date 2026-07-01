@@ -482,8 +482,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await api.onboarding.calibrate(updated);
       if (res.onboarding) {
-        setOnboarding(res.onboarding);
-        localStorage.setItem('lunacare_onboarding', JSON.stringify(res.onboarding));
+        // Safeguard: Ensure the client-controlled onboardingCompleted status is preserved
+        // to prevent premature backend updates (e.g. from production server API) from skipping the wizard flow.
+        const resolved = {
+          ...res.onboarding,
+          onboardingCompleted: updated.onboardingCompleted
+        };
+        setOnboarding(resolved);
+        localStorage.setItem('lunacare_onboarding', JSON.stringify(resolved));
       }
     } catch (err) {
       console.error('Failed to sync onboarding with backend, kept local state.', err);

@@ -404,6 +404,147 @@ export const Dashboard: React.FC = () => {
     );
   };
 
+  // Helper for rendering detailed hover tooltip
+  const renderTooltip = (cellDateStr: string, dayStats: any, cellLog: any, cellIndex: number) => {
+    // Format a nice date: weekday, month day, year
+    const formattedDate = (() => {
+      try {
+        const dateObj = parseLocalDate(cellDateStr);
+        return dateObj.toLocaleDateString(i18n.language || 'en-US', { 
+          weekday: 'short', 
+          month: 'short', 
+          day: 'numeric' 
+        });
+      } catch (e) {
+        return cellDateStr;
+      }
+    })();
+
+    // Translate phase names nicely
+    const phaseShortName = t(`rhythms.${dayStats.currentPhase}Short`) || dayStats.currentPhase;
+    const phaseLabelMap: Record<string, string> = {
+      menstrual: `${phaseShortName} Phase 🩸`,
+      follicular: `${phaseShortName} Phase 🌿`,
+      ovulation: `${phaseShortName} Phase 🌸`,
+      luteal: `${phaseShortName} Phase 🌙`
+    };
+    
+    const phaseLabel = phaseLabelMap[dayStats.currentPhase] || `${phaseShortName} Phase`;
+
+    // Check fertile/ovulation window
+    let statusLabel = 'Low Fertility';
+    let statusStyle = 'bg-slate-100/80 text-slate-700 border-slate-200';
+    if (dayStats.isOvulation) {
+      statusLabel = 'Ovulation Day';
+      statusStyle = 'bg-purple-100 text-purple-800 border-purple-200';
+    } else if (dayStats.isFertile) {
+      statusLabel = 'High Fertility';
+      statusStyle = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    }
+
+    // Determine tooltip alignment to prevent overflow on edges
+    const isLeftEdge = cellIndex % 7 === 0;
+    const isRightEdge = cellIndex % 7 === 6;
+    let alignClass = 'left-1/2 -translate-x-1/2 bottom-full mb-3 origin-bottom';
+    if (isLeftEdge) {
+      alignClass = 'left-0 bottom-full mb-3 origin-bottom-left';
+    } else if (isRightEdge) {
+      alignClass = 'right-0 bottom-full mb-3 origin-bottom-right';
+    }
+
+    return (
+      <div 
+        className={`absolute ${alignClass} hidden group-hover:flex flex-col gap-2.5 w-64 bg-white/95 backdrop-blur-md text-slate-800 p-4 rounded-2xl shadow-xl border border-slate-100 transition-all duration-200 z-50 text-left font-normal select-none pointer-events-none`}
+        style={{ boxShadow: '0 12px 30px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(165, 53, 86, 0.04)' }}
+      >
+        {/* Date and Phase header */}
+        <div className="flex justify-between items-center border-b border-slate-100 pb-1.5">
+          <div className="flex flex-col">
+            <span className="text-xs font-black text-slate-800">{formattedDate}</span>
+            <span className="text-[10px] font-bold text-slate-500">CD {dayStats.currentCycleDay}</span>
+          </div>
+          {cellDateStr === todayStr && (
+            <span className="text-[8.5px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">Today</span>
+          )}
+        </div>
+
+        {/* Phase and Fertility Info */}
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-1.5 text-[10.5px] font-extrabold" style={{ color: dayStats.phaseColor }}>
+            <span className="w-2.5 h-2.5 rounded-full inline-block shrink-0 shadow-sm" style={{ backgroundColor: dayStats.phaseColor }} />
+            <span>{phaseLabel}</span>
+          </div>
+          <div className="flex items-center justify-between mt-0.5">
+            <span className="text-[9.5px] font-bold text-slate-400 font-bold">Fertility:</span>
+            <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full border ${statusStyle}`}>{statusLabel}</span>
+          </div>
+        </div>
+
+        {/* Log details if exists */}
+        {cellLog ? (
+          <div className="border-t border-slate-100 pt-2 flex flex-col gap-1.5">
+            <div className="flex justify-between items-center text-[10px]">
+              <span className="font-bold text-slate-400">Mood:</span>
+              <span className="font-black text-slate-700">{cellLog.mood} {
+                cellLog.mood === 'Radiant' ? '😊' :
+                cellLog.mood === 'Balanced' ? '😐' :
+                cellLog.mood === 'Sensitive' ? '🥺' :
+                cellLog.mood === 'Low Energy' ? '🥱' :
+                cellLog.mood === 'Anxious' ? '😰' : ''
+              }</span>
+            </div>
+            
+            {cellLog.flowType && cellLog.flowType !== 'NONE' && (
+              <div className="flex justify-between items-center text-[10px]">
+                <span className="font-bold text-slate-400">Flow:</span>
+                <span className="font-black text-slate-700 uppercase text-[9px]">{cellLog.flowType} 🩸</span>
+              </div>
+            )}
+
+            {cellLog.symptoms && cellLog.symptoms.length > 0 && (
+              <div className="flex flex-col gap-1 text-[10px]">
+                <span className="font-bold text-slate-400">Symptoms:</span>
+                <div className="flex flex-wrap gap-1 mt-0.5">
+                  {cellLog.symptoms.map((symptom: string, sIdx: number) => (
+                    <span key={sIdx} className="text-[8px] font-extrabold bg-slate-50 text-slate-600 px-1.5 py-0.5 rounded border border-slate-150">
+                      {symptom}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-1.5 mt-1 border-t border-slate-100/60 pt-1.5 text-[9px] text-slate-500 font-bold">
+              <div className="flex items-center gap-1">
+                <span>💤</span> <span>Sleep: {cellLog.sleep}h</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span>⚡</span> <span>Energy: {cellLog.energy}/10</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span>🧘</span> <span>Stress: {cellLog.stress}/10</span>
+              </div>
+              {cellLog.hydration && (
+                <div className="flex items-center gap-1">
+                  <span>💧</span> <span>Hydration: {cellLog.hydration}c</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="border-t border-slate-100 pt-2 flex items-center justify-center py-1">
+            <span className="text-[9px] font-bold text-slate-400 italic">No symptoms or logs recorded.</span>
+          </div>
+        )}
+        
+        {/* Footer Hint */}
+        <div className="text-[8px] font-black text-primary/70 uppercase tracking-wide text-center border-t border-slate-100 pt-1.5 mt-0.5">
+          Click cell to select & log
+        </div>
+      </div>
+    );
+  };
+
   // Selected Day Details for Diagnostics
   const selectedLog = dailyLogs[selectedDateStr];
   const selectedDayStats = getCycleStatsForDate(selectedDateStr);
@@ -1179,8 +1320,7 @@ export const Dashboard: React.FC = () => {
                               <button
                                 key={`day-${day}`}
                                 onClick={() => setSelectedDateStr(dateStr)}
-                                className={`aspect-square min-h-[44px] rounded-[1.25rem] sm:rounded-[2.5rem] flex flex-col items-center justify-center gap-0.5 sm:gap-1.5 p-1 text-xs font-bold relative transition-all ${cellStyle}`}
-                                title={`Date: ${dateStr}, Phase: ${dayStats.currentPhase}, Cycle Day: ${dayStats.currentCycleDay}`}
+                                className={`aspect-square min-h-[44px] rounded-[1.25rem] sm:rounded-[2.5rem] flex flex-col items-center justify-center gap-0.5 sm:gap-1.5 p-1 text-xs font-bold relative transition-all group ${cellStyle}`}
                               >
                                 <span className="text-[6.5px] sm:text-[8px] font-black text-secondary/60 leading-none">CD{dayStats.currentCycleDay}</span>
                                 <span className={`text-[12px] sm:text-[16px] font-extrabold leading-none ${dateStr === todayStr ? 'bg-primary text-white w-5 h-5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-md' : 'text-secondary/90'}`}>
@@ -1189,6 +1329,7 @@ export const Dashboard: React.FC = () => {
                                 <div className="h-2 sm:h-3 flex items-center justify-center transform-gpu scale-75 sm:scale-100">
                                   {getDayIndicator(dateStr)}
                                 </div>
+                                {renderTooltip(dateStr, dayStats, cellLog, idx)}
                               </button>
                             );
                           })}
@@ -1260,8 +1401,7 @@ export const Dashboard: React.FC = () => {
                                     <button
                                       key={dayNum}
                                       onClick={() => setSelectedDateStr(cellDateStr)}
-                                      className={`aspect-square min-h-[44px] rounded-[1.25rem] sm:rounded-[2.5rem] flex flex-col items-center justify-center gap-0.5 sm:gap-1.5 p-1 text-xs font-bold relative transition-all ${cellStyle}`}
-                                      title={`Cycle Day: ${dayNum}, Date: ${cellDateStr}`}
+                                      className={`aspect-square min-h-[44px] rounded-[1.25rem] sm:rounded-[2.5rem] flex flex-col items-center justify-center gap-0.5 sm:gap-1.5 p-1 text-xs font-bold relative transition-all group ${cellStyle}`}
                                     >
                                       <span className="text-[6.5px] sm:text-[8px] font-black text-secondary/60 leading-none">CD{dayNum}</span>
                                       <span className={`text-[12px] sm:text-[16px] font-extrabold leading-none ${cellDateStr === todayStr ? 'bg-primary text-white w-5 h-5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-md' : 'text-secondary/90'}`}>
@@ -1270,6 +1410,7 @@ export const Dashboard: React.FC = () => {
                                       <div className="h-2 sm:h-3 flex items-center justify-center transform-gpu scale-75 sm:scale-100">
                                         {getDayIndicator(cellDateStr)}
                                       </div>
+                                      {renderTooltip(cellDateStr, dayStats, cellLog, dayIndex)}
                                     </button>
                                   );
                                 })}
