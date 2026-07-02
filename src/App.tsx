@@ -11,6 +11,8 @@ import {
 } from './components/AuthFlow'
 import { OnboardingFlow } from './components/OnboardingFlow'
 import { Dashboard } from './components/Dashboard'
+import { PrivacyPage, TermsPage, ContactPage } from './components/Legal'
+import { NotFound } from './components/NotFound'
 
 function AppRoutes() {
   const { user, onboarding } = useApp()
@@ -20,6 +22,13 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/landingpage" element={<LandingPage />} />
+        <Route path="/about" element={<LandingPage scrollTarget="about" />} />
+        <Route path="/features" element={<LandingPage scrollTarget="experience" />} />
+        
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+
         <Route path="/welcome" element={
           user.isLoggedIn ? (
             onboarding.onboardingCompleted ? <Navigate to="/dashboard" replace /> : <Navigate to="/onboarding" replace />
@@ -53,12 +62,48 @@ function AppRoutes() {
         } />
         <Route path="/dashboard" element={
           user.isLoggedIn ? (
-            onboarding.onboardingCompleted ? <Dashboard /> : <Navigate to="/onboarding" replace />
+            onboarding.onboardingCompleted ? <Dashboard initialTab="home" /> : <Navigate to="/onboarding" replace />
           ) : (
             <Navigate to="/welcome" replace />
           )
         } />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/calendar" element={
+          user.isLoggedIn ? (
+            onboarding.onboardingCompleted ? <Dashboard initialTab="calendar" /> : <Navigate to="/onboarding" replace />
+          ) : (
+            <Navigate to="/welcome" replace />
+          )
+        } />
+        <Route path="/prediction-lab" element={
+          user.isLoggedIn ? (
+            onboarding.onboardingCompleted ? <Dashboard initialTab="lab" /> : <Navigate to="/onboarding" replace />
+          ) : (
+            <Navigate to="/welcome" replace />
+          )
+        } />
+        <Route path="/logger" element={
+          user.isLoggedIn ? (
+            onboarding.onboardingCompleted ? <Dashboard initialTab="log" /> : <Navigate to="/onboarding" replace />
+          ) : (
+            <Navigate to="/welcome" replace />
+          )
+        } />
+        <Route path="/insights" element={
+          user.isLoggedIn ? (
+            onboarding.onboardingCompleted ? <Dashboard initialTab="insights" /> : <Navigate to="/onboarding" replace />
+          ) : (
+            <Navigate to="/welcome" replace />
+          )
+        } />
+        <Route path="/profile" element={
+          user.isLoggedIn ? (
+            onboarding.onboardingCompleted ? <Dashboard initialTab="profile" /> : <Navigate to="/onboarding" replace />
+          ) : (
+            <Navigate to="/welcome" replace />
+          )
+        } />
+        <Route path="/404" element={<NotFound />} />
+        <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>
     </Router>
   )

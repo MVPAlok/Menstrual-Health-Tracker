@@ -25,8 +25,10 @@ import {
   Activity
 } from 'lucide-react';
 
+import { SEO } from './SEO';
+
 /* ═══════════════ MAIN DASHBOARD SCREEN ═══════════════ */
-export const Dashboard: React.FC = () => {
+export const Dashboard: React.FC<{ initialTab?: 'home' | 'lab' | 'calendar' | 'log' | 'insights' | 'profile' }> = ({ initialTab = 'home' }) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
@@ -57,8 +59,112 @@ export const Dashboard: React.FC = () => {
     updateProfileImage
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'home' | 'lab' | 'calendar' | 'log' | 'insights' | 'profile'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'lab' | 'calendar' | 'log' | 'insights' | 'profile'>(initialTab);
   const [insightsTimeframe, setInsightsTimeframe] = useState<'7days' | '30days' | 'all'>('7days');
+
+  // Sync tab selection with initialTab prop
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
+
+  // Dynamic route updating when user clicks tabs inside Dashboard
+  useEffect(() => {
+    const tabRoutes: Record<string, string> = {
+      home: '/dashboard',
+      lab: '/prediction-lab',
+      calendar: '/calendar',
+      log: '/logger',
+      insights: '/insights',
+      profile: '/profile'
+    };
+    const targetPath = tabRoutes[activeTab];
+    if (targetPath && window.location.pathname !== targetPath) {
+      navigate(targetPath, { replace: true });
+    }
+  }, [activeTab, navigate]);
+
+  // Generate SEO dynamic metadata for active tab
+  const getTabSEOMetadata = () => {
+    const defaultMeta = {
+      title: "Dashboard | NariCare",
+      description: "NariCare health dashboard. Monitor cycle stages, symptoms, and autonomic metrics instantly.",
+      canonicalUrl: "https://www.naricaree.com/dashboard",
+      schema: {
+        "@context": "https://schema.org",
+        "@type": "MedicalWebPage",
+        "name": "NariCare Wellness Dashboard",
+        "description": "Interactive summary of hormone baselines, logs, and cycle parameters."
+      }
+    };
+
+    switch (activeTab) {
+      case 'home':
+        return defaultMeta;
+      case 'lab':
+        return {
+          title: "Cycle Prediction Lab | NariCare",
+          description: "NariCare cycle prediction lab. Volumetric projection of future hormonal curves and LH surges.",
+          canonicalUrl: "https://www.naricaree.com/prediction-lab",
+          schema: {
+            "@context": "https://schema.org",
+            "@type": "MedicalWebPage",
+            "name": "NariCare Cycle Prediction Lab",
+            "description": "Volumetric forecasting of future biological states and luteinizing hormone curves."
+          }
+        };
+      case 'calendar':
+        return {
+          title: "Cycle Calendar | NariCare",
+          description: "NariCare menstrual cycle calendar. Schedule and align events dynamically to biological phases.",
+          canonicalUrl: "https://www.naricaree.com/calendar",
+          schema: {
+            "@context": "https://schema.org",
+            "@type": "MedicalWebPage",
+            "name": "NariCare Cycle Calendar",
+            "description": "Chronological mapping of cycle phases and daily logs."
+          }
+        };
+      case 'log':
+        return {
+          title: "Health Logger | NariCare",
+          description: "NariCare daily health logger. Log mood, sleep quality, symptoms, and hydration levels.",
+          canonicalUrl: "https://www.naricaree.com/logger",
+          schema: {
+            "@context": "https://schema.org",
+            "@type": "MedicalWebPage",
+            "name": "NariCare Health Logger",
+            "description": "Symptom and biometric data collection form."
+          }
+        };
+      case 'insights':
+        return {
+          title: "Women's Health Insights | NariCare",
+          description: "NariCare women's health insights. AI-powered metabolic analysis and cycle correlation maps.",
+          canonicalUrl: "https://www.naricaree.com/insights",
+          schema: {
+            "@context": "https://schema.org",
+            "@type": "MedicalWebPage",
+            "name": "NariCare Women's Health Insights",
+            "description": "Biometric analysis and data correlations derived from daily logging history."
+          }
+        };
+      case 'profile':
+        return {
+          title: "Profile | NariCare",
+          description: "Manage your NariCare private profile and parameters. Export health reports or delete records.",
+          canonicalUrl: "https://www.naricaree.com/profile",
+          schema: {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "NariCare Profile Page"
+          }
+        };
+      default:
+        return defaultMeta;
+    }
+  };
+
+  const seoMeta = getTabSEOMetadata();
 
   // Local date helpers to avoid UTC timezone off-by-one shifts
   const getLocalDateString = (dateObj: Date = new Date()) => {
@@ -677,6 +783,7 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full bg-background pb-40 relative text-on-background selection:bg-primary/20">
+      <SEO {...seoMeta} />
       {/* Real-time Toast Notifications */}
       <AnimatePresence>
         {partnerLogUpdate && (
@@ -737,8 +844,12 @@ export const Dashboard: React.FC = () => {
           {user.profileImage && (
             <img 
               src={user.profileImage} 
-              alt="Profile" 
+              alt={`${user.name || 'User'}'s Profile Avatar`} 
               className="w-9 h-9 rounded-full object-cover border border-primary/20 shadow-sm"
+              loading="lazy"
+              decoding="async"
+              width={36}
+              height={36}
             />
           )}
           <div className="text-right hidden sm:block">
@@ -2380,8 +2491,12 @@ export const Dashboard: React.FC = () => {
                     {user.profileImage ? (
                       <img 
                         src={user.profileImage} 
-                        alt="Profile" 
+                        alt={`${user.name || 'User'}'s Profile Avatar`} 
                         className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                        width={96}
+                        height={96}
                       />
                     ) : (
                       <span className="material-symbols-outlined text-[36px] sm:text-[48px] text-primary font-light">shield_person</span>

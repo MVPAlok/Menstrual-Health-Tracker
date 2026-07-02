@@ -81,11 +81,13 @@ function RevealOnScroll({
   );
 }
 
+import { SEO } from './components/SEO';
+
 /* ─────────────────────────────────────────────
    Main Component
    ───────────────────────────────────────────── */
 
-export default function LandingPage() {
+export default function LandingPage({ scrollTarget }: { scrollTarget?: string }) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -95,6 +97,122 @@ export default function LandingPage() {
   const [subscribed, setSubscribed] = useState(false);
   const [email, setEmail] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to targeted anchors on page load or route transition
+  useEffect(() => {
+    if (scrollTarget) {
+      setTimeout(() => {
+        let elementId = scrollTarget;
+        if (scrollTarget === 'about') {
+          elementId = 'rhythms';
+        }
+        const element = document.getElementById(elementId);
+        if (element) {
+          try {
+            if ((window as any).lenis) {
+              (window as any).lenis.scrollTo(element, { offset: -50, duration: 1.5 });
+            } else {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          } catch (err) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+      }, 200);
+    }
+  }, [scrollTarget]);
+
+  // Determine SEO metadata dynamically
+  const getSEOMetadata = () => {
+    if (scrollTarget === 'about') {
+      return {
+        title: "About Us | NariCare",
+        description: "Meet the team and view the technical design philosophy behind NariCare's AI women's health platform.",
+        canonicalUrl: "https://www.naricaree.com/about",
+        schema: {
+          "@context": "https://schema.org",
+          "@type": "AboutPage",
+          "name": "About NariCare",
+          "description": "Learn more about the creators, developers and vision behind NariCare."
+        }
+      };
+    }
+    if (scrollTarget === 'experience') {
+      return {
+        title: "Platform Features | NariCare",
+        description: "Explore NariCare's smart period logs, LH ovulation predictions, neural symptom mapping, and private vault features.",
+        canonicalUrl: "https://www.naricaree.com/features",
+        schema: {
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": "NariCare Platform Features",
+          "description": "Details about biological logging, predictive graphs, and cycle calendars."
+        }
+      };
+    }
+    // Default home page metadata
+    return {
+      title: "NariCare | AI Women's Health & Smart Period Tracker",
+      description: "NariCare is an AI-powered biological intelligence platform and period tracker helping women understand cycles, predict symptoms, and track health patterns dynamically.",
+      canonicalUrl: "https://www.naricaree.com/",
+      schema: [
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "NariCare",
+          "url": "https://www.naricaree.com",
+          "logo": "https://www.naricaree.com/favicon.svg",
+          "sameAs": [
+            "https://www.linkedin.com/in/alokyadavdesigner/",
+            "https://github.com/MVPAlok"
+          ],
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "",
+            "contactType": "customer support",
+            "email": "hello@naricaree.com"
+          }
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "NariCare",
+          "url": "https://www.naricaree.com",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://www.naricaree.com/?s={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "NariCare",
+          "operatingSystem": "All",
+          "applicationCategory": "HealthApplication",
+          "offers": {
+            "@type": "Offer",
+            "price": "0"
+          }
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "MedicalWebPage",
+          "name": "NariCare AI Women's Health Platform",
+          "description": "AI-powered period tracker, cycle prediction, metabolic analysis, and women's health loggers."
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "Person",
+          "name": "Alok Yadav",
+          "jobTitle": "UI/UX Designer & Product Designer & Frontend Developer",
+          "url": "https://www.linkedin.com/in/alokyadavdesigner/"
+        }
+      ]
+    };
+  };
+
+  const seoMeta = getSEOMetadata();
 
   const languages = [
     { code: 'en', label: 'English', flag: '🇮🇳' },
@@ -356,8 +474,9 @@ export default function LandingPage() {
 
   return (
     <>
+      <SEO {...seoMeta} />
 {/* ═══════════════ TOP NAVIGATION ═══════════════ */}
-<motion.nav
+<motion.header
   className="fixed top-0 w-full z-50 pt-6 pb-2 px-4 md:px-8"
   initial={{ y: -100, opacity: 0 }}
   animate={{ y: 0, opacity: 1 }}
@@ -547,7 +666,7 @@ export default function LandingPage() {
       </motion.div>
     )}
   </AnimatePresence>
-</motion.nav>
+</motion.header>
 
 {/* ═══════════════ HERO SECTION ═══════════════ */}
 <section className="fixed top-0 left-0 w-full flex items-center justify-center pt-16 sm:pt-24 overflow-hidden z-0" style={{ height: '100dvh' }}>
@@ -659,6 +778,7 @@ export default function LandingPage() {
 
 {/* ═══════════════ CONTENT WRAPPER ═══════════════ */}
 <div className="relative z-10 bg-[#fffdfd] rounded-t-[3rem] md:rounded-t-[4rem] shadow-[0_-40px_80px_rgba(165,53,86,0.08)] border-t border-white/50" style={{ isolation: 'isolate', marginTop: '100dvh' }}>
+  <main id="main-content">
 
 {/* ═══════════════ SECTION 2: LIVING RHYTHM ═══════════════ */}
 <section id="rhythms" className="py-16 sm:py-20 md:py-section-gap relative min-h-[80vh] md:min-h-screen flex flex-col items-center justify-center bg-[#fffdfd] overflow-hidden">
@@ -2012,6 +2132,7 @@ export default function LandingPage() {
     </RevealOnScroll>
   </div>
 </section>
+</main>
 
 {/* ═══════════════ FOOTER ═══════════════ */}
 <footer className="premium-footer border-t border-outline-variant/15 pt-20 pb-12 relative z-10">

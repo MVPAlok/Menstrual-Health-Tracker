@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /onboarding
+Disallow: /auth-success
+Disallow: /welcome
+Disallow: /api/
+
+Sitemap: https://www.naricaree.com/sitemap.xml
