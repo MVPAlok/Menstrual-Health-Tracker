@@ -156,7 +156,7 @@ export const OnboardingFlow: React.FC = () => {
       <div className="absolute top-0 left-0 right-0 w-full p-4 sm:p-6 md:p-8 flex flex-row justify-between items-center z-20 max-w-7xl mx-auto gap-2">
         <span className="font-extrabold text-lg sm:text-xl text-primary tracking-tight flex items-center gap-1.5">
           <Sparkles className="w-5 h-5 text-primary" />
-          LunaCare
+          NariCare
         </span>
         <div className="flex items-center gap-2 sm:gap-4 justify-end">
           <button 

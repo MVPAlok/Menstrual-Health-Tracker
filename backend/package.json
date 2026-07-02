@@ -1,7 +1,7 @@
 {
-  "name": "lunacare-backend",
+  "name": "naricare-backend",
   "version": "1.0.0",
-  "description": "LunaCare Real-Time Backend Service",
+  "description": "NariCare Real-Time Backend Service",
   "main": "dist/server.js",
   "type": "commonjs",
   "scripts": {

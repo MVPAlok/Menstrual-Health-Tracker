@@ -198,7 +198,7 @@
     "desc": "Transforming how the world views women's health through cinematic intelligence and radical empathy.",
     "product": "Product",
     "sanctuary": "Sanctuary",
-    "copyright": "© 2024 LunaCare. All rights reserved.",
+    "copyright": "© 2024 NariCare. All rights reserved.",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
     "security": "Security"
@@ -239,7 +239,7 @@
     "letPersonalize": "Let's Personalize"
   },
   "dashboard": {
-    "title": "LunaCare",
+    "title": "NariCare",
     "bodyCalibrated": "Body Calibrated",
     "intelCore": "Intelligence Core",
     "welcome": "Welcome back",
@@ -249,7 +249,7 @@
     "focusState": "Focus State",
     "hrvBaseline": "HRV Baseline",
     "calibrating": "Calibrating...",
-    "telemetryLogsRequired": "LunaCare requires at least 3 daily telemetry logs to establish baseline biometrics. Log daily signals to unlock predictions.",
+    "telemetryLogsRequired": "NariCare requires at least 3 daily telemetry logs to establish baseline biometrics. Log daily signals to unlock predictions.",
     "collectingBaseline": "Collecting Baseline Data...",
     "logDailySignals": "Log Daily Signals",
     "timelineTitle": "Physiological Timeline Forecast",
@@ -509,7 +509,7 @@
     "lastPeriodDesc": "Select the day your last menstrual flow commenced.",
     "selectedPeriodStart": "Selected Period Start",
     "noDateSelected": "No date selected",
-    "lastPeriodNotice": "LunaCare utilizes this baseline to forecast follicular, luteal, and ovulation milestones.",
+    "lastPeriodNotice": "NariCare utilizes this baseline to forecast follicular, luteal, and ovulation milestones.",
     "cycleLengthTitle": "Cycle Length",
     "cycleLengthDesc": "What is the typical interval between the start of one period and the next?",
     "days": "Days",

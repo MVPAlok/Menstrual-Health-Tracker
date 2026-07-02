@@ -190,12 +190,12 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('lunacare_user');
+    const saved = localStorage.getItem('naricare_user');
     return saved ? JSON.parse(saved) : { name: '', email: '', isLoggedIn: false };
   });
 
   const [onboarding, setOnboarding] = useState<OnboardingData>(() => {
-    const saved = localStorage.getItem('lunacare_onboarding');
+    const saved = localStorage.getItem('naricare_onboarding');
     return saved ? JSON.parse(saved) : defaultOnboarding;
   });
 
@@ -215,7 +215,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const socketRef = useRef<Socket | null>(null);
 
   const refreshAnalytics = async () => {
-    if (!localStorage.getItem('lunacare_token')) return;
+    if (!localStorage.getItem('naricare_token')) return;
     try {
       setIsLoadingAnalytics(true);
       const [stats, comparison, changes] = await Promise.all([
@@ -344,17 +344,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Check token on mount
   useEffect(() => {
-    const token = localStorage.getItem('lunacare_token');
+    const token = localStorage.getItem('naricare_token');
     if (token && user.isLoggedIn) {
       connectSocket(token);
       api.onboarding.get()
         .then((data) => {
           if (data) {
             setOnboarding(data);
-            localStorage.setItem('lunacare_onboarding', JSON.stringify(data));
+            localStorage.setItem('naricare_onboarding', JSON.stringify(data));
           } else {
             setOnboarding(defaultOnboarding);
-            localStorage.setItem('lunacare_onboarding', JSON.stringify(defaultOnboarding));
+            localStorage.setItem('naricare_onboarding', JSON.stringify(defaultOnboarding));
           }
         })
         .catch((err) => {
@@ -362,7 +362,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             logoutUser();
           } else if (err.status === 404) {
             setOnboarding(defaultOnboarding);
-            localStorage.setItem('lunacare_onboarding', JSON.stringify(defaultOnboarding));
+            localStorage.setItem('naricare_onboarding', JSON.stringify(defaultOnboarding));
           } else {
             console.warn('Failed to refresh onboarding from server (server/network error). Keeping cached onboarding:', err);
           }
@@ -387,22 +387,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const loginUser = async (firstName: string, lastName: string, password: string) => {
     const res = await api.auth.login({ firstName, lastName, password });
-    localStorage.setItem('lunacare_token', res.token);
-    localStorage.setItem('lunacare_user', JSON.stringify(res.user));
+    localStorage.setItem('naricare_token', res.token);
+    localStorage.setItem('naricare_user', JSON.stringify(res.user));
     
     setUser(res.user);
     if (res.onboarding) {
       const resolved = mapDbOnboardingToFrontend(res.onboarding);
       if (resolved) {
         setOnboarding(resolved);
-        localStorage.setItem('lunacare_onboarding', JSON.stringify(resolved));
+        localStorage.setItem('naricare_onboarding', JSON.stringify(resolved));
       } else {
         setOnboarding(defaultOnboarding);
-        localStorage.setItem('lunacare_onboarding', JSON.stringify(defaultOnboarding));
+        localStorage.setItem('naricare_onboarding', JSON.stringify(defaultOnboarding));
       }
     } else {
       setOnboarding(defaultOnboarding);
-      localStorage.setItem('lunacare_onboarding', JSON.stringify(defaultOnboarding));
+      localStorage.setItem('naricare_onboarding', JSON.stringify(defaultOnboarding));
     }
     
     connectSocket(res.token);
@@ -433,22 +433,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const registerUser = async (firstName: string, lastName: string, password: string) => {
     const res = await api.auth.register({ firstName, lastName, password });
-    localStorage.setItem('lunacare_token', res.token);
-    localStorage.setItem('lunacare_user', JSON.stringify(res.user));
+    localStorage.setItem('naricare_token', res.token);
+    localStorage.setItem('naricare_user', JSON.stringify(res.user));
     
     setUser(res.user);
     if (res.onboarding) {
       const resolved = mapDbOnboardingToFrontend(res.onboarding);
       if (resolved) {
         setOnboarding(resolved);
-        localStorage.setItem('lunacare_onboarding', JSON.stringify(resolved));
+        localStorage.setItem('naricare_onboarding', JSON.stringify(resolved));
       } else {
         setOnboarding(defaultOnboarding);
-        localStorage.setItem('lunacare_onboarding', JSON.stringify(defaultOnboarding));
+        localStorage.setItem('naricare_onboarding', JSON.stringify(defaultOnboarding));
       }
     } else {
       setOnboarding(defaultOnboarding);
-      localStorage.setItem('lunacare_onboarding', JSON.stringify(defaultOnboarding));
+      localStorage.setItem('naricare_onboarding', JSON.stringify(defaultOnboarding));
     }
     
     connectSocket(res.token);
@@ -470,15 +470,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       socketRef.current.disconnect();
       socketRef.current = null;
     }
-    localStorage.removeItem('lunacare_token');
-    localStorage.removeItem('lunacare_user');
-    localStorage.removeItem('lunacare_onboarding');
+    localStorage.removeItem('naricare_token');
+    localStorage.removeItem('naricare_user');
+    localStorage.removeItem('naricare_onboarding');
   };
 
   const updateOnboarding = async (data: Partial<OnboardingData>) => {
     const updated = { ...onboarding, ...data };
     setOnboarding(updated);
-    localStorage.setItem('lunacare_onboarding', JSON.stringify(updated));
+    localStorage.setItem('naricare_onboarding', JSON.stringify(updated));
     try {
       const res = await api.onboarding.calibrate(updated);
       if (res.onboarding) {
@@ -489,7 +489,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           onboardingCompleted: updated.onboardingCompleted
         };
         setOnboarding(resolved);
-        localStorage.setItem('lunacare_onboarding', JSON.stringify(resolved));
+        localStorage.setItem('naricare_onboarding', JSON.stringify(resolved));
       }
     } catch (err) {
       console.error('Failed to sync onboarding with backend, kept local state.', err);
@@ -571,13 +571,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await api.auth.updateProfileImage(image);
       const updatedUser = { ...user, profileImage: res.profileImage };
       setUser(updatedUser);
-      localStorage.setItem('lunacare_user', JSON.stringify(updatedUser));
+      localStorage.setItem('naricare_user', JSON.stringify(updatedUser));
     } catch (err) {
       console.error("Failed to persist profile image:", err);
       // Fallback
       const updatedUser = { ...user, profileImage: image };
       setUser(updatedUser);
-      localStorage.setItem('lunacare_user', JSON.stringify(updatedUser));
+      localStorage.setItem('naricare_user', JSON.stringify(updatedUser));
     }
   };
 

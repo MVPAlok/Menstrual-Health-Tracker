@@ -92,6 +92,8 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [activePhase, setActivePhase] = useState('follicular');
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
+  const [email, setEmail] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const languages = [
@@ -373,7 +375,7 @@ export default function LandingPage() {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
     >
-      LunaCare
+      NariCare
     </motion.div>
 
     <div className="hidden md:flex gap-8 items-center">
@@ -1571,7 +1573,7 @@ export default function LandingPage() {
               <div className="absolute top-3 left-1/2 -translate-x-1/2 w-16 h-4 bg-black rounded-full z-50"></div>
               <div className="w-full h-full rounded-[30px] bg-[#fff8f8] overflow-hidden relative p-4 flex flex-col justify-between iphone-reflection">
                 <div className="flex justify-between items-center text-[9px] text-secondary font-black">
-                  <span>LunaCare</span>
+                  <span>NariCare</span>
                   <span className="material-symbols-outlined text-[10px] text-primary">wifi</span>
                 </div>
                 <div className="flex-grow flex flex-col items-center justify-center text-center mt-4">
@@ -2012,63 +2014,283 @@ export default function LandingPage() {
 </section>
 
 {/* ═══════════════ FOOTER ═══════════════ */}
-<RevealOnScroll>
-  <footer className="bg-[#fffdfd] border-t border-outline-variant/30 py-16 sm:py-24">
-    <div className="px-container-padding-mobile md:px-container-padding-desktop max-w-7xl mx-auto">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 sm:gap-16 mb-20 sm:mb-24">
-        <div className="col-span-1 sm:col-span-2">
-          <div className="font-headline-md text-3xl text-primary font-black tracking-tighter mb-8">LunaCare</div>
-          <p className="text-secondary text-xl max-w-sm mb-10">{t('footer.desc')}</p>
-          <div className="flex gap-6">
-            {['language', 'favorite'].map(icon => (
-              <motion.div key={icon} className="w-12 h-12 rounded-full glass border border-primary/20 flex items-center justify-center cursor-pointer" whileHover={{ scale: 1.1, backgroundColor: 'rgba(165,53,86,0.1)' }}>
-                <span className="material-symbols-outlined text-primary">{icon}</span>
-              </motion.div>
+<footer className="premium-footer border-t border-outline-variant/15 pt-20 pb-12 relative z-10">
+  
+  {/* Cinematic Background Elements */}
+  <div className="aurora-glow-footer top-0 left-1/4"></div>
+  <div className="aurora-glow-footer bottom-0 right-1/4" style={{ animationDelay: '-12s' }}></div>
+
+  {/* Biological wave lines */}
+  <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" xmlns="http://www.w3.org/2000/svg">
+    <path className="biological-wave-line" d="M -100,150 C 200,50 300,250 600,150 C 900,50 1000,250 1300,150" fill="none" stroke="rgba(165,53,86,0.1)" strokeWidth="1.5" />
+    <path className="biological-wave-line" d="M -50,250 C 250,150 350,350 650,250 C 950,150 1050,350 1350,250" fill="none" stroke="rgba(174,159,196,0.08)" strokeWidth="1.2" style={{ animationDelay: '-15s' }} />
+    <path className="biological-wave-line" d="M 0,350 C 300,250 400,450 700,350 C 1000,250 1100,450 1400,350" fill="none" stroke="rgba(255,123,156,0.06)" strokeWidth="1" style={{ animationDelay: '-30s' }} />
+  </svg>
+
+  <div className="relative z-10 max-w-7xl mx-auto px-container-padding-mobile md:px-container-padding-desktop">
+    
+    {/* ─── LAYER 1: BRAND STATEMENT (Hero Element) ─── */}
+    <div className="relative w-full flex flex-col items-center justify-center py-10 md:py-16 overflow-hidden select-none border-b border-outline-variant/10 mb-16">
+      
+      {/* Heartbeat waveform flowing through typography */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.06] mix-blend-screen">
+        <svg className="w-full h-40 text-primary" viewBox="0 0 1000 100" preserveAspectRatio="none">
+          <path
+            className="heartbeat-path"
+            d="M0 50 L250 50 L270 42 L290 58 L310 50 L350 50 L370 15 L390 85 L405 50 L425 50 L445 35 L465 65 L485 50 L1000 50"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+
+      {/* Massive NariCare wordmark */}
+      <motion.h1 
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+        className="text-[12vw] font-black tracking-[-0.05em] text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#ff7b9c] to-[#ae9fc4] drop-shadow-[0_4px_30px_rgba(165,53,86,0.12)] leading-none text-center relative z-10"
+      >
+        NariCare
+      </motion.h1>
+
+      <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] font-black text-secondary/60 mt-4 relative z-10">
+        Women's health, understood beautifully.
+      </p>
+    </div>
+
+    {/* Main Grid: Layers 2, 3, 4 */}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-16 mb-16">
+      
+      {/* ─── LAYER 2: BRAND STORY & NEWSLETTER ─── */}
+      <div className="flex flex-col gap-10">
+        {/* Brand details */}
+        <div className="flex flex-col gap-5">
+          <div className="flex items-center gap-2">
+            <span className="font-headline-md text-2xl text-primary font-black tracking-tighter select-none">
+              NariCare
+            </span>
+          </div>
+          <p className="text-secondary text-sm leading-relaxed max-w-sm">
+            NariCare combines AI, biological science, and thoughtful design to help women understand their body's natural rhythms with confidence.
+          </p>
+          {/* Rounded Badges */}
+          <div className="flex flex-wrap gap-2 pt-2">
+            {['AI Powered', 'Privacy First', 'Made in India', 'Research Driven'].map(badge => (
+              <span key={badge} className="footer-badge px-3.5 py-1.5 rounded-full text-[10px] font-bold tracking-wider cursor-default">
+                {badge}
+              </span>
             ))}
           </div>
         </div>
+
+        {/* Newsletter Section */}
+        <div className="glass p-6 sm:p-8 rounded-[2rem] border border-outline-variant/10 shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl pointer-events-none"></div>
+          <h5 className="font-black text-primary uppercase tracking-widest text-xs mb-2">Stay in Rhythm.</h5>
+          <p className="text-secondary text-xs leading-relaxed mb-6">
+            Receive product updates, AI research insights, and women's health innovations.
+          </p>
+          
+          {subscribed ? (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }} 
+              animate={{ opacity: 1, scale: 1 }} 
+              className="flex flex-col items-center justify-center py-6 text-center text-primary font-bold"
+            >
+              <span className="material-symbols-outlined text-3xl mb-2 text-primary">check_circle</span>
+              <p className="text-xs">You have joined the Sanctuary.</p>
+            </motion.div>
+          ) : (
+            <form 
+              onSubmit={(e) => { e.preventDefault(); if (email) setSubscribed(true); }} 
+              className="flex flex-col gap-3 w-full"
+            >
+              <input
+                type="email"
+                placeholder="Email Address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="newsletter-input w-full px-5 py-3 rounded-full bg-white/50 border border-outline-variant/30 text-xs font-semibold focus:outline-none"
+              />
+              <motion.button
+                type="submit"
+                className="bg-primary text-on-primary w-full py-3.5 rounded-full font-bold text-xs shadow-md shadow-primary/10 tracking-wider hover:shadow-lg hover:shadow-primary/20 transition-all shrink-0"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Join Community
+              </motion.button>
+            </form>
+          )}
+        </div>
+      </div>
+
+      {/* ─── LAYER 3: QUICK LINKS ─── */}
+      <div className="grid grid-cols-3 gap-4 sm:gap-6">
         <div>
-          <h5 className="font-black text-primary uppercase tracking-widest text-xs mb-8">{t('footer.product')}</h5>
-          <ul className="space-y-4 font-bold text-secondary">
+          <h5 className="font-black text-primary uppercase tracking-widest text-[10px] sm:text-[11px] mb-6">Product</h5>
+          <ul className="space-y-4 text-xs font-bold text-secondary">
             {[
-              { label: t('nav.rhythms'), href: '#rhythms' },
-              { label: t('nav.science'), href: '#science' },
-              { label: t('nav.insights'), href: '#insights' },
-              { label: t('footer.security'), href: '#' }
+              { label: 'Dashboard', href: '/welcome' },
+              { label: 'Predictions', href: '#science' },
+              { label: 'Calendar', href: '/welcome' },
+              { label: 'Insights', href: '#insights' },
+              { label: 'Health Logger', href: '/welcome' }
             ].map(item => (
-              <li key={item.label}><motion.a className="hover:text-primary transition-colors" href={item.href} whileHover={{ x: 4 }}>{item.label}</motion.a></li>
+              <li key={item.label}>
+                <a className="premium-link hover:text-primary transition-colors py-0.5" href={item.href}>
+                  {item.label}
+                </a>
+              </li>
             ))}
           </ul>
         </div>
         <div>
-          <h5 className="font-black text-primary uppercase tracking-widest text-xs mb-8">{t('footer.sanctuary')}</h5>
-          <ul className="space-y-4 font-bold text-secondary">
+          <h5 className="font-black text-primary uppercase tracking-widest text-[10px] sm:text-[11px] mb-6">Resources</h5>
+          <ul className="space-y-4 text-xs font-bold text-secondary">
             {[
-              t('footerExtra.journal'),
-              t('footerExtra.community'),
-              t('footerExtra.research'),
-              t('footerExtra.careers')
+              { label: 'Documentation', href: '#' },
+              { label: 'Science', href: '#science' },
+              { label: 'Privacy', href: '#' },
+              { label: 'Security', href: '#' },
+              { label: 'FAQ', href: '#' }
             ].map(item => (
-              <li key={item}><motion.a className="hover:text-primary transition-colors" href="#" whileHover={{ x: 4 }}>{item}</motion.a></li>
+              <li key={item.label}>
+                <a className="premium-link hover:text-primary transition-colors py-0.5" href={item.href}>
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h5 className="font-black text-primary uppercase tracking-widest text-[10px] sm:text-[11px] mb-6">Company</h5>
+          <ul className="space-y-4 text-xs font-bold text-secondary">
+            {[
+              { label: 'About', href: '#' },
+              { label: 'Contact', href: '#' },
+              { label: 'Roadmap', href: '#' },
+              { label: 'Careers', href: '#' }
+            ].map(item => (
+              <li key={item.label}>
+                <a className="premium-link hover:text-primary transition-colors py-0.5" href={item.href}>
+                  {item.label}
+                </a>
+              </li>
             ))}
           </ul>
         </div>
       </div>
-      <div className="flex flex-col md:flex-row justify-between items-center pt-12 border-t border-outline-variant/20 gap-8">
-        <p className="text-secondary/50 font-bold">{t('footer.copyright')}</p>
-        <div className="flex gap-10 font-bold text-secondary/50 text-sm">
+
+      {/* ─── LAYER 4: CREATOR SECTION & SOCIALS ─── */}
+      <div className="flex flex-col gap-8 md:col-span-2 lg:col-span-1">
+        
+        {/* Creator Card */}
+        <div className="founder-card p-6 rounded-[2rem] flex flex-col gap-3 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl pointer-events-none"></div>
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-primary/60 block mb-1">
+              Designed & Developed by
+            </span>
+            <h4 className="text-xl font-black text-on-background tracking-tight">Alok Yadav</h4>
+            <p className="text-[11px] font-bold text-secondary/80 mt-1 leading-tight flex flex-wrap gap-x-1.5 gap-y-0.5">
+              <span>UI/UX Designer</span>
+              <span className="text-primary">•</span>
+              <span>Frontend Developer</span>
+              <span className="text-primary">•</span>
+              <span>Product Designer</span>
+            </p>
+          </div>
+          <p className="text-secondary text-xs leading-relaxed mt-2 border-t border-outline-variant/10 pt-3 italic">
+            "Passionate about crafting meaningful digital experiences that combine thoughtful design with intelligent technology."
+          </p>
+        </div>
+
+        {/* Social Cards */}
+        <div className="flex flex-col gap-3">
           {[
-            t('footer.privacy'),
-            t('footer.terms'),
-            t('footer.security')
-          ].map(item => (
-            <motion.a key={item} className="hover:text-primary transition-colors" href="#" whileHover={{ y: -2 }}>{item}</motion.a>
+            {
+              name: 'LinkedIn',
+              sub: 'Professional Profile',
+              icon: 'link',
+              url: 'https://www.linkedin.com/in/alokyadavdesigner/',
+              hoverColor: 'hover:border-[#0077b5]/30 hover:text-[#0077b5]'
+            },
+            {
+              name: 'GitHub',
+              sub: 'Open Source Projects',
+              icon: 'code',
+              url: 'https://github.com/MVPAlok',
+              hoverColor: 'hover:border-[#24292e]/30 hover:text-[#24292e]'
+            },
+            {
+              name: 'Contra',
+              sub: 'Design Portfolio',
+              icon: 'palette',
+              url: 'https://contra.com/alok_yadav_itseicge?r=alok_yadav_itseicge',
+              hoverColor: 'hover:border-[#e95420]/30 hover:text-[#e95420]'
+            }
+          ].map(social => (
+            <motion.a
+              key={social.name}
+              href={social.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`social-card p-3 rounded-2xl flex items-center justify-between ${social.hoverColor}`}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="social-icon-wrapper w-8 h-8 rounded-xl bg-primary/5 flex items-center justify-center text-primary transition-all">
+                  <span className="material-symbols-outlined text-[18px]">{social.icon}</span>
+                </div>
+                <div className="min-w-0">
+                  <h6 className="font-black text-xs text-on-background leading-tight">{social.name}</h6>
+                  <p className="text-[9px] text-secondary font-semibold truncate mt-0.5">{social.sub}</p>
+                </div>
+              </div>
+              <span className="material-symbols-outlined text-secondary/30 text-base group-hover:text-primary transition-colors pr-2">arrow_forward</span>
+            </motion.a>
           ))}
         </div>
       </div>
+
     </div>
-  </footer>
-</RevealOnScroll>
+
+    {/* Bottom Bar Section */}
+    <div className="flex flex-col sm:flex-row justify-between items-center pt-8 border-t border-outline-variant/15 gap-6 text-xs text-secondary/50 font-bold">
+      <div className="order-3 sm:order-1 text-center sm:text-left">
+        <p>© 2026 NariCare</p>
+        <p className="text-[10px] text-secondary/40 font-semibold mt-0.5">Made with care in India.</p>
+      </div>
+      <div className="order-1 sm:order-2 text-center text-primary font-black tracking-wide">
+        <a 
+          href="https://www.linkedin.com/in/alokyadavdesigner/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="hover:underline"
+        >
+          Designed & Developed by Alok Yadav
+        </a>
+      </div>
+      <div className="order-2 sm:order-3 flex flex-wrap gap-x-6 gap-y-2 justify-center">
+        {['Privacy', 'Terms', 'Security', 'Accessibility', 'Cookie Settings'].map(item => (
+          <motion.a
+            key={item}
+            className="premium-link hover:text-primary transition-colors"
+            href="#"
+            whileHover={{ y: -1 }}
+          >
+            {item}
+          </motion.a>
+        ))}
+      </div>
+    </div>
+  </div>
+</footer>
 
 </div>
     </>

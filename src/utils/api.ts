@@ -6,7 +6,7 @@ export interface ApiError {
 
 // Fetch helper with token handling
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const token = localStorage.getItem('lunacare_token');
+  const token = localStorage.getItem('naricare_token');
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -32,7 +32,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 // Special fetch helper for raw files (CSV/HTML)
 async function requestRaw(endpoint: string, options: RequestInit = {}): Promise<{ blob: Blob; filename: string }> {
-  const token = localStorage.getItem('lunacare_token');
+  const token = localStorage.getItem('naricare_token');
   const headers: HeadersInit = {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers || {}),
@@ -54,7 +54,7 @@ async function requestRaw(endpoint: string, options: RequestInit = {}): Promise<
 
   const blob = await response.blob();
   const disposition = response.headers.get('Content-Disposition');
-  let filename = 'lunacare_report';
+  let filename = 'naricare_report';
   if (disposition && disposition.indexOf('attachment') !== -1) {
     const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
     const matches = filenameRegex.exec(disposition);

@@ -1,6 +1,6 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/React-Light.svg" width="60" alt="React Logo" />
-  <h1>✨ LunaCare ✨</h1>
+  <h1>✨ NariCare ✨</h1>
   <p><strong>Cinematic Body Intelligence & Premium Cycle Tracking</strong></p>
   
   <p>
@@ -14,11 +14,11 @@
 
 <br />
 
-> **LunaCare** is a next-generation period and cycle health tracking platform. Inspired by the premium aesthetics of *Apple Health*, *Oura*, and *Flo Premium*, it moves away from generic healthcare dashboards to deliver an emotionally resonant, living body-intelligence engine.
+> **NariCare** is a next-generation period and cycle health tracking platform. Inspired by the premium aesthetics of *Apple Health*, *Oura*, and *Flo Premium*, it moves away from generic healthcare dashboards to deliver an emotionally resonant, living body-intelligence engine.
 
 ## 🌌 The Vision
 
-Health data shouldn't feel like a spreadsheet. It should feel like a sanctuary. LunaCare was built with **luxury minimalism** and **ambient glassmorphism** in mind. The experience feels elegant, intelligent, modern, and deeply personal.
+Health data shouldn't feel like a spreadsheet. It should feel like a sanctuary. NariCare was built with **luxury minimalism** and **ambient glassmorphism** in mind. The experience feels elegant, intelligent, modern, and deeply personal.
 
 ## ✨ Key Features
 

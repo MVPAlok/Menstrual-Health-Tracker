@@ -82,7 +82,7 @@ export const exportReport = async (req: AuthenticatedRequest, res: Response) => 
     if (format === 'csv') {
       const csvData = await generateCSVReport(userId);
       res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', 'attachment; filename=lunacare_health_report.csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=naricare_health_report.csv');
       return res.status(200).send(csvData);
     } else {
       const htmlData = await generateDoctorHTMLReport(userId);

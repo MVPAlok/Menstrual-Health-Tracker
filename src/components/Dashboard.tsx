@@ -731,7 +731,7 @@ export const Dashboard: React.FC = () => {
           <span className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
             <span className="material-symbols-outlined text-[18px]">spa</span>
           </span>
-          <span className="font-extrabold text-xl text-primary tracking-tight">LunaCare</span>
+          <span className="font-extrabold text-xl text-primary tracking-tight">NariCare</span>
         </div>
         <div className="flex items-center gap-4">
           {user.profileImage && (
@@ -953,7 +953,7 @@ export const Dashboard: React.FC = () => {
               <div className="glass-card p-5 sm:p-8 rounded-[2rem] border border-white/60 shadow-sm flex flex-col gap-6">
                 <div>
                   <h3 className="font-extrabold text-primary text-lg tracking-tight mb-1">Health Journey Progression</h3>
-                  <p className="text-secondary text-xs">LunaCare automatically unlocks advanced pattern metrics as you build logs history.</p>
+                  <p className="text-secondary text-xs">NariCare automatically unlocks advanced pattern metrics as you build logs history.</p>
                 </div>
                 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">

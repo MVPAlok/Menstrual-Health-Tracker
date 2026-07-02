@@ -28,7 +28,7 @@ const getUserLocalTime = (timezone: string) => {
 };
 
 export const startNotificationScheduler = (io: Server) => {
-  console.log('⏰ LunaCare Notification Scheduler engine initialized.');
+  console.log('⏰ NariCare Notification Scheduler engine initialized.');
 
   // Run scheduler check every 30 minutes
   setInterval(async () => {

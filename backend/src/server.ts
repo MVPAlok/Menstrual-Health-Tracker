@@ -70,5 +70,5 @@ startNotificationScheduler(io);
 
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {
-  console.log(`🚀 LunaCare Core functioning on port ${PORT}`);
+  console.log(`🚀 NariCare Core functioning on port ${PORT}`);
 });

@@ -18,7 +18,7 @@ if (!publicVapidKey || !privateVapidKey) {
 }
 
 webpush.setVapidDetails(
-  'mailto:support@lunacare.app',
+  'mailto:support@naricare.app',
   publicVapidKey,
   privateVapidKey
 );

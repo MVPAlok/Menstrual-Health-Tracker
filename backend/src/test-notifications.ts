@@ -2,7 +2,7 @@ import prisma from './prisma';
 import { triggerNotification, getOrCreatePreferences } from './services/notificationService';
 
 async function runTests() {
-  console.log('🧪 Starting LunaCare Notification Integration Tests...');
+  console.log('🧪 Starting NariCare Notification Integration Tests...');
 
   // 1. Find or create a test user
   let testUser = await prisma.user.findFirst();

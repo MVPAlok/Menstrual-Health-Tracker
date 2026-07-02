@@ -393,3 +393,167 @@ section {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
+
+/* ─── Premium Footer Redesign Styles ─── */
+.premium-footer {
+  background: radial-gradient(circle at 50% 0%, rgba(255, 93, 143, 0.04) 0%, rgba(255, 253, 253, 1) 60%), #fffdfd;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Shifting aurora background glow */
+.aurora-glow-footer {
+  position: absolute;
+  width: 700px;
+  height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 93, 143, 0.05) 0%, rgba(174, 159, 196, 0.04) 40%, rgba(255, 255, 255, 0) 70%);
+  filter: blur(100px);
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  z-index: 0;
+  animation: float-aurora-footer 25s ease-in-out infinite alternate;
+}
+
+@keyframes float-aurora-footer {
+  0% { transform: translate(-15%, -15%) scale(0.9) rotate(0deg); }
+  50% { transform: translate(10%, -5%) scale(1.1) rotate(180deg); }
+  100% { transform: translate(15%, 15%) scale(1.2) rotate(360deg); }
+}
+
+/* Animated heartbeat wave in logo statement */
+.heartbeat-path {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  animation: draw-heartbeat 8s linear infinite;
+}
+
+@keyframes draw-heartbeat {
+  0% { stroke-dashoffset: 1200; }
+  100% { stroke-dashoffset: 0; }
+}
+
+/* Animated rhythm wave in logo */
+.rhythm-wave-path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: draw-rhythm-wave 4s ease-in-out infinite alternate;
+}
+
+@keyframes draw-rhythm-wave {
+  0% { stroke-dashoffset: 1000; }
+  100% { stroke-dashoffset: 0; }
+}
+
+/* Biological wave line overlay */
+.biological-wave-line {
+  opacity: 0.06;
+  stroke-dasharray: 4, 8;
+  animation: wave-flow 60s linear infinite;
+}
+
+@keyframes wave-flow {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: 1000; }
+}
+
+/* Founder glass card interactive border glow */
+.founder-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(32px) saturate(120%);
+  -webkit-backdrop-filter: blur(32px) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.founder-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(165, 53, 86, 0.15), rgba(174, 159, 196, 0.1), rgba(255, 255, 255, 0.3));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.founder-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 40px 80px -20px rgba(165, 53, 86, 0.18), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.founder-card:hover::before {
+  background: linear-gradient(135deg, rgba(165, 53, 86, 0.45), rgba(174, 159, 196, 0.35), rgba(255, 255, 255, 0.6));
+}
+
+/* Social buttons custom with shadow hover */
+.social-card {
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.social-card:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(165, 53, 86, 0.25);
+  box-shadow: 0 20px 40px -10px rgba(165, 53, 86, 0.12);
+}
+
+.social-card:hover .social-icon-wrapper {
+  transform: scale(1.1) rotate(5deg);
+  background: rgba(165, 53, 86, 0.1);
+  box-shadow: 0 0 15px rgba(165, 53, 86, 0.15);
+}
+
+/* Custom underline helper for premium links */
+.premium-link {
+  position: relative;
+  display: inline-block;
+}
+
+.premium-link::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  transform: scaleX(0);
+  height: 1.5px;
+  bottom: -2px;
+  left: 0;
+  background: linear-gradient(90deg, #a53556, #ff7b9c);
+  transform-origin: bottom right;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.premium-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+/* Newsletter Input focus glow */
+.newsletter-input {
+  transition: all 0.3s ease;
+}
+.newsletter-input:focus {
+  box-shadow: 0 0 0 3px rgba(165, 53, 86, 0.12);
+  border-color: rgba(165, 53, 86, 0.3);
+}
+
+.footer-badge {
+  background: rgba(165, 53, 86, 0.04);
+  border: 1px solid rgba(165, 53, 86, 0.1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.footer-badge:hover {
+  background: rgba(165, 53, 86, 0.08);
+  border-color: rgba(165, 53, 86, 0.25);
+  transform: translateY(-2px);
+}
+
+

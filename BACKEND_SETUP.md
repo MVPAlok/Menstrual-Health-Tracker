@@ -1,6 +1,6 @@
-# 🌌 LunaCare Backend & Real-Time Setup Guide
+# 🌌 NariCare Backend & Real-Time Setup Guide
 
-Welcome to the backend architecture blueprint for **LunaCare**. This document provides an exhaustive, step-by-step implementation guide to build, connect, and deploy a robust Node.js/TypeScript backend powered by a **Neon PostgreSQL** database and **Prisma ORM**, with full **real-time synchronization** capabilities (via **Socket.io**).
+Welcome to the backend architecture blueprint for **NariCare**. This document provides an exhaustive, step-by-step implementation guide to build, connect, and deploy a robust Node.js/TypeScript backend powered by a **Neon PostgreSQL** database and **Prisma ORM**, with full **real-time synchronization** capabilities (via **Socket.io**).
 
 Following this guide, you can fully convert the client-side mock state (`localStorage`) into a production-grade, secure, multi-device real-time platform.
 
@@ -38,7 +38,7 @@ Neon provides serverless PostgreSQL with autoscaling and branching.
 
 ### Setup Instructions:
 1. Log in to the [Neon Console](https://console.neon.tech/).
-2. Create a new project, naming it `lunacare-db`. Select your preferred region and click **Create Project**.
+2. Create a new project, naming it `naricare-db`. Select your preferred region and click **Create Project**.
 3. Once created, copy the **Connection string** from the Dashboard. It will look like this:
    ```env
    postgresql://alex:password@ep-cool-glade-123456.us-east-2.aws.neon.tech/neondb?sslmode=require
@@ -63,7 +63,7 @@ npx prisma init
 ```
 
 ### Prisma Schema (`backend/prisma/schema.prisma`)
-Copy this schema. It represents the exact data fields required by the LunaCare onboarding wizard, calendar logging, and dashboard statistics, plus authorization states and partner pairing.
+Copy this schema. It represents the exact data fields required by the NariCare onboarding wizard, calendar logging, and dashboard statistics, plus authorization states and partner pairing.
 
 ```prisma
 datasource db {
@@ -315,7 +315,7 @@ startNotificationScheduler(io);
 
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {
-  console.log(`🚀 LunaCare Core functioning on port ${PORT}`);
+  console.log(`🚀 NariCare Core functioning on port ${PORT}`);
 });
 ```
 
@@ -543,7 +543,7 @@ export const startNotificationScheduler = (io: Server) => {
 
       // Real-time Push Alert 1: Period starting in 2 days
       if (daysUntilNext === 2 && user.onboarding.notifyPeriod) {
-        const msg = "LunaCare Insight: Your cycle reset commencement is projected in 48 hours. Focus on restful recovery.";
+        const msg = "NariCare Insight: Your cycle reset commencement is projected in 48 hours. Focus on restful recovery.";
         
         // Save to database notification history
         await prisma.notification.create({
@@ -566,7 +566,7 @@ export const startNotificationScheduler = (io: Server) => {
       // Real-time Push Alert 2: Ovulation Day Peak
       const ovulationDay = user.onboarding.cycleLength - 14;
       if (currentCycleDay === ovulationDay && user.onboarding.notifyOvulation) {
-        const msg = "LunaCare Alert: Estrogen peak and LH hormone surge detected. Peak stamina state active.";
+        const msg = "NariCare Alert: Estrogen peak and LH hormone surge detected. Peak stamina state active.";
 
         await prisma.notification.create({
           data: {
@@ -627,7 +627,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('lunacare_user');
+    const saved = localStorage.getItem('naricare_user');
     return saved ? JSON.parse(saved) : { name: '', email: '', isLoggedIn: false };
   });
 
@@ -646,7 +646,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
 
       socketConn.on('connect', () => {
-        console.log('⚡ Connected to LunaCare live telemetry engine');
+        console.log('⚡ Connected to NariCare live telemetry engine');
       });
 
       // Synchronize database updates from other devices in real-time
@@ -700,14 +700,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const loginUser = (profile: UserProfile) => {
     setUser(profile);
-    localStorage.setItem('lunacare_user', JSON.stringify(profile));
+    localStorage.setItem('naricare_user', JSON.stringify(profile));
   };
 
   const logoutUser = () => {
     setUser({ name: '', email: '', isLoggedIn: false });
     setOnboarding(defaultOnboarding);
     setDailyLogs({});
-    localStorage.removeItem('lunacare_user');
+    localStorage.removeItem('naricare_user');
     socket?.disconnect();
   };
 
@@ -777,4 +777,4 @@ To ensure your web app functions in real-time without latency, deploy components
     5. Set build command: `npm install && npm run build`.
     6. Set start command: `node dist/server.js`.
     7. Add environment variables from your `.env` (including `DATABASE_URL` and `DIRECT_URL`).
-    8. Click **Deploy Web Service**. Render provides an HTTP URL (e.g. `https://lunacare-backend.onrender.com`) which also acts as your WebSocket connection path (`wss://lunacare-backend.onrender.com`).
+    8. Click **Deploy Web Service**. Render provides an HTTP URL (e.g. `https://naricare-backend.onrender.com`) which also acts as your WebSocket connection path (`wss://naricare-backend.onrender.com`).

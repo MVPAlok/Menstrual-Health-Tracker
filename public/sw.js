@@ -11,13 +11,13 @@ self.addEventListener('push', function(event) {
           actionUrl: data.actionUrl || '/dashboard'
         },
         actions: [
-          { action: 'open', title: 'Open LunaCare' },
+          { action: 'open', title: 'Open NariCare' },
           { action: 'later', title: 'Remind Me Later' }
         ]
       };
       
       event.waitUntil(
-        self.registration.showNotification(data.title || 'LunaCare Update', options)
+        self.registration.showNotification(data.title || 'NariCare Update', options)
       );
     } catch (e) {
       const options = {
@@ -28,7 +28,7 @@ self.addEventListener('push', function(event) {
         }
       };
       event.waitUntil(
-        self.registration.showNotification('LunaCare Update', options)
+        self.registration.showNotification('NariCare Update', options)
       );
     }
   }

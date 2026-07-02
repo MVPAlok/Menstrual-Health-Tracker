@@ -116,7 +116,7 @@ export const LoginScreen: React.FC = () => {
         >
           <span className="material-symbols-outlined text-[18px] sm:text-[20px]">arrow_back</span>
         </button>
-        <span className="font-extrabold text-base sm:text-lg text-primary tracking-tight">LunaCare</span>
+        <span className="font-extrabold text-base sm:text-lg text-primary tracking-tight">NariCare</span>
       </div>
 
       <h2 className="font-headline-lg text-2xl sm:text-headline-lg text-primary mb-1 sm:mb-2">{t('auth.welcomeBack')}</h2>
@@ -248,7 +248,7 @@ export const SignUpScreen: React.FC = () => {
         >
           <span className="material-symbols-outlined text-[18px] sm:text-[20px]">arrow_back</span>
         </button>
-        <span className="font-extrabold text-base sm:text-lg text-primary tracking-tight">LunaCare</span>
+        <span className="font-extrabold text-base sm:text-lg text-primary tracking-tight">NariCare</span>
       </div>
 
       <h2 className="font-headline-lg text-2xl sm:text-headline-lg text-primary mb-1 sm:mb-2">{t('auth.createSanctuary')}</h2>
