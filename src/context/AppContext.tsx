@@ -331,8 +331,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         navigator.serviceWorker.ready.then((reg) => {
           reg.showNotification(data.title, {
             body: data.message,
-            icon: '/favicon.ico',
-            badge: '/favicon.ico',
+            icon: '/favicon.svg',
+            badge: '/favicon.svg',
             data: { actionUrl: data.actionUrl || '/dashboard' }
           });
         });
