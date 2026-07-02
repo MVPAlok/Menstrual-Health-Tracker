@@ -177,69 +177,99 @@ html.lenis body {
   animation: rotate-reverse 35s linear infinite;
 }
 
-/* ─── Orbit Elliptical (Prediction Cards) ─── */
-:root {
-  --orbit-rx: 380px;
-  --orbit-ry: 110px;
-}
-@media (max-width: 1024px) {
-  :root {
-    --orbit-rx: 290px;
-    --orbit-ry: 90px;
-  }
-}
-@media (max-width: 768px) {
-  :root {
-    --orbit-rx: 160px;
-    --orbit-ry: 55px;
-  }
-}
-@media (max-width: 480px) {
-  :root {
-    --orbit-rx: 90px;
-    --orbit-ry: 35px;
-  }
+/* ─── Prediction Core: Neural Pipeline Animations ─── */
+
+/* Neural node slow drift */
+@keyframes neural-drift {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(6px, -8px); }
+  50% { transform: translate(-4px, 5px); }
+  75% { transform: translate(8px, 3px); }
 }
 
-.orbit-card-wrapper {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  will-change: transform;
+/* Radar sweep rotation */
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-@keyframes orbit-elliptical {
-  0% {
-    transform: translate(calc(-50% + var(--orbit-rx)), -50%) scale(1);
-    z-index: 40;
-    filter: blur(0px);
-    opacity: 1;
-  }
-  25% {
-    transform: translate(-50%, calc(-50% + var(--orbit-ry))) scale(1.05);
-    z-index: 40;
-    filter: blur(0px);
-    opacity: 1;
-  }
-  50% {
-    transform: translate(calc(-50% - var(--orbit-rx)), -50%) scale(1);
-    z-index: 10;
-    filter: blur(2px);
-    opacity: 0.45;
-  }
-  75% {
-    transform: translate(-50%, calc(-50% - var(--orbit-ry))) scale(0.9);
-    z-index: 10;
-    filter: blur(3px);
-    opacity: 0.35;
-  }
-  100% {
-    transform: translate(calc(-50% + var(--orbit-rx)), -50%) scale(1);
-    z-index: 40;
-    filter: blur(0px);
-    opacity: 1;
-  }
+/* Connection line pulse */
+@keyframes connection-pulse {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.5; }
+}
+
+/* Pipeline stage glow activation */
+@keyframes stage-glow {
+  0% { box-shadow: 0 0 0 0 rgba(165, 53, 86, 0); border-color: rgba(255,255,255,0.08); }
+  100% { box-shadow: 0 0 25px -4px rgba(165, 53, 86, 0.35); border-color: rgba(165, 53, 86, 0.4); }
+}
+
+/* Background particle float */
+@keyframes particle-float {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0.3; }
+  33% { transform: translateY(-15px) translateX(8px); opacity: 0.6; }
+  66% { transform: translateY(10px) translateX(-6px); opacity: 0.2; }
+}
+
+/* Confidence meter fill */
+@keyframes confidence-fill {
+  from { width: 0%; }
+  to { width: var(--fill-to, 92%); }
+}
+
+/* Expanding pulse ring for neural core */
+@keyframes core-pulse-ring {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Data packet flowing along path */
+@keyframes data-packet-flow {
+  0% { stroke-dashoffset: 40; opacity: 0.8; }
+  100% { stroke-dashoffset: -40; opacity: 0.8; }
+}
+
+/* Prediction card stagger entrance */
+@keyframes pred-card-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Pipeline step connector draw */
+@keyframes draw-line {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+/* Ring breathing */
+@keyframes ring-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.06); opacity: 0.5; }
+}
+
+.prediction-particle {
+  animation: particle-float 8s ease-in-out infinite;
+}
+
+.neural-node {
+  animation: neural-drift 12s ease-in-out infinite;
+}
+
+.core-pulse {
+  animation: core-pulse-ring 3s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+}
+
+.radar-line {
+  animation: radar-sweep 8s linear infinite;
+}
+
+.connection-line {
+  animation: connection-pulse 3s ease-in-out infinite;
+}
+
+.ring-breathe {
+  animation: ring-breathe 4s ease-in-out infinite;
 }
 
 /* ─── CSS 3D iPhone container ─── */
@@ -268,13 +298,6 @@ html.lenis body {
 
 /* --- Tablet (max 768px) --- */
 @media (max-width: 768px) {
-  #prediction-core-container {
-    transform: none !important;
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-    height: 480px !important;
-  }
-
   .iphones-scale {
     transform: scale(0.55) !important;
     transform-origin: center center;
@@ -301,17 +324,16 @@ html.lenis body {
     margin-top: -60px;
     margin-bottom: -60px;
   }
+
+  /* Prediction core neural viz scales down */
+  .neural-core-viz {
+    transform: scale(0.6);
+    transform-origin: center center;
+  }
 }
 
 /* --- Small phones (max 480px) --- */
 @media (max-width: 480px) {
-  #prediction-core-container {
-    transform: none !important;
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-    height: 380px !important;
-  }
-
   .iphones-scale {
     transform: scale(0.42) !important;
     transform-origin: center center;
@@ -326,6 +348,11 @@ html.lenis body {
     transform-origin: center center;
     margin-top: -100px;
     margin-bottom: -100px;
+  }
+
+  .neural-core-viz {
+    transform: scale(0.45);
+    transform-origin: center center;
   }
 }
 

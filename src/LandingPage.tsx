@@ -325,77 +325,7 @@ export default function LandingPage() {
     }
   }, []);
 
-  /* Connection lines animation for prediction section */
-  useEffect(() => {
-    let connAnimId: number;
-    const container = document.getElementById('prediction-core-container');
-    const centerOrb = document.getElementById('prediction-center-orb');
-    const cards = [
-      document.getElementById('prediction-card-1'),
-      document.getElementById('prediction-card-2'),
-      document.getElementById('prediction-card-3'),
-      document.getElementById('prediction-card-4')
-    ];
-    const energyPaths = [
-      document.getElementById('energy-path-1'),
-      document.getElementById('energy-path-2'),
-      document.getElementById('energy-path-3'),
-      document.getElementById('energy-path-4')
-    ];
-    const energyBgs = [
-      document.getElementById('energy-bg-1'),
-      document.getElementById('energy-bg-2'),
-      document.getElementById('energy-bg-3'),
-      document.getElementById('energy-bg-4')
-    ];
 
-    cards.forEach(card => {
-      if (!card) return;
-      card.addEventListener('mouseenter', () => { card.style.animationPlayState = 'paused'; });
-      card.addEventListener('mouseleave', () => { card.style.animationPlayState = 'running'; });
-    });
-
-    function animateConnections() {
-      if (!container || !centerOrb) {
-        connAnimId = requestAnimationFrame(animateConnections);
-        return;
-      }
-      const containerRect = container.getBoundingClientRect();
-      if (containerRect.width === 0 || containerRect.height === 0) {
-        connAnimId = requestAnimationFrame(animateConnections);
-        return;
-      }
-      const centerRect = centerOrb.getBoundingClientRect();
-      const cx = (centerRect.left + centerRect.width / 2) - containerRect.left;
-      const cy = (centerRect.top + centerRect.height / 2) - containerRect.top;
-
-      cards.forEach((card, index) => {
-        if (!card) return;
-        const cardRect = card.getBoundingClientRect();
-        const tx = (cardRect.left + cardRect.width / 2) - containerRect.left;
-        const ty = (cardRect.top + cardRect.height / 2) - containerRect.top;
-
-        const pathD = `M ${cx} ${cy} L ${tx} ${ty}`;
-        if (energyPaths[index]) energyPaths[index]!.setAttribute('d', pathD);
-        if (energyBgs[index]) energyBgs[index]!.setAttribute('d', pathD);
-
-        const style = window.getComputedStyle(card);
-        const transform = style.transform;
-        let opacity = 0.55;
-        if (transform && transform !== 'none') {
-          const values = transform.split('(')[1].split(')')[0].split(',');
-          const scaleX = parseFloat(values[0]);
-          opacity = scaleX < 0.9 ? 0.12 : 0.65;
-        }
-        if (energyPaths[index]) energyPaths[index]!.setAttribute('stroke-opacity', opacity.toString());
-      });
-
-      connAnimId = requestAnimationFrame(animateConnections);
-    }
-    connAnimId = requestAnimationFrame(animateConnections);
-
-    return () => cancelAnimationFrame(connAnimId);
-  }, []);
 
   /* ─────────── Mobile Menu Variants ─────────── */
   const menuVariants: Variants = {
@@ -1062,115 +992,418 @@ export default function LandingPage() {
   </div>
 </section>
 
-{/* ═══════════════ SECTION 5: PREDICTION ENGINE ═══════════════ */}
-<section id="insights" className="py-section-gap bg-on-background text-on-primary min-h-screen flex items-center justify-center relative overflow-hidden">
-  <div className="absolute inset-0 bg-gradient-to-br from-primary/35 via-transparent to-tertiary/25 z-0"></div>
-  <div className="absolute inset-0 sci-fi-grid opacity-25 pointer-events-none z-0"></div>
+{/* ═══════════════ SECTION 5: PREDICTION CORE — NEURAL PIPELINE ═══════════════ */}
+<section id="insights" className="py-16 md:py-section-gap bg-on-background text-on-primary relative overflow-hidden">
+  {/* ── Layered Background System ── */}
+  <div className="absolute inset-0 bg-gradient-to-b from-[#0d0a0f] via-[#1b1c1c] to-[#0f0a12] z-0"></div>
+  <div className="absolute inset-0 sci-fi-grid opacity-[0.08] pointer-events-none z-0"></div>
+
+  {/* Volumetric gradient blobs */}
   <motion.div
-    className="absolute top-[20%] left-[20%] w-96 h-96 rounded-full bg-primary/20 blur-[150px] z-0"
-    animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.3, 0.2] }}
-    transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+    className="absolute top-[10%] left-[5%] w-[500px] h-[500px] rounded-full bg-primary/15 blur-[180px] z-0"
+    animate={{ scale: [1, 1.3, 1], opacity: [0.12, 0.2, 0.12] }}
+    transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
   />
   <motion.div
-    className="absolute bottom-[20%] right-[20%] w-[500px] h-[500px] rounded-full bg-tertiary/20 blur-[180px] z-0"
-    animate={{ scale: [1, 1.15, 1], opacity: [0.2, 0.25, 0.2] }}
-    transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+    className="absolute top-[40%] right-[10%] w-[600px] h-[600px] rounded-full bg-[#ae9fc4]/12 blur-[200px] z-0"
+    animate={{ scale: [1, 1.15, 1], opacity: [0.1, 0.18, 0.1] }}
+    transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+  />
+  <motion.div
+    className="absolute bottom-[5%] left-[30%] w-[400px] h-[400px] rounded-full bg-[#ff7b9c]/10 blur-[160px] z-0"
+    animate={{ scale: [1, 1.2, 1], opacity: [0.08, 0.15, 0.08] }}
+    transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 5 }}
   />
 
-  <div className="px-container-padding-mobile max-w-7xl mx-auto w-full text-center relative z-10">
-    <RevealOnScroll>
-      <h2 className="text-7xl font-black mb-6 tracking-tighter text-white hero-glow-text">{t('prediction.title')}</h2>
-      <p className="text-white/60 text-lg max-w-xl mx-auto mb-16">{t('prediction.desc')}</p>
+  {/* Floating background particles */}
+  <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+    {Array.from({ length: 30 }).map((_, i) => (
+      <div
+        key={`particle-${i}`}
+        className="absolute rounded-full prediction-particle"
+        style={{
+          width: `${1.5 + Math.random() * 2.5}px`,
+          height: `${1.5 + Math.random() * 2.5}px`,
+          left: `${Math.random() * 100}%`,
+          top: `${Math.random() * 100}%`,
+          background: i % 3 === 0 ? '#a53556' : i % 3 === 1 ? '#ff7b9c' : '#ae9fc4',
+          opacity: 0.2 + Math.random() * 0.3,
+          animationDelay: `${Math.random() * 8}s`,
+          animationDuration: `${6 + Math.random() * 6}s`,
+        }}
+      />
+    ))}
+  </div>
+
+  {/* Subtle noise overlay */}
+  <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', backgroundSize: '128px 128px' }}></div>
+
+  <div className="px-container-padding-mobile md:px-container-padding-desktop max-w-[1400px] mx-auto w-full relative z-10">
+
+    {/* ── Section Header ── */}
+    <RevealOnScroll className="text-center mb-12 md:mb-20">
+
+      <h2 className="text-3xl sm:text-5xl md:text-7xl font-black mb-4 md:mb-6 tracking-tighter text-white hero-glow-text">{t('prediction.title')}</h2>
+      <p className="text-white/50 text-sm sm:text-base md:text-lg max-w-2xl mx-auto">{t('prediction.desc')}</p>
     </RevealOnScroll>
 
-    {/* Orbiting Sphere Area */}
-    <div id="prediction-core-container" className="relative h-[650px] w-full flex items-center justify-center overflow-hidden">
-      {/* HUD Rings */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 scale-[0.45] sm:scale-[0.8] md:scale-100">
-        <svg className="absolute w-[680px] h-[680px] opacity-20 animate-spin-slow" viewBox="0 0 200 200">
-          <circle cx="100" cy="100" r="95" fill="none" stroke="rgba(255, 93, 143, 0.4)" strokeWidth="0.5" strokeDasharray="10 30" />
-          <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(255, 255, 255, 0.15)" strokeWidth="0.75" strokeDasharray="2 6" />
-        </svg>
-        <svg className="absolute w-[600px] h-[600px] opacity-25 animate-spin-reverse" viewBox="0 0 200 200">
-          <circle cx="100" cy="100" r="95" fill="none" stroke="rgba(220, 200, 255, 0.5)" strokeWidth="0.5" strokeDasharray="30 20 10 5" />
-          <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255, 93, 143, 0.2)" strokeWidth="1.2" />
-        </svg>
-        <svg className="absolute w-[520px] h-[520px] opacity-35 animate-spin-slow" viewBox="0 0 200 200">
-          <circle cx="100" cy="100" r="95" fill="none" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1" strokeDasharray="8 8" />
-          <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(220, 200, 255, 0.3)" strokeWidth="0.75" />
-        </svg>
-      </div>
+    {/* ── Three-Column Layout ── */}
+    <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr_280px] gap-6 lg:gap-8 items-start mb-16 md:mb-24">
 
-      {/* 3D Orbit Rings */}
-      <div className="absolute w-[240px] h-[240px] sm:w-[440px] sm:h-[440px] md:w-[580px] md:h-[580px] rounded-full border border-white/10 opacity-30 orbit-animation pointer-events-none z-0" style={{ transform: 'rotateX(70deg) rotateY(15deg)' }}></div>
-      <div className="absolute w-[200px] h-[200px] sm:w-[380px] sm:h-[380px] md:w-[500px] md:h-[500px] rounded-full border border-white/20 border-dashed opacity-40 orbit-animation-reverse pointer-events-none z-0" style={{ transform: 'rotateX(70deg) rotateY(-15deg)' }}></div>
-      <div className="absolute w-[180px] h-[180px] sm:w-[320px] sm:h-[320px] md:w-[420px] md:h-[420px] rounded-full border border-primary/25 opacity-50 orbit-animation pointer-events-none z-0" style={{ transform: 'rotateX(25deg) rotateY(70deg)' }}></div>
+      {/* ─── LEFT: Pipeline Stages ─── */}
+      <motion.div
+        className="flex lg:flex-col gap-3 lg:gap-0 overflow-x-auto lg:overflow-visible pb-3 lg:pb-0 no-scrollbar order-2 lg:order-1"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        variants={staggerContainer}
+      >
+        {[
+          { icon: 'sensors', title: 'Body Signals', desc: 'Biometric inputs collected', status: 'ACTIVE', color: '#ff7b9c' },
+          { icon: 'memory', title: 'Data Processing', desc: 'Normalizing health vectors', status: 'RUNNING', color: '#ffb1c1' },
+          { icon: 'hub', title: 'Pattern Recognition', desc: 'Neural correlation mapping', status: 'LEARNING', color: '#ae9fc4' },
+          { icon: 'psychology', title: 'Prediction Engine', desc: 'Bayesian state projection', status: 'PREDICTING', color: '#d0c0e7' },
+          { icon: 'timeline', title: 'Future Timeline', desc: 'Health trajectory mapped', status: 'COMPLETE', color: '#a53556' },
+        ].map((stage, i) => (
+          <motion.div key={stage.title} variants={staggerItem} custom={i}>
+            {/* Stage card */}
+            <motion.div
+              className="dark-glass min-w-[200px] lg:min-w-0 p-4 lg:p-5 rounded-2xl flex items-start gap-3 lg:gap-4 cursor-default group relative overflow-hidden"
+              whileHover={{ borderColor: 'rgba(165,53,86,0.3)', backgroundColor: 'rgba(30,25,30,0.9)' }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* Glow accent on hover */}
+              <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-1 h-8 rounded-full transition-all duration-500 group-hover:h-12 group-hover:opacity-100 opacity-50" style={{ background: stage.color, boxShadow: `0 0 15px ${stage.color}40` }}></div>
 
-      {/* Energy SVG paths */}
-      <svg id="energy-svg" className="absolute inset-0 w-full h-full pointer-events-none z-10" style={{ mixBlendMode: 'plus-lighter' }}>
-        <defs>
-          <linearGradient id="energy-grad-1" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#a53556" stopOpacity="0.8"/>
-            <stop offset="100%" stopColor="#ff7b9c" stopOpacity="0.8"/>
-          </linearGradient>
-          <filter id="energy-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-        </defs>
-        {[1, 2, 3, 4].map(n => (
-          <g key={n}>
-            <path id={`energy-bg-${n}`} stroke="rgba(255, 93, 143, 0.08)" strokeWidth="1.5" fill="none" />
-            <path id={`energy-path-${n}`} className="energy-line" stroke="url(#energy-grad-1)" strokeWidth="2.5" fill="none" filter="url(#energy-glow)" />
-          </g>
+              <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${stage.color}15` }}>
+                <motion.span
+                  className="material-symbols-outlined text-[18px] lg:text-[20px]"
+                  style={{ color: stage.color }}
+                  animate={i <= 3 ? { opacity: [0.6, 1, 0.6] } : {}}
+                  transition={{ duration: 2 + i * 0.5, repeat: Infinity, ease: 'easeInOut' }}
+                >{stage.icon}</motion.span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="font-black text-[11px] lg:text-xs text-white uppercase tracking-wider">{stage.title}</span>
+                  <span className="px-1.5 py-0.5 rounded text-[7px] lg:text-[8px] font-black tracking-widest uppercase shrink-0" style={{ color: stage.color, background: `${stage.color}15` }}>{stage.status}</span>
+                </div>
+                <p className="text-[10px] lg:text-[11px] text-white/35 leading-snug">{stage.desc}</p>
+              </div>
+            </motion.div>
+
+            {/* Connector between stages */}
+            {i < 4 && (
+              <div className="hidden lg:flex items-center justify-center py-1.5">
+                <div className="relative h-6 w-[2px]">
+                  <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-white/5 rounded-full"></div>
+                  <motion.div
+                    className="absolute w-1.5 h-1.5 rounded-full left-1/2 -translate-x-1/2"
+                    style={{ background: stage.color, boxShadow: `0 0 6px ${stage.color}60` }}
+                    animate={{ top: ['0%', '100%', '0%'] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: i * 0.4 }}
+                  />
+                </div>
+              </div>
+            )}
+          </motion.div>
         ))}
-      </svg>
+      </motion.div>
 
-      {/* Central Orb */}
-      <div id="prediction-center-orb" className="relative z-20 flex items-center justify-center pointer-events-none select-none">
-        <motion.div
-          className="absolute w-44 h-44 sm:w-80 sm:h-80 md:w-[350px] md:h-[350px] rounded-full bg-gradient-to-tr from-primary via-primary-container to-tertiary-container blur-[15px] opacity-70"
-          animate={{ scale: [1, 1.05, 1] }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <div className="relative w-32 h-32 sm:w-64 sm:h-64 md:w-80 md:h-80 rounded-full bg-gradient-to-tr from-primary via-primary-container to-[#ae9fc4] shadow-[0_0_80px_rgba(165,53,86,0.6)] sm:shadow-[0_0_150px_rgba(165,53,86,0.85)] flex items-center justify-center overflow-hidden border border-white/30">
-          <motion.span
-            className="material-symbols-outlined text-[50px] sm:text-[100px] md:text-[130px] text-white/50"
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            neurology
-          </motion.span>
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_95%,rgba(255,255,255,0.15)_95%)] bg-[length:100%_12px] opacity-40 pointer-events-none"></div>
+      {/* ─── CENTER: Neural Core Visualization ─── */}
+      <RevealOnScroll className="relative flex items-center justify-center order-1 lg:order-2 min-h-[350px] sm:min-h-[450px] lg:min-h-[580px]" variants={scaleIn}>
+        <div className="relative w-full h-full flex items-center justify-center neural-core-viz">
+
+          {/* Outer rotating ring 1 */}
+          <svg className="absolute w-[340px] h-[340px] sm:w-[440px] sm:h-[440px] lg:w-[520px] lg:h-[520px] ring-breathe" viewBox="0 0 200 200" style={{ animationDuration: '5s' }}>
+            <circle cx="100" cy="100" r="96" fill="none" stroke="rgba(165,53,86,0.12)" strokeWidth="0.5" strokeDasharray="3 12" />
+          </svg>
+
+          {/* Outer rotating ring 2 */}
+          <svg className="absolute w-[310px] h-[310px] sm:w-[400px] sm:h-[400px] lg:w-[470px] lg:h-[470px] animate-spin-slow" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="96" fill="none" stroke="rgba(255,93,143,0.15)" strokeWidth="0.75" strokeDasharray="6 18 2 12" />
+            {/* Tick marks */}
+            {Array.from({ length: 36 }).map((_, i) => {
+              const angle = (i * 10) * (Math.PI / 180);
+              const r = 96;
+              const x1 = 100 + (r - 2) * Math.cos(angle);
+              const y1 = 100 + (r - 2) * Math.sin(angle);
+              const x2 = 100 + (r + 2) * Math.cos(angle);
+              const y2 = 100 + (r + 2) * Math.sin(angle);
+              return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" />;
+            })}
+          </svg>
+
+          {/* Middle ring — counter-rotating */}
+          <svg className="absolute w-[260px] h-[260px] sm:w-[340px] sm:h-[340px] lg:w-[400px] lg:h-[400px] animate-spin-reverse" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="96" fill="none" stroke="rgba(174,159,196,0.2)" strokeWidth="1" strokeDasharray="20 8 4 8" />
+          </svg>
+
+          {/* Inner scanning ring */}
+          <svg className="absolute w-[200px] h-[200px] sm:w-[260px] sm:h-[260px] lg:w-[310px] lg:h-[310px] ring-breathe" viewBox="0 0 200 200" style={{ animationDuration: '3.5s', animationDelay: '1s' }}>
+            <circle cx="100" cy="100" r="96" fill="none" stroke="rgba(255,177,193,0.15)" strokeWidth="1.5" />
+          </svg>
+
+          {/* Radar sweep */}
+          <div className="absolute w-[200px] h-[200px] sm:w-[260px] sm:h-[260px] lg:w-[310px] lg:h-[310px] rounded-full overflow-hidden radar-line" style={{ animationDuration: '6s' }}>
+            <div className="absolute inset-0" style={{ background: 'conic-gradient(from 0deg, transparent 0deg, transparent 340deg, rgba(165,53,86,0.15) 350deg, rgba(165,53,86,0.25) 358deg, transparent 360deg)' }}></div>
+          </div>
+
+          {/* Neural connection lines (SVG mesh) */}
+          <svg className="absolute w-[300px] h-[300px] sm:w-[380px] sm:h-[380px] lg:w-[440px] lg:h-[440px] pointer-events-none" viewBox="0 0 200 200">
+            <defs>
+              <linearGradient id="neural-line-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#a53556" stopOpacity="0.3"/>
+                <stop offset="100%" stopColor="#ae9fc4" stopOpacity="0.1"/>
+              </linearGradient>
+            </defs>
+            {/* Connection lines between nodes */}
+            {[
+              'M 100 30 Q 130 65 100 100', 'M 100 170 Q 70 135 100 100',
+              'M 30 80 Q 65 90 100 100', 'M 170 120 Q 135 110 100 100',
+              'M 40 150 Q 70 125 100 100', 'M 160 50 Q 130 75 100 100',
+              'M 50 40 Q 75 70 100 100', 'M 150 160 Q 125 130 100 100',
+              'M 30 130 L 60 110', 'M 170 70 L 140 90',
+              'M 50 40 L 30 80', 'M 160 50 L 170 70',
+              'M 40 150 L 30 130', 'M 150 160 L 170 120',
+            ].map((d, i) => (
+              <path key={`conn-${i}`} d={d} stroke="url(#neural-line-grad)" strokeWidth="0.6" fill="none" className="connection-line" style={{ animationDelay: `${i * 0.3}s` }} />
+            ))}
+
+            {/* Animated data packets along connections */}
+            {[
+              { path: 'M 100 30 Q 130 65 100 100', dur: '3s', color: '#ff7b9c' },
+              { path: 'M 30 80 Q 65 90 100 100', dur: '4s', color: '#ae9fc4' },
+              { path: 'M 170 120 Q 135 110 100 100', dur: '3.5s', color: '#a53556' },
+              { path: 'M 100 170 Q 70 135 100 100', dur: '4.5s', color: '#ffb1c1' },
+              { path: 'M 40 150 Q 70 125 100 100', dur: '5s', color: '#d0c0e7' },
+              { path: 'M 160 50 Q 130 75 100 100', dur: '3.8s', color: '#ff7b9c' },
+            ].map((packet, i) => (
+              <circle key={`packet-${i}`} r="2" fill={packet.color} opacity="0.7">
+                <animateMotion dur={packet.dur} repeatCount="indefinite" path={packet.path} />
+              </circle>
+            ))}
+
+            {/* Neural nodes at fixed positions */}
+            {[
+              { cx: 100, cy: 30, r: 3 }, { cx: 100, cy: 170, r: 3 },
+              { cx: 30, cy: 80, r: 2.5 }, { cx: 170, cy: 120, r: 2.5 },
+              { cx: 40, cy: 150, r: 2 }, { cx: 160, cy: 50, r: 2 },
+              { cx: 50, cy: 40, r: 2 }, { cx: 150, cy: 160, r: 2 },
+              { cx: 30, cy: 130, r: 1.5 }, { cx: 170, cy: 70, r: 1.5 },
+              { cx: 60, cy: 110, r: 1.5 }, { cx: 140, cy: 90, r: 1.5 },
+            ].map((node, i) => (
+              <g key={`node-${i}`}>
+                <circle cx={node.cx} cy={node.cy} r={node.r * 2.5} fill={i % 3 === 0 ? '#a53556' : i % 3 === 1 ? '#ff7b9c' : '#ae9fc4'} opacity="0.08">
+                  <animate attributeName="r" values={`${node.r * 2};${node.r * 3.5};${node.r * 2}`} dur={`${3 + i * 0.5}s`} repeatCount="indefinite" />
+                </circle>
+                <circle cx={node.cx} cy={node.cy} r={node.r} fill={i % 3 === 0 ? '#a53556' : i % 3 === 1 ? '#ff7b9c' : '#ae9fc4'} opacity="0.6">
+                  <animate attributeName="opacity" values="0.4;0.8;0.4" dur={`${2 + i * 0.3}s`} repeatCount="indefinite" />
+                </circle>
+              </g>
+            ))}
+          </svg>
+
+          {/* Central Core */}
+          <div className="relative z-20 flex items-center justify-center">
+            {/* Pulse rings expanding outward */}
+            <div className="absolute w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-full border border-primary/40 core-pulse"></div>
+            <div className="absolute w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-full border border-[#ae9fc4]/30 core-pulse" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-full border border-[#ff7b9c]/20 core-pulse" style={{ animationDelay: '2s' }}></div>
+
+            {/* Core glow */}
+            <motion.div
+              className="absolute w-20 h-20 sm:w-28 sm:h-28 lg:w-36 lg:h-36 rounded-full bg-gradient-to-tr from-primary/40 via-primary-container/30 to-[#ae9fc4]/20 blur-[25px]"
+              animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.7, 0.5] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            />
+
+            {/* Core sphere */}
+            <motion.div
+              className="relative w-16 h-16 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-full bg-gradient-to-br from-primary via-primary-container to-[#ae9fc4] shadow-[0_0_60px_rgba(165,53,86,0.5)] flex items-center justify-center border border-white/20 overflow-hidden"
+              animate={{ scale: [1, 1.04, 1] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <motion.span
+                className="material-symbols-outlined text-white/60 text-[28px] sm:text-[40px] lg:text-[48px]"
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+              >neurology</motion.span>
+              {/* Scanline overlay */}
+              <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0)_97%,rgba(255,255,255,0.1)_97%)] bg-[length:100%_6px] opacity-30 pointer-events-none"></div>
+            </motion.div>
+          </div>
+
+          {/* Floating telemetry labels near the neural mesh */}
+          {[
+            { label: 'ESTROGEN', value: '↑ 12%', pos: 'top-[8%] left-[5%] sm:top-[5%] sm:left-[8%]' },
+            { label: 'CORTISOL', value: '↓ LOW', pos: 'top-[8%] right-[5%] sm:top-[5%] sm:right-[8%]' },
+            { label: 'HRV', value: '68 ms', pos: 'bottom-[8%] left-[5%] sm:bottom-[5%] sm:left-[8%]' },
+            { label: 'TEMP', value: '36.6°', pos: 'bottom-[8%] right-[5%] sm:bottom-[5%] sm:right-[8%]' },
+          ].map((tag, i) => (
+            <motion.div
+              key={tag.label}
+              className={`absolute ${tag.pos} hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm`}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.8 + i * 0.2, duration: 0.6 }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: i % 2 === 0 ? '#ff7b9c' : '#ae9fc4' }}></span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-white/30">{tag.label}</span>
+              <span className="text-[10px] font-bold text-white/60">{tag.value}</span>
+            </motion.div>
+          ))}
         </div>
-      </div>
+      </RevealOnScroll>
 
-      {/* Orbiting Cards */}
-      {[
-        { id: 1, delay: '0s', badge: t('prediction.badge1'), text: t('prediction.text1'), sub1: t('prediction.sub1_1'), sub2: t('prediction.sub1_2'), dotColor: 'bg-primary animate-ping' },
-        { id: 2, delay: '-8s', badge: t('prediction.badge2'), text: t('prediction.text2'), sub1: t('prediction.sub2_1'), sub2: t('prediction.sub2_2'), dotColor: 'bg-[#ae9fc4] animate-pulse' },
-        { id: 3, delay: '-16s', badge: t('prediction.badge3'), text: t('prediction.text3'), sub1: t('prediction.sub3_1'), sub2: t('prediction.sub3_2'), dotColor: 'bg-[#ffd9df]' },
-        { id: 4, delay: '-24s', badge: t('prediction.badge4'), text: t('prediction.text4'), sub1: t('prediction.sub4_1'), sub2: t('prediction.sub4_2'), dotColor: 'bg-primary animate-pulse' },
-      ].map(card => (
-        <div key={card.id} id={`prediction-card-${card.id}`} className="orbit-card-wrapper pointer-events-auto" style={{ animation: 'orbit-elliptical 32s linear infinite', animationDelay: card.delay }}>
+      {/* ─── RIGHT: Live Prediction Feed ─── */}
+      <motion.div
+        className="flex flex-col gap-3 order-3"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.15 }}
+        variants={staggerContainer}
+      >
+        {/* Feed header */}
+        <motion.div variants={staggerItem} className="flex items-center justify-between mb-1 px-1">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#ff7b9c] animate-pulse shadow-[0_0_8px_#ff7b9c]"></span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Live Predictions</span>
+          </div>
+          <span className="text-[9px] font-bold text-white/25 uppercase tracking-wider">Real-time</span>
+        </motion.div>
+
+        {/* Prediction cards */}
+        {[
+          { icon: 'cycle', label: 'Cycle Probability', value: '96%', visual: 'bar', barWidth: '96%', barColor: '#a53556' },
+          { icon: 'balance', label: 'Hormonal Stability', value: 'Moderate', visual: 'dot', dotColor: '#ffb1c1' },
+          { icon: 'bedtime', label: 'Sleep Recovery', value: 'Improving', visual: 'trend', trendUp: true },
+          { icon: 'bolt', label: 'Energy Projection', value: 'High Tomorrow', visual: 'dot', dotColor: '#ff7b9c' },
+          { icon: 'spa', label: 'Stress Forecast', value: 'Low', visual: 'bar', barWidth: '22%', barColor: '#ae9fc4' },
+          { icon: 'water_drop', label: 'Hydration Impact', value: 'Detected', visual: 'dot', dotColor: '#d0c0e7' },
+          { icon: 'egg_alt', label: 'Ovulation Window', value: 'Approaching', visual: 'trend', trendUp: true },
+          { icon: 'shield', label: 'Prediction Confidence', value: '92%', visual: 'bar', barWidth: '92%', barColor: '#a53556' },
+        ].map((pred, i) => (
           <motion.div
-            className="glass border-white/15 p-4 sm:p-6 rounded-2xl sm:rounded-3xl w-44 sm:w-64 text-left shadow-2xl select-none"
-            whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.2)' }}
-            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+            key={pred.label}
+            variants={staggerItem}
+            custom={i}
+            className="dark-glass p-3 sm:p-3.5 rounded-xl flex items-center gap-3 group cursor-default"
+            whileHover={{ borderColor: 'rgba(255,93,143,0.2)', backgroundColor: 'rgba(30,25,30,0.85)' }}
           >
-            <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-              <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${card.dotColor}`}></span>
-              <p className="text-white/50 font-black text-[8px] sm:text-[10px] uppercase tracking-widest">{card.badge}</p>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(165,53,86,0.1)' }}>
+              <span className="material-symbols-outlined text-[16px] text-[#ff7b9c]">{pred.icon}</span>
             </div>
-            <p className="text-white text-xs sm:text-sm md:text-lg font-bold leading-snug">{card.text}</p>
-            <div className="mt-2 sm:mt-3 flex items-center justify-between text-[9px] sm:text-[11px] text-white/40">
-              <span>{card.sub1}</span>
-              <span>{card.sub2}</span>
+            <div className="flex-1 min-w-0">
+              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-white/35 block truncate">{pred.label}</span>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-xs sm:text-sm font-black text-white/90">{pred.value}</span>
+                {pred.visual === 'trend' && (
+                  <span className="material-symbols-outlined text-[12px]" style={{ color: pred.trendUp ? '#4ade80' : '#ff7b9c' }}>
+                    {pred.trendUp ? 'trending_up' : 'trending_down'}
+                  </span>
+                )}
+                {pred.visual === 'dot' && (
+                  <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: pred.dotColor }}></span>
+                )}
+              </div>
+              {pred.visual === 'bar' && (
+                <div className="w-full h-1 bg-white/5 rounded-full mt-1.5 overflow-hidden">
+                  <motion.div
+                    className="h-full rounded-full"
+                    style={{ background: pred.barColor, width: 0 }}
+                    whileInView={{ width: pred.barWidth }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 1.5, delay: 0.5 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                  />
+                </div>
+              )}
             </div>
           </motion.div>
-        </div>
-      ))}
+        ))}
+
+        {/* Confidence summary */}
+        <motion.div
+          variants={staggerItem}
+          className="mt-2 p-3.5 rounded-xl border border-primary/15 bg-primary/[0.04] backdrop-blur-sm"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-black uppercase tracking-widest text-primary/70">Overall Confidence</span>
+            <motion.span
+              className="text-sm font-black text-primary"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 1.8, duration: 0.5 }}
+            >92%</motion.span>
+          </div>
+          <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full rounded-full bg-gradient-to-r from-primary to-[#ff7b9c]"
+              style={{ width: 0, boxShadow: '0 0 12px rgba(165,53,86,0.4)' }}
+              whileInView={{ width: '92%' }}
+              viewport={{ once: true }}
+              transition={{ duration: 2, delay: 1.5, ease: [0.22, 1, 0.36, 1] }}
+            />
+          </div>
+        </motion.div>
+      </motion.div>
     </div>
+
+    {/* ── Bottom: Horizontal Pipeline Process Bar ── */}
+    <RevealOnScroll className="w-full">
+      <div className="relative border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm rounded-2xl p-5 sm:p-6 md:p-8 overflow-hidden">
+        {/* Subtle top glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60%] h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+
+        <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 sm:gap-2">
+          {[
+            { icon: 'favorite', label: 'Health Data', color: '#ff7b9c' },
+            { icon: 'memory', label: 'AI Processing', color: '#a53556' },
+            { icon: 'psychology', label: 'Pattern Learning', color: '#ae9fc4' },
+            { icon: 'auto_awesome', label: 'Prediction Generated', color: '#ffb1c1' },
+            { icon: 'person_check', label: 'Recommendation', color: '#d0c0e7' },
+          ].map((step, i, arr) => (
+            <div key={step.label} className="flex items-center gap-2 sm:gap-3 flex-1 min-w-[130px] sm:min-w-0">
+              {/* Step */}
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                <motion.div
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border border-white/[0.06]"
+                  style={{ background: `${step.color}12` }}
+                  whileInView={{ scale: [0.8, 1] }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.15, type: 'spring', stiffness: 200 }}
+                >
+                  <motion.span
+                    className="material-symbols-outlined text-[16px] sm:text-[18px]"
+                    style={{ color: step.color }}
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 2 + i * 0.3, repeat: Infinity, ease: 'easeInOut' }}
+                  >{step.icon}</motion.span>
+                </motion.div>
+                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-white/40 whitespace-nowrap">{step.label}</span>
+              </div>
+
+              {/* Connector arrow */}
+              {i < arr.length - 1 && (
+                <div className="hidden sm:flex flex-1 items-center justify-center px-1">
+                  <div className="flex-1 h-[1px] bg-gradient-to-r from-white/10 to-white/5 relative">
+                    <motion.div
+                      className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full"
+                      style={{ background: step.color, boxShadow: `0 0 6px ${step.color}50` }}
+                      animate={{ left: ['0%', '100%'] }}
+                      transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.5 }}
+                    />
+                  </div>
+                  <span className="material-symbols-outlined text-[12px] text-white/15 mx-1">chevron_right</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </RevealOnScroll>
   </div>
 </section>
 
@@ -1703,12 +1936,7 @@ export default function LandingPage() {
   </div>
 
   <div className="relative z-10 text-center px-container-padding-mobile max-w-5xl mx-auto flex flex-col items-center py-10 sm:py-20">
-    <RevealOnScroll>
-      <div className="inline-flex items-center gap-3 px-6 py-2 sm:py-2.5 rounded-full glass border border-white/15 text-white font-bold text-xs tracking-[0.2em] mb-6 sm:mb-8 uppercase select-none">
-        <motion.span className="material-symbols-outlined text-[14px] sm:text-[16px] text-[#ff7b9c]" animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 2, repeat: Infinity }}>favorite</motion.span>
-        {t('trust.badge')}
-      </div>
-    </RevealOnScroll>
+
 
     <RevealOnScroll>
       {(() => {
