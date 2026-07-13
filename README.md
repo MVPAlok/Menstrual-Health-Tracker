@@ -1,5 +1,8 @@
+<img width="2160" height="2700" alt="nari" src="https://github.com/user-attachments/assets/7697a362-31b4-4056-99d3-0b36c628b54c" />
+
+
 <div align="center">
-  <img src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/React-Light.svg" width="60" alt="React Logo" />
+
   <h1>✨ NariCare ✨</h1>
   <p><strong>Cinematic Body Intelligence & Premium Cycle Tracking</strong></p>
   
