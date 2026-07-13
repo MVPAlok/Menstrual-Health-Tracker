@@ -2,7 +2,7 @@
 
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/React-Light.svg" width="60" alt="React Logo" />
+
   <h1>✨ NariCare ✨</h1>
   <p><strong>Cinematic Body Intelligence & Premium Cycle Tracking</strong></p>
   
