@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -83,6 +83,18 @@ function RevealOnScroll({
 
 import { SEO } from './components/SEO';
 
+// Pre-calculate tick mark coordinates for the outer rotating ring to prevent on-render calculations
+const NEURAL_TICK_MARKS = Array.from({ length: 36 }).map((_, i) => {
+  const angle = (i * 10) * (Math.PI / 180);
+  const r = 96;
+  return {
+    x1: 100 + (r - 2) * Math.cos(angle),
+    y1: 100 + (r - 2) * Math.sin(angle),
+    x2: 100 + (r + 2) * Math.cos(angle),
+    y2: 100 + (r + 2) * Math.sin(angle),
+  };
+});
+
 /* ─────────────────────────────────────────────
    Main Component
    ───────────────────────────────────────────── */
@@ -90,6 +102,20 @@ import { SEO } from './components/SEO';
 export default function LandingPage({ scrollTarget }: { scrollTarget?: string }) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+
+  // Memoize random particle properties to prevent layout recalculation on each render
+  const predictionParticles = useMemo(() => {
+    return Array.from({ length: 30 }).map((_, i) => ({
+      width: 1.5 + Math.random() * 2.5,
+      height: 1.5 + Math.random() * 2.5,
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      background: i % 3 === 0 ? '#a53556' : i % 3 === 1 ? '#ff7b9c' : '#ae9fc4',
+      opacity: 0.2 + Math.random() * 0.3,
+      delay: Math.random() * 8,
+      duration: 6 + Math.random() * 6,
+    }));
+  }, []);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activePhase, setActivePhase] = useState('follicular');
@@ -1122,43 +1148,62 @@ export default function LandingPage({ scrollTarget }: { scrollTarget?: string })
 
   {/* Volumetric gradient blobs */}
   <motion.div
-    className="absolute top-[10%] left-[5%] w-[500px] h-[500px] rounded-full bg-primary/15 blur-[180px] z-0"
+    className="absolute top-[10%] left-[5%] w-[500px] h-[500px] rounded-full z-0 pointer-events-none will-change-transform transform-gpu"
+    style={{
+      background: 'radial-gradient(circle, rgba(165, 53, 86, 0.15) 0%, rgba(165, 53, 86, 0) 70%)',
+      willChange: 'transform, opacity'
+    }}
     animate={{ scale: [1, 1.3, 1], opacity: [0.12, 0.2, 0.12] }}
     transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
   />
   <motion.div
-    className="absolute top-[40%] right-[10%] w-[600px] h-[600px] rounded-full bg-[#ae9fc4]/12 blur-[200px] z-0"
+    className="absolute top-[40%] right-[10%] w-[600px] h-[600px] rounded-full z-0 pointer-events-none will-change-transform transform-gpu"
+    style={{
+      background: 'radial-gradient(circle, rgba(174, 159, 196, 0.12) 0%, rgba(174, 159, 196, 0) 70%)',
+      willChange: 'transform, opacity'
+    }}
     animate={{ scale: [1, 1.15, 1], opacity: [0.1, 0.18, 0.1] }}
     transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
   />
   <motion.div
-    className="absolute bottom-[5%] left-[30%] w-[400px] h-[400px] rounded-full bg-[#ff7b9c]/10 blur-[160px] z-0"
+    className="absolute bottom-[5%] left-[30%] w-[400px] h-[400px] rounded-full z-0 pointer-events-none will-change-transform transform-gpu"
+    style={{
+      background: 'radial-gradient(circle, rgba(255, 123, 156, 0.1) 0%, rgba(255, 123, 156, 0) 70%)',
+      willChange: 'transform, opacity'
+    }}
     animate={{ scale: [1, 1.2, 1], opacity: [0.08, 0.15, 0.08] }}
     transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 5 }}
   />
 
   {/* Floating background particles */}
-  <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-    {Array.from({ length: 30 }).map((_, i) => (
+  <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden transform-gpu" style={{ willChange: 'transform' }}>
+    {predictionParticles.map((p, i) => (
       <div
         key={`particle-${i}`}
         className="absolute rounded-full prediction-particle"
         style={{
-          width: `${1.5 + Math.random() * 2.5}px`,
-          height: `${1.5 + Math.random() * 2.5}px`,
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 100}%`,
-          background: i % 3 === 0 ? '#a53556' : i % 3 === 1 ? '#ff7b9c' : '#ae9fc4',
-          opacity: 0.2 + Math.random() * 0.3,
-          animationDelay: `${Math.random() * 8}s`,
-          animationDuration: `${6 + Math.random() * 6}s`,
+          width: `${p.width}px`,
+          height: `${p.height}px`,
+          left: `${p.left}%`,
+          top: `${p.top}%`,
+          background: p.background,
+          opacity: p.opacity,
+          animationDelay: `${p.delay}s`,
+          animationDuration: `${p.duration}s`,
         }}
       />
     ))}
   </div>
 
   {/* Subtle noise overlay */}
-  <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', backgroundSize: '128px 128px' }}></div>
+  <div
+    className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none transform-gpu"
+    style={{
+      backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")',
+      backgroundSize: '128px 128px',
+      willChange: 'transform'
+    }}
+  />
 
   <div className="px-container-padding-mobile md:px-container-padding-desktop max-w-[1400px] mx-auto w-full relative z-10">
 
@@ -1237,42 +1282,36 @@ export default function LandingPage({ scrollTarget }: { scrollTarget?: string })
         <div className="relative w-full h-full flex items-center justify-center neural-core-viz">
 
           {/* Outer rotating ring 1 */}
-          <svg className="absolute w-[340px] h-[340px] sm:w-[440px] sm:h-[440px] lg:w-[520px] lg:h-[520px] ring-breathe" viewBox="0 0 200 200" style={{ animationDuration: '5s' }}>
+          <svg className="absolute w-[340px] h-[340px] sm:w-[440px] sm:h-[440px] lg:w-[520px] lg:h-[520px] ring-breathe transform-gpu" viewBox="0 0 200 200" style={{ animationDuration: '5s', willChange: 'transform, opacity' }}>
             <circle cx="100" cy="100" r="96" fill="none" stroke="rgba(165,53,86,0.12)" strokeWidth="0.5" strokeDasharray="3 12" />
           </svg>
 
           {/* Outer rotating ring 2 */}
-          <svg className="absolute w-[310px] h-[310px] sm:w-[400px] sm:h-[400px] lg:w-[470px] lg:h-[470px] animate-spin-slow" viewBox="0 0 200 200">
+          <svg className="absolute w-[310px] h-[310px] sm:w-[400px] sm:h-[400px] lg:w-[470px] lg:h-[470px] animate-spin-slow transform-gpu" viewBox="0 0 200 200" style={{ willChange: 'transform' }}>
             <circle cx="100" cy="100" r="96" fill="none" stroke="rgba(255,93,143,0.15)" strokeWidth="0.75" strokeDasharray="6 18 2 12" />
             {/* Tick marks */}
-            {Array.from({ length: 36 }).map((_, i) => {
-              const angle = (i * 10) * (Math.PI / 180);
-              const r = 96;
-              const x1 = 100 + (r - 2) * Math.cos(angle);
-              const y1 = 100 + (r - 2) * Math.sin(angle);
-              const x2 = 100 + (r + 2) * Math.cos(angle);
-              const y2 = 100 + (r + 2) * Math.sin(angle);
-              return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" />;
-            })}
+            {NEURAL_TICK_MARKS.map((tick, i) => (
+              <line key={i} x1={tick.x1} y1={tick.y1} x2={tick.x2} y2={tick.y2} stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" />
+            ))}
           </svg>
 
           {/* Middle ring — counter-rotating */}
-          <svg className="absolute w-[260px] h-[260px] sm:w-[340px] sm:h-[340px] lg:w-[400px] lg:h-[400px] animate-spin-reverse" viewBox="0 0 200 200">
+          <svg className="absolute w-[260px] h-[260px] sm:w-[340px] sm:h-[340px] lg:w-[400px] lg:h-[400px] animate-spin-reverse transform-gpu" viewBox="0 0 200 200" style={{ willChange: 'transform' }}>
             <circle cx="100" cy="100" r="96" fill="none" stroke="rgba(174,159,196,0.2)" strokeWidth="1" strokeDasharray="20 8 4 8" />
           </svg>
 
           {/* Inner scanning ring */}
-          <svg className="absolute w-[200px] h-[200px] sm:w-[260px] sm:h-[260px] lg:w-[310px] lg:h-[310px] ring-breathe" viewBox="0 0 200 200" style={{ animationDuration: '3.5s', animationDelay: '1s' }}>
+          <svg className="absolute w-[200px] h-[200px] sm:w-[260px] sm:h-[260px] lg:w-[310px] lg:h-[310px] ring-breathe transform-gpu" viewBox="0 0 200 200" style={{ animationDuration: '3.5s', animationDelay: '1s', willChange: 'transform, opacity' }}>
             <circle cx="100" cy="100" r="96" fill="none" stroke="rgba(255,177,193,0.15)" strokeWidth="1.5" />
           </svg>
 
           {/* Radar sweep */}
-          <div className="absolute w-[200px] h-[200px] sm:w-[260px] sm:h-[260px] lg:w-[310px] lg:h-[310px] rounded-full overflow-hidden radar-line" style={{ animationDuration: '6s' }}>
+          <div className="absolute w-[200px] h-[200px] sm:w-[260px] sm:h-[260px] lg:w-[310px] lg:h-[310px] rounded-full overflow-hidden radar-line transform-gpu" style={{ animationDuration: '6s', willChange: 'transform' }}>
             <div className="absolute inset-0" style={{ background: 'conic-gradient(from 0deg, transparent 0deg, transparent 340deg, rgba(165,53,86,0.15) 350deg, rgba(165,53,86,0.25) 358deg, transparent 360deg)' }}></div>
           </div>
 
           {/* Neural connection lines (SVG mesh) */}
-          <svg className="absolute w-[300px] h-[300px] sm:w-[380px] sm:h-[380px] lg:w-[440px] lg:h-[440px] pointer-events-none" viewBox="0 0 200 200">
+          <svg className="absolute w-[300px] h-[300px] sm:w-[380px] sm:h-[380px] lg:w-[440px] lg:h-[440px] pointer-events-none transform-gpu" viewBox="0 0 200 200" style={{ willChange: 'transform' }}>
             <defs>
               <linearGradient id="neural-line-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#a53556" stopOpacity="0.3"/>
@@ -1316,12 +1355,28 @@ export default function LandingPage({ scrollTarget }: { scrollTarget?: string })
               { cx: 60, cy: 110, r: 1.5 }, { cx: 140, cy: 90, r: 1.5 },
             ].map((node, i) => (
               <g key={`node-${i}`}>
-                <circle cx={node.cx} cy={node.cy} r={node.r * 2.5} fill={i % 3 === 0 ? '#a53556' : i % 3 === 1 ? '#ff7b9c' : '#ae9fc4'} opacity="0.08">
-                  <animate attributeName="r" values={`${node.r * 2};${node.r * 3.5};${node.r * 2}`} dur={`${3 + i * 0.5}s`} repeatCount="indefinite" />
-                </circle>
-                <circle cx={node.cx} cy={node.cy} r={node.r} fill={i % 3 === 0 ? '#a53556' : i % 3 === 1 ? '#ff7b9c' : '#ae9fc4'} opacity="0.6">
-                  <animate attributeName="opacity" values="0.4;0.8;0.4" dur={`${2 + i * 0.3}s`} repeatCount="indefinite" />
-                </circle>
+                <circle
+                  cx={node.cx}
+                  cy={node.cy}
+                  r={node.r * 2.5}
+                  fill={i % 3 === 0 ? '#a53556' : i % 3 === 1 ? '#ff7b9c' : '#ae9fc4'}
+                  className="node-outer-anim"
+                  style={{
+                    animationDuration: `${3 + i * 0.5}s`,
+                    animationDelay: `${i * 0.2}s`,
+                  }}
+                />
+                <circle
+                  cx={node.cx}
+                  cy={node.cy}
+                  r={node.r}
+                  fill={i % 3 === 0 ? '#a53556' : i % 3 === 1 ? '#ff7b9c' : '#ae9fc4'}
+                  className="node-inner-anim"
+                  style={{
+                    animationDuration: `${2 + i * 0.3}s`,
+                    animationDelay: `${i * 0.15}s`,
+                  }}
+                />
               </g>
             ))}
           </svg>

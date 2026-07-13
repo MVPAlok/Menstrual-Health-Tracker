@@ -62,15 +62,15 @@ html.lenis body {
 
 /* ─── Dark Glass ─── */
 .dark-glass {
-  background: rgba(20, 18, 20, 0.65);
-  backdrop-filter: blur(24px) saturate(140%);
-  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  background: rgba(20, 18, 20, 0.88);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 12px 40px -4px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.05);
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .dark-glass:hover {
-  background: rgba(30, 25, 30, 0.85);
+  background: rgba(30, 25, 30, 0.95);
   border-color: rgba(255, 93, 143, 0.25);
   box-shadow: 0 16px 48px -4px rgba(165, 53, 86, 0.15);
 }
@@ -250,26 +250,63 @@ html.lenis body {
 
 .prediction-particle {
   animation: particle-float 8s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 .neural-node {
   animation: neural-drift 12s ease-in-out infinite;
+  will-change: transform;
 }
 
 .core-pulse {
   animation: core-pulse-ring 3s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+  will-change: transform, opacity;
 }
 
 .radar-line {
   animation: radar-sweep 8s linear infinite;
+  will-change: transform;
 }
 
 .connection-line {
   animation: connection-pulse 3s ease-in-out infinite;
+  will-change: opacity;
 }
 
 .ring-breathe {
   animation: ring-breathe 4s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* SVG Neural Nodes GPU animations */
+@keyframes node-pulse-outer {
+  0%, 100% { transform: scale(1); opacity: 0.08; }
+  50% { transform: scale(1.4); opacity: 0.18; }
+}
+
+@keyframes node-pulse-inner {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.85; }
+}
+
+.node-outer-anim {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: node-pulse-outer 3s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.node-inner-anim {
+  animation: node-pulse-inner 2s ease-in-out infinite;
+  will-change: opacity;
+}
+
+/* GPU promotion utilities */
+.will-change-transform {
+  will-change: transform;
+}
+.transform-gpu {
+  transform: translate3d(0, 0, 0);
 }
 
 /* ─── CSS 3D iPhone container ─── */

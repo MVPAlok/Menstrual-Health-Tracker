@@ -186,6 +186,20 @@ const defaultOnboarding: OnboardingData = {
   onboardingCompleted: false,
 };
 
+const saveUserToLocalStorage = (userData: UserProfile) => {
+  try {
+    localStorage.setItem('naricare_user', JSON.stringify(userData));
+  } catch (err) {
+    console.error('Failed to save user in localStorage (quota exceeded), trying without profile image:', err);
+    try {
+      const strippedUser = { ...userData, profileImage: '' };
+      localStorage.setItem('naricare_user', JSON.stringify(strippedUser));
+    } catch (innerErr) {
+      console.error('Failed to save user in localStorage completely:', innerErr);
+    }
+  }
+};
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -388,7 +402,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const loginUser = async (firstName: string, lastName: string, password: string) => {
     const res = await api.auth.login({ firstName, lastName, password });
     localStorage.setItem('naricare_token', res.token);
-    localStorage.setItem('naricare_user', JSON.stringify(res.user));
+    saveUserToLocalStorage(res.user);
     
     setUser(res.user);
     if (res.onboarding) {
@@ -434,7 +448,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const registerUser = async (firstName: string, lastName: string, password: string) => {
     const res = await api.auth.register({ firstName, lastName, password });
     localStorage.setItem('naricare_token', res.token);
-    localStorage.setItem('naricare_user', JSON.stringify(res.user));
+    saveUserToLocalStorage(res.user);
     
     setUser(res.user);
     if (res.onboarding) {
@@ -571,13 +585,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await api.auth.updateProfileImage(image);
       const updatedUser = { ...user, profileImage: res.profileImage };
       setUser(updatedUser);
-      localStorage.setItem('naricare_user', JSON.stringify(updatedUser));
+      saveUserToLocalStorage(updatedUser);
     } catch (err) {
       console.error("Failed to persist profile image:", err);
       // Fallback
       const updatedUser = { ...user, profileImage: image };
       setUser(updatedUser);
-      localStorage.setItem('naricare_user', JSON.stringify(updatedUser));
+      saveUserToLocalStorage(updatedUser);
     }
   };
 
