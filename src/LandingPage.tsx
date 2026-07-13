@@ -178,8 +178,8 @@ export default function LandingPage({ scrollTarget }: { scrollTarget?: string })
     }
     // Default home page metadata
     return {
-      title: "AI Period Tracker & Menstrual Cycle Calendar | NariCare",
-      description: "NariCare is the premier AI period tracker and menstrual cycle calendar. Track your period, predict symptoms, and log hormonal patterns dynamically with 100% privacy.",
+      title: "NariCare | AI Women's Health & Smart Period Tracker",
+      description: "NariCare is an AI-powered biological intelligence platform and period tracker helping women understand cycles, predict symptoms, and track health patterns dynamically.",
       canonicalUrl: "https://www.naricaree.com/",
       schema: [
         {
@@ -762,17 +762,6 @@ export default function LandingPage({ scrollTarget }: { scrollTarget?: string })
   </motion.div>
 
   <div className="relative z-10 text-center max-w-5xl px-container-padding-mobile mx-auto mt-4 sm:mt-10">
-    {/* Visually stunning SEO pill badge */}
-    <motion.div
-      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/20 bg-primary/[0.03] text-primary text-[10px] sm:text-xs font-black tracking-widest uppercase mb-5 sm:mb-8"
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.6, delay: 0.2 }}
-    >
-      <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_#a53556]"></span>
-      <span>{t('hero.badge')}</span>
-    </motion.div>
-
     <motion.h1
       className="font-hero-display-mobile md:font-hero-display text-[32px] xs:text-[38px] sm:text-5xl md:text-hero-display mb-4 sm:mb-6 tracking-tighter text-on-background drop-shadow-sm"
       initial={{ opacity: 0, y: 60 }}
