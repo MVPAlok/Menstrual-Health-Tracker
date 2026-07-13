@@ -185,6 +185,7 @@ export default function LandingPage({ scrollTarget }: { scrollTarget?: string })
         {
           "@context": "https://schema.org",
           "@type": "Organization",
+          "@id": "https://www.naricaree.com/#organization",
           "name": "NariCare",
           "url": "https://www.naricaree.com",
           "logo": "https://www.naricaree.com/favicon.svg",
@@ -194,7 +195,6 @@ export default function LandingPage({ scrollTarget }: { scrollTarget?: string })
           ],
           "contactPoint": {
             "@type": "ContactPoint",
-            "telephone": "",
             "contactType": "customer support",
             "email": "hello@naricaree.com"
           }
@@ -202,8 +202,18 @@ export default function LandingPage({ scrollTarget }: { scrollTarget?: string })
         {
           "@context": "https://schema.org",
           "@type": "WebSite",
+          "@id": "https://www.naricaree.com/#website",
           "name": "NariCare",
           "url": "https://www.naricaree.com",
+          "publisher": {
+            "@id": "https://www.naricaree.com/#organization"
+          },
+          "creator": {
+            "@id": "https://www.naricaree.com/#creator"
+          },
+          "author": {
+            "@id": "https://www.naricaree.com/#creator"
+          },
           "potentialAction": {
             "@type": "SearchAction",
             "target": "https://www.naricaree.com/?s={search_term_string}",
@@ -213,12 +223,24 @@ export default function LandingPage({ scrollTarget }: { scrollTarget?: string })
         {
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
+          "@id": "https://www.naricaree.com/#software",
           "name": "NariCare",
+          "url": "https://www.naricaree.com",
           "operatingSystem": "All",
           "applicationCategory": "HealthApplication",
+          "description": "NariCare is an AI-powered biological intelligence platform and period tracker helping women understand cycles, predict symptoms, and track health patterns dynamically.",
           "offers": {
             "@type": "Offer",
             "price": "0"
+          },
+          "publisher": {
+            "@id": "https://www.naricaree.com/#organization"
+          },
+          "creator": {
+            "@id": "https://www.naricaree.com/#creator"
+          },
+          "author": {
+            "@id": "https://www.naricaree.com/#creator"
           }
         },
         {
@@ -230,9 +252,26 @@ export default function LandingPage({ scrollTarget }: { scrollTarget?: string })
         {
           "@context": "https://schema.org",
           "@type": "Person",
+          "@id": "https://www.naricaree.com/#creator",
           "name": "Alok Yadav",
           "jobTitle": "UI/UX Designer & Product Designer & Frontend Developer",
-          "url": "https://www.linkedin.com/in/alokyadavdesigner/"
+          "url": "https://www.linkedin.com/in/alokyadavdesigner/",
+          "image": "https://www.naricaree.com/trust-bg.png",
+          "sameAs": [
+            "https://www.linkedin.com/in/alokyadavdesigner/",
+            "https://github.com/MVPAlok",
+            "https://contra.com/alokyadav"
+          ],
+          "knowsAbout": [
+            "UI/UX Design",
+            "Product Design",
+            "Frontend Development",
+            "Menstrual Health Technology",
+            "Women's Wellness Applications"
+          ],
+          "worksFor": {
+            "@id": "https://www.naricaree.com/#organization"
+          }
         }
       ]
     };
