@@ -56,7 +56,7 @@ To make this frontend fully functional in real-time, setup the Neon database, Pr
 To get a local copy up and running, follow these simple steps.
 
 ### Prerequisites
-Make sure you have Node.js and npm installed.
+Make sure you have Node.js and npm installed..
 
 ### Installation
 
