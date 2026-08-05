@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
 import { createAdapter } from '@socket.io/redis-adapter';
-import { redisClient } from './config/redis';
+import { redisClient, isRedisConnected } from './config/redis';
 import authRoutes from './routes/authRoutes';
 import onboardingRoutes from './routes/onboardingRoutes';
 import logRoutes from './routes/logRoutes';
@@ -25,10 +25,10 @@ dotenv.config();
 const app = express();
 const httpServer = createServer(app);
 
-// Configure Redis-backed API Rate Limiter (Fallback to memory store if Redis is unavailable)
-const apiRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // Limit each IP to 300 requests per windowMs
+// Configure Redis-backed API Rate Limiter with instant Memory fallback if Redis is offline
+const redisRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests from this IP, please try again after 15 minutes.' },
@@ -37,6 +37,21 @@ const apiRateLimiter = rateLimit({
     sendCommand: (...args: string[]) => redisClient.call(...args),
   }),
 });
+
+const memoryRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests from this IP, please try again after 15 minutes.' },
+});
+
+const apiRateLimiter = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (isRedisConnected) {
+    return redisRateLimiter(req, res, next);
+  }
+  return memoryRateLimiter(req, res, next);
+};
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -75,13 +90,15 @@ const io = new Server(httpServer, {
 });
 
 // Configure Socket.io Redis Adapter for cross-server real-time pub/sub sync
-try {
-  const pubClient = redisClient.duplicate();
-  const subClient = redisClient.duplicate();
-  io.adapter(createAdapter(pubClient, subClient));
-  console.log('⚡ [Socket.io] Redis Pub/Sub adapter connected');
-} catch (e) {
-  console.warn('⚠️ [Socket.io] Failed to connect Redis adapter, falling back to default memory adapter');
+if (isRedisConnected) {
+  try {
+    const pubClient = redisClient.duplicate();
+    const subClient = redisClient.duplicate();
+    io.adapter(createAdapter(pubClient, subClient));
+    console.log('⚡ [Socket.io] Redis Pub/Sub adapter connected');
+  } catch (e) {
+    console.warn('⚠️ [Socket.io] Failed to connect Redis adapter, falling back to default memory adapter');
+  }
 }
 
 // Bind WebSocket event listeners
@@ -91,13 +108,16 @@ setSocketIoInstance(io);
 // Initialize background cron for real-time notification alerts
 startNotificationScheduler(io);
 
-// Start BullMQ background worker for Push Notifications
-try {
-  startNotificationWorker();
-  console.log('⚡ [BullMQ] Notification worker running');
-} catch (e) {
-  console.warn('⚠️ [BullMQ] Failed to start notification worker');
+// Start BullMQ background worker for Push Notifications only if Redis is connected
+if (isRedisConnected) {
+  try {
+    startNotificationWorker();
+    console.log('⚡ [BullMQ] Notification worker running');
+  } catch (e) {
+    console.warn('⚠️ [BullMQ] Failed to start notification worker');
+  }
 }
+
 
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {

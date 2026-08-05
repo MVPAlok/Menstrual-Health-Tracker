@@ -158,7 +158,8 @@ export const triggerNotification = async (
   return notification;
 };
 
-import { notificationQueue } from '../queues/notificationQueue';
+import { getNotificationQueue } from '../queues/notificationQueue';
+import { isRedisConnected } from '../config/redis';
 
 /**
  * Direct execution of push notification sending logic
@@ -220,8 +221,13 @@ export const sendPushNotification = async (
   body: string,
   actionUrl: string = ''
 ) => {
+  if (!isRedisConnected) {
+    return await sendPushNotificationDirect(userId, title, body, actionUrl);
+  }
+
   try {
-    await notificationQueue.add('send-push', {
+    const queue = getNotificationQueue();
+    await queue.add('send-push', {
       userId,
       title,
       body,
@@ -229,9 +235,9 @@ export const sendPushNotification = async (
     });
     console.log(`📥 [BullMQ] Enqueued push notification job for user:${userId}`);
   } catch (err) {
-    // If BullMQ / Redis is not reachable, fall back to direct sync dispatching
     console.warn(`⚠️ [BullMQ] Enqueue failed, falling back to direct push notification delivery:`, err);
     await sendPushNotificationDirect(userId, title, body, actionUrl);
   }
 };
+
 
