@@ -57,6 +57,7 @@ html.lenis body {
 .text-gradient {
   background: linear-gradient(135deg, #a53556 0%, #ff7b9c 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -512,6 +513,7 @@ section {
   padding: 1px;
   background: linear-gradient(135deg, rgba(165, 53, 86, 0.15), rgba(174, 159, 196, 0.1), rgba(255, 255, 255, 0.3));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
