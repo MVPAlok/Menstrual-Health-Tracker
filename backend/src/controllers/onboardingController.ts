@@ -3,12 +3,25 @@ import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import prisma from '../prisma';
 import { SleepType, StressType, ActivityType, HydrationType } from '@prisma/client';
 
+import { redisClient } from '../config/redis';
+import { invalidateAnalyticsCache } from '../services/analyticsService';
+
 export const getOnboarding = async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.userId;
 
   if (!userId) {
     return res.status(401).json({ error: 'Unauthorized.' });
   }
+
+  const cacheKey = `onboarding:${userId}`;
+
+  try {
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      console.log(`⚡ [Redis Cache] Hit for ${cacheKey}`);
+      return res.status(200).json(JSON.parse(cached));
+    }
+  } catch (e) {}
 
   try {
     const onboarding = await prisma.onboarding.findUnique({
@@ -18,6 +31,10 @@ export const getOnboarding = async (req: AuthenticatedRequest, res: Response) =>
     if (!onboarding) {
       return res.status(404).json({ error: 'Onboarding records not found for this user.' });
     }
+
+    try {
+      await redisClient.setex(cacheKey, 86400, JSON.stringify(onboarding));
+    } catch (e) {}
 
     return res.status(200).json(onboarding);
   } catch (error) {
@@ -87,6 +104,11 @@ export const calibrate = async (req: AuthenticatedRequest, res: Response) => {
       },
     });
 
+    try {
+      await redisClient.del(`onboarding:${userId}`);
+      await invalidateAnalyticsCache(userId);
+    } catch (e) {}
+
     return res.status(200).json({
       message: 'Onboarding profile successfully calibrated.',
       onboarding,
@@ -96,3 +118,4 @@ export const calibrate = async (req: AuthenticatedRequest, res: Response) => {
     return res.status(500).json({ error: 'Server error persisting calibration data.' });
   }
 };
+

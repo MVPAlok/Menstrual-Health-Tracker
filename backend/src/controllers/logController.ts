@@ -3,6 +3,8 @@ import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import prisma from '../prisma';
 import { Mood, MenstrualFlow } from '@prisma/client';
 import { triggerNotification } from '../services/notificationService';
+import { invalidateAnalyticsCache } from '../services/analyticsService';
+
 
 export const getLogsRange = async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.userId;
@@ -258,6 +260,8 @@ export const saveLog = async (req: AuthenticatedRequest, res: Response) => {
       }
     }
 
+    await invalidateAnalyticsCache(userId);
+
     return res.status(200).json({
       message: 'Daily telemetry log saved successfully.',
       log: {
@@ -299,6 +303,8 @@ export const deleteLog = async (req: AuthenticatedRequest, res: Response) => {
         }
       }
     });
+
+    await invalidateAnalyticsCache(userId);
 
     return res.status(200).json({ message: 'Daily telemetry log deleted successfully.' });
   } catch (error: any) {
@@ -365,6 +371,8 @@ export const duplicateLog = async (req: AuthenticatedRequest, res: Response) => 
         hrv: precedingLog.hrv
       }
     });
+
+    await invalidateAnalyticsCache(userId);
 
     return res.status(200).json({
       message: 'Telemetry duplicated successfully.',

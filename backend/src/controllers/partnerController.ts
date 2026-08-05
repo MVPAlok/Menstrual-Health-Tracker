@@ -110,6 +110,10 @@ export const pair = async (req: AuthenticatedRequest, res: Response) => {
       console.error('Failed to trigger partner connection notifications:', err);
     }
 
+    try {
+      await redisClient.del(`partner:status:${userId}`, `partner:status:${pendingSync.initiatorId}`);
+    } catch (e) {}
+
     return res.status(200).json({
       message: 'Successfully paired with partner.',
       partner: {
@@ -148,11 +152,21 @@ export const unlink = async (req: AuthenticatedRequest, res: Response) => {
       where: { id: activeSync.id },
     });
 
+    try {
+      await redisClient.del(
+        `partner:status:${userId}`,
+        `partner:status:${activeSync.initiatorId}`,
+        `partner:status:${activeSync.receiverId || ''}`
+      );
+    } catch (e) {}
+
     return res.status(200).json({ message: 'Partner link severed successfully.' });
   } catch (error) {
     return res.status(500).json({ error: 'Server error disconnecting partner.' });
   }
 };
+
+import { redisClient } from '../config/redis';
 
 export const getPartnerStatus = async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.userId;
@@ -160,6 +174,16 @@ export const getPartnerStatus = async (req: AuthenticatedRequest, res: Response)
   if (!userId) {
     return res.status(401).json({ error: 'Unauthorized.' });
   }
+
+  const cacheKey = `partner:status:${userId}`;
+
+  try {
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      console.log(`⚡ [Redis Cache] Hit for ${cacheKey}`);
+      return res.status(200).json(JSON.parse(cached));
+    }
+  } catch (e) {}
 
   try {
     const activeSync = await prisma.partnerSync.findFirst({
@@ -180,13 +204,17 @@ export const getPartnerStatus = async (req: AuthenticatedRequest, res: Response)
     });
 
     if (!activeSync) {
-      return res.status(200).json({ paired: false });
+      const resp = { paired: false };
+      try { await redisClient.setex(cacheKey, 3600, JSON.stringify(resp)); } catch (e) {}
+      return res.status(200).json(resp);
     }
 
     const rawPartner = activeSync.initiatorId === userId ? activeSync.receiver : activeSync.initiator;
 
     if (!rawPartner) {
-      return res.status(200).json({ paired: false });
+      const resp = { paired: false };
+      try { await redisClient.setex(cacheKey, 3600, JSON.stringify(resp)); } catch (e) {}
+      return res.status(200).json(resp);
     }
 
     const partner = {
@@ -194,12 +222,17 @@ export const getPartnerStatus = async (req: AuthenticatedRequest, res: Response)
       name: `${rawPartner.firstName} ${rawPartner.lastName}`
     };
 
-    return res.status(200).json({
+    const resp = {
       paired: true,
       syncId: activeSync.id,
       partner,
-    });
+    };
+
+    try { await redisClient.setex(cacheKey, 3600, JSON.stringify(resp)); } catch (e) {}
+
+    return res.status(200).json(resp);
   } catch (error) {
     return res.status(500).json({ error: 'Server error retrieving partner status.' });
   }
 };
+

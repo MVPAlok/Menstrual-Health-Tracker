@@ -4,6 +4,8 @@ import { calculatePredictions } from '../services/cycleEngine';
 import { getProfileStats as getProfileStatsService, getCycleComparison as getCycleComparisonService, getRecentChanges as getRecentChangesService } from '../services/analyticsService';
 import { generateCSVReport, generateDoctorHTMLReport } from '../services/reportsService';
 
+import { redisClient } from '../config/redis';
+
 export const getForecast = async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.userId;
   const { offset } = req.query;
@@ -14,13 +16,29 @@ export const getForecast = async (req: AuthenticatedRequest, res: Response) => {
 
   try {
     const offsetDays = offset ? Math.max(0, parseInt(String(offset), 10)) : 0;
+    const cacheKey = `predictions:${userId}:${offsetDays}`;
+
+    try {
+      const cached = await redisClient.get(cacheKey);
+      if (cached) {
+        console.log(`⚡ [Redis Cache] Hit for ${cacheKey}`);
+        return res.status(200).json(JSON.parse(cached));
+      }
+    } catch (e) {}
+
     const forecast = await calculatePredictions(userId, offsetDays);
+
+    try {
+      await redisClient.setex(cacheKey, 43200, JSON.stringify(forecast)); // 12h TTL
+    } catch (e) {}
+
     return res.status(200).json(forecast);
   } catch (error: any) {
     console.error('Error generating cycle forecast:', error);
     return res.status(500).json({ error: error.message || 'Server error generating predictions.' });
   }
 };
+
 
 export const getProfileStats = async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.userId;

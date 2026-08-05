@@ -3,6 +3,10 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
+import RedisStore from 'rate-limit-redis';
+import { createAdapter } from '@socket.io/redis-adapter';
+import { redisClient } from './config/redis';
 import authRoutes from './routes/authRoutes';
 import onboardingRoutes from './routes/onboardingRoutes';
 import logRoutes from './routes/logRoutes';
@@ -14,21 +18,28 @@ import { authenticateToken } from './middleware/authMiddleware';
 import { registerSocketHandlers } from './sockets/syncSocket';
 import { startNotificationScheduler } from './services/notificationEngine';
 import { setSocketIoInstance } from './services/notificationService';
+import { startNotificationWorker } from './workers/notificationWorker';
 
 dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
 
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
-if (process.env.CLIENT_URL) {
-  allowedOrigins.push(process.env.CLIENT_URL);
-}
+// Configure Redis-backed API Rate Limiter (Fallback to memory store if Redis is unavailable)
+const apiRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300, // Limit each IP to 300 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests from this IP, please try again after 15 minutes.' },
+  store: new RedisStore({
+    // @ts-ignore
+    sendCommand: (...args: string[]) => redisClient.call(...args),
+  }),
+});
 
-// Enable CORS for frontend Vite client dev and production URLs
 app.use(cors({
   origin: (origin, callback) => {
-    // Dynamically allow any origin to prevent CORS deployment errors
     callback(null, true);
   },
   credentials: true
@@ -36,6 +47,9 @@ app.use(cors({
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Apply rate limiter to all API endpoints
+app.use('/api', apiRateLimiter);
 
 // REST Route Registrations
 app.use('/api/auth', authRoutes);
@@ -47,11 +61,10 @@ app.use('/api/notifications', notificationRoutes);
 app.get('/api/notification-preferences', authenticateToken, getNotificationPreferences);
 app.patch('/api/notification-preferences', authenticateToken, updateNotificationPreferences);
 
-// Socket.io initialization with custom ping configurations for quick reconnections
+// Socket.io initialization with custom ping configurations
 const io = new Server(httpServer, {
   cors: {
     origin: (origin, callback) => {
-      // Dynamically allow any origin to prevent CORS deployment errors
       callback(null, true);
     },
     methods: ['GET', 'POST'],
@@ -61,12 +74,30 @@ const io = new Server(httpServer, {
   pingInterval: 25000
 });
 
+// Configure Socket.io Redis Adapter for cross-server real-time pub/sub sync
+try {
+  const pubClient = redisClient.duplicate();
+  const subClient = redisClient.duplicate();
+  io.adapter(createAdapter(pubClient, subClient));
+  console.log('⚡ [Socket.io] Redis Pub/Sub adapter connected');
+} catch (e) {
+  console.warn('⚠️ [Socket.io] Failed to connect Redis adapter, falling back to default memory adapter');
+}
+
 // Bind WebSocket event listeners
 registerSocketHandlers(io);
 setSocketIoInstance(io);
 
 // Initialize background cron for real-time notification alerts
 startNotificationScheduler(io);
+
+// Start BullMQ background worker for Push Notifications
+try {
+  startNotificationWorker();
+  console.log('⚡ [BullMQ] Notification worker running');
+} catch (e) {
+  console.warn('⚠️ [BullMQ] Failed to start notification worker');
+}
 
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {

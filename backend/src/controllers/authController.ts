@@ -126,3 +126,24 @@ export const updateProfileImage = async (req: AuthenticatedRequest, res: Respons
     return res.status(500).json({ error: 'Server error encountered while updating profile image.' });
   }
 };
+
+import { redisClient } from '../config/redis';
+
+export const logout = async (req: AuthenticatedRequest, res: Response) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token) {
+    try {
+      // Blacklist token in Redis for 7 days (604800 seconds)
+      await redisClient.setex(`blacklist:${token}`, 604800, 'true');
+      console.log('🔒 [Redis Blacklist] Token invalidated successfully');
+    } catch (e) {
+      console.error('Failed to blacklist token in Redis', e);
+    }
+  }
+
+  return res.status(200).json({ message: 'Logout successful.' });
+};
+
+

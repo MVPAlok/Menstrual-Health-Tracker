@@ -158,10 +158,12 @@ export const triggerNotification = async (
   return notification;
 };
 
+import { notificationQueue } from '../queues/notificationQueue';
+
 /**
- * Sends a push notification to all registered subscriptions of a user
+ * Direct execution of push notification sending logic
  */
-export const sendPushNotification = async (
+export const sendPushNotificationDirect = async (
   userId: string,
   title: string,
   body: string,
@@ -197,7 +199,6 @@ export const sendPushNotification = async (
       await webpush.sendNotification(pushSub, payload);
     } catch (err: any) {
       console.error(`❌ Push notification delivery failed for subscription: ${sub.id}`, err.statusCode);
-      // Clean up invalid or expired subscriptions (Gone/Not Found codes)
       if (err.statusCode === 410 || err.statusCode === 404) {
         await prisma.pushSubscription.delete({
           where: { id: sub.id }
@@ -209,3 +210,28 @@ export const sendPushNotification = async (
 
   await Promise.all(promises);
 };
+
+/**
+ * Enqueues push notification to Redis BullMQ worker, with fallback to direct execution
+ */
+export const sendPushNotification = async (
+  userId: string,
+  title: string,
+  body: string,
+  actionUrl: string = ''
+) => {
+  try {
+    await notificationQueue.add('send-push', {
+      userId,
+      title,
+      body,
+      actionUrl
+    });
+    console.log(`📥 [BullMQ] Enqueued push notification job for user:${userId}`);
+  } catch (err) {
+    // If BullMQ / Redis is not reachable, fall back to direct sync dispatching
+    console.warn(`⚠️ [BullMQ] Enqueue failed, falling back to direct push notification delivery:`, err);
+    await sendPushNotificationDirect(userId, title, body, actionUrl);
+  }
+};
+

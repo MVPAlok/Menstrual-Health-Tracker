@@ -1,4 +1,22 @@
 import prisma from '../prisma';
+import { redisClient } from '../config/redis';
+
+export const invalidateAnalyticsCache = async (userId: string) => {
+  try {
+    await redisClient.del(
+      `analytics:stats:${userId}`,
+      `analytics:comparison:${userId}`,
+      `analytics:recent:${userId}`,
+      `predictions:${userId}:0`,
+      `predictions:${userId}:1`
+    );
+    console.log(`🧹 [Redis Cache] Invalidated all analytics and predictions caches for user:${userId}`);
+  } catch (e) {
+    // Fail silently if Redis is down
+  }
+};
+
+
 
 export interface ProfileStats {
   trackingSince: string;
@@ -115,6 +133,15 @@ export const calculateStreaks = (logDates: string[]): { currentStreak: number; l
 };
 
 export const getProfileStats = async (userId: string): Promise<ProfileStats> => {
+  const cacheKey = `analytics:stats:${userId}`;
+  try {
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      console.log(`⚡ [Redis Cache] Hit for ${cacheKey}`);
+      return JSON.parse(cached);
+    }
+  } catch (e) {}
+
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { createdAt: true }
@@ -215,7 +242,7 @@ export const getProfileStats = async (userId: string): Promise<ProfileStats> => 
   else if (logsSubmitted >= 14 && logsSubmitted <= 29) predictionAccuracy = 86;
   else if (logsSubmitted >= 30) predictionAccuracy = 98;
 
-  return {
+  const result: ProfileStats = {
     trackingSince: registrationDate.toISOString().split('T')[0],
     cyclesRecorded,
     averageCycleLength,
@@ -233,9 +260,24 @@ export const getProfileStats = async (userId: string): Promise<ProfileStats> => 
     averageHrv,
     moodDistribution
   };
+
+  try {
+    await redisClient.setex(cacheKey, 86400, JSON.stringify(result));
+  } catch (e) {}
+
+  return result;
 };
 
 export const getCycleComparison = async (userId: string): Promise<CycleComparison> => {
+  const cacheKey = `analytics:comparison:${userId}`;
+  try {
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      console.log(`⚡ [Redis Cache] Hit for ${cacheKey}`);
+      return JSON.parse(cached);
+    }
+  } catch (e) {}
+
   const onboarding = await prisma.onboarding.findUnique({
     where: { userId }
   });
@@ -366,11 +408,17 @@ export const getCycleComparison = async (userId: string): Promise<CycleCompariso
     periodLengthDiff: currentStats.periodLength - prevStats.periodLength
   };
 
-  return {
+  const result: CycleComparison = {
     current: currentStats,
     previous: prevStats,
     comparison
   };
+
+  try {
+    await redisClient.setex(cacheKey, 86400, JSON.stringify(result));
+  } catch (e) {}
+
+  return result;
 };
 
 export interface RecentChanges {
@@ -382,6 +430,15 @@ export interface RecentChanges {
 }
 
 export const getRecentChanges = async (userId: string): Promise<RecentChanges> => {
+  const cacheKey = `analytics:recent:${userId}`;
+  try {
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      console.log(`⚡ [Redis Cache] Hit for ${cacheKey}`);
+      return JSON.parse(cached);
+    }
+  } catch (e) {}
+
   const logs = await prisma.dailyLog.findMany({
     where: { userId },
     orderBy: { date: 'desc' },
@@ -423,11 +480,17 @@ export const getRecentChanges = async (userId: string): Promise<RecentChanges> =
   const currentConfidence = getConfidenceForLogsCount(stats.logsSubmitted);
   const confidenceDiffPct = currentConfidence - prevConfidence;
 
-  return {
+  const result: RecentChanges = {
     stressDiffPct,
     hydrationDiffPct,
     sleepDiffPct,
     confidenceDiffPct,
     streakIncrement: stats.currentStreak > 0 ? 1 : 0
   };
+
+  try {
+    await redisClient.setex(cacheKey, 86400, JSON.stringify(result));
+  } catch (e) {}
+
+  return result;
 };

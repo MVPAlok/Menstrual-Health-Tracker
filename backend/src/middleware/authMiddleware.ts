@@ -14,14 +14,24 @@ interface DecodedToken {
   email: string;
 }
 
+import { redisClient } from '../config/redis';
+
 // HTTP request JWT verification middleware
-export const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const authenticateToken = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
     return res.status(401).json({ error: 'Access Denied: Authentication token required.' });
   }
+
+  // Check if token has been blacklisted in Redis (e.g. user logged out)
+  try {
+    const isBlacklisted = await redisClient.get(`blacklist:${token}`);
+    if (isBlacklisted) {
+      return res.status(401).json({ error: 'Access Denied: Session expired or logged out.' });
+    }
+  } catch (e) {}
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
@@ -32,6 +42,7 @@ export const authenticateToken = (req: AuthenticatedRequest, res: Response, next
     return res.status(403).json({ error: 'Access Denied: Invalid signature token.' });
   }
 };
+
 
 // WebSocket connection verification middleware
 export const verifySocketToken = (socket: Socket, next: (err?: Error) => void) => {
