@@ -68,7 +68,14 @@ const apiRateLimiter = (req: express.Request, res: express.Response, next: expre
   return memoryRateLimiter(req, res, next);
 };
 
-const allowedOrigins = process.env.CLIENT_URL ? [process.env.CLIENT_URL, 'http://localhost:5173', 'http://localhost:3000'] : ['http://localhost:5173', 'http://localhost:3000'];
+const allowedOrigins = [
+  'https://naricaree.com',
+  'https://www.naricaree.com',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  process.env.CLIENT_URL || ''
+].filter(Boolean);
+
 
 app.use(cors({
   origin: (origin, callback) => {
