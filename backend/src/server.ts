@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
@@ -22,8 +23,18 @@ import { startNotificationWorker } from './workers/notificationWorker';
 
 dotenv.config();
 
+// Security Warning for unconfigured JWT secret in production
+if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET.includes('YOUR_SUPER_SECRET'))) {
+  console.error('🔴 [SECURITY ERROR] Production mode requires a strong custom JWT_SECRET set in environment variables!');
+}
+
 const app = express();
 const httpServer = createServer(app);
+
+// Apply Helmet HTTP security headers (XSS, HSTS, X-Frame-Options, Content-Type sniffing)
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable default CSP to allow custom WebSocket / cross-origin connections if needed
+}));
 
 // Configure Redis-backed API Rate Limiter with instant Memory fallback if Redis is offline
 const redisRateLimiter = rateLimit({
@@ -57,12 +68,20 @@ const apiRateLimiter = (req: express.Request, res: express.Response, next: expre
   return memoryRateLimiter(req, res, next);
 };
 
+const allowedOrigins = process.env.CLIENT_URL ? [process.env.CLIENT_URL, 'http://localhost:5173', 'http://localhost:3000'] : ['http://localhost:5173', 'http://localhost:3000'];
+
 app.use(cors({
   origin: (origin, callback) => {
-    callback(null, true);
+    // Allow non-browser requests or matching origins
+    if (!origin || process.env.NODE_ENV !== 'production' || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS Policy: Origin blocked for security'));
+    }
   },
   credentials: true
 }));
+
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
