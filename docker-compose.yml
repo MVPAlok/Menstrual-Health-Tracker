@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Redis service for queue workers & caching
+  redis:
+    image: redis:alpine
+    container_name: naricare-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Express Backend API service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: naricare-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:-YOUR_SUPER_SECRET_KEY_FOR_WEB_SIGNATURES}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://neondb_owner:npg_ikMvqm1Tz9wa@ep-long-feather-aoqhgf40.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require}
+      - CLIENT_URL=${CLIENT_URL:-http://localhost:5173}
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # React Frontend (Nginx static web server)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: naricare-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  redis_data:
