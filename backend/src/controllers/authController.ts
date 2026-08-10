@@ -51,10 +51,14 @@ export const register = async (req: Request, res: Response) => {
       },
       onboarding: user.onboarding,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Registration error:', error);
+    if (error?.code === 'P1001' || error?.message?.includes('Authentication failed') || error?.message?.includes('database server')) {
+      return res.status(503).json({ error: 'Database authentication failed. Please update DATABASE_URL credentials in backend environment settings.' });
+    }
     return res.status(500).json({ error: 'Server error encountered during registration.' });
   }
+
 };
 
 export const login = async (req: Request, res: Response) => {
@@ -95,11 +99,15 @@ export const login = async (req: Request, res: Response) => {
       },
       onboarding: user.onboarding,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error);
+    if (error?.code === 'P1001' || error?.message?.includes('Authentication failed') || error?.message?.includes('database server')) {
+      return res.status(503).json({ error: 'Database authentication failed. Please update DATABASE_URL credentials in backend environment settings.' });
+    }
     return res.status(500).json({ error: 'Server error encountered during authentication.' });
   }
 };
+
 
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 

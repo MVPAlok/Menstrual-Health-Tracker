@@ -96,7 +96,29 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Apply rate limiter to all API endpoints
 app.use('/api', apiRateLimiter);
 
+import prisma from './prisma';
+
 // REST Route Registrations
+app.get('/api/health', async (_req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return res.status(200).json({
+      status: 'ok',
+      database: 'connected',
+      redis: isRedisConnected ? 'connected' : 'offline',
+      timestamp: new Date().toISOString()
+    });
+  } catch (err: any) {
+    return res.status(503).json({
+      status: 'error',
+      database: 'disconnected',
+      error: err?.message || 'Database connection error',
+      redis: isRedisConnected ? 'connected' : 'offline',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/logs', logRoutes);
@@ -105,6 +127,7 @@ app.use('/api/predictions', predictionsRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.get('/api/notification-preferences', authenticateToken, getNotificationPreferences);
 app.patch('/api/notification-preferences', authenticateToken, updateNotificationPreferences);
+
 
 // Socket.io initialization with custom ping configurations
 const io = new Server(httpServer, {
