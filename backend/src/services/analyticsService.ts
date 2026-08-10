@@ -1,7 +1,8 @@
 import prisma from '../prisma';
-import { redisClient } from '../config/redis';
+import { redisClient, isRedisConnected } from '../config/redis';
 
 export const invalidateAnalyticsCache = async (userId: string) => {
+  if (!isRedisConnected) return;
   try {
     await redisClient.del(
       `analytics:stats:${userId}`,
@@ -15,6 +16,7 @@ export const invalidateAnalyticsCache = async (userId: string) => {
     // Fail silently if Redis is down
   }
 };
+
 
 
 

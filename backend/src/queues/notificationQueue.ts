@@ -1,13 +1,10 @@
-import { Queue } from 'bullmq';
+import { Queue, ConnectionOptions } from 'bullmq';
 
 const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
-const urlObj = new URL(redisUrl);
 
-export const connectionOptions = {
-  host: urlObj.hostname || '127.0.0.1',
-  port: parseInt(urlObj.port || '6379', 10),
+export const connectionOptions: ConnectionOptions = {
+  url: redisUrl,
   maxRetriesPerRequest: null,
-  enableOfflineQueue: false,
 };
 
 let queueInstance: Queue | null = null;
@@ -30,4 +27,5 @@ export const getNotificationQueue = () => {
   return queueInstance;
 };
 
-console.log('📦 [BullMQ] Notification queue configuration ready');
+console.log('📦 [BullMQ] Notification queue configuration ready for', redisUrl);
+

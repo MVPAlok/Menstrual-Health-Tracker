@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
 import { createAdapter } from '@socket.io/redis-adapter';
-import { redisClient, isRedisConnected } from './config/redis';
+import { redisClient, isRedisConnected, onRedisReady } from './config/redis';
 import authRoutes from './routes/authRoutes';
 import onboardingRoutes from './routes/onboardingRoutes';
 import logRoutes from './routes/logRoutes';
@@ -34,7 +34,7 @@ const redisRateLimiter = rateLimit({
   message: { error: 'Too many requests from this IP, please try again after 15 minutes.' },
   store: new RedisStore({
     // @ts-ignore
-    sendCommand: (...args: string[]) => redisClient.call(...args),
+    sendCommand: (command: string, ...args: string[]) => redisClient.call(command, ...args),
   }),
 });
 
@@ -48,7 +48,11 @@ const memoryRateLimiter = rateLimit({
 
 const apiRateLimiter = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   if (isRedisConnected) {
-    return redisRateLimiter(req, res, next);
+    try {
+      return redisRateLimiter(req, res, next);
+    } catch (e) {
+      console.warn('⚠️ [Rate Limiter] Redis store error, falling back to memory');
+    }
   }
   return memoryRateLimiter(req, res, next);
 };
@@ -89,18 +93,6 @@ const io = new Server(httpServer, {
   pingInterval: 25000
 });
 
-// Configure Socket.io Redis Adapter for cross-server real-time pub/sub sync
-if (isRedisConnected) {
-  try {
-    const pubClient = redisClient.duplicate();
-    const subClient = redisClient.duplicate();
-    io.adapter(createAdapter(pubClient, subClient));
-    console.log('⚡ [Socket.io] Redis Pub/Sub adapter connected');
-  } catch (e) {
-    console.warn('⚠️ [Socket.io] Failed to connect Redis adapter, falling back to default memory adapter');
-  }
-}
-
 // Bind WebSocket event listeners
 registerSocketHandlers(io);
 setSocketIoInstance(io);
@@ -108,18 +100,36 @@ setSocketIoInstance(io);
 // Initialize background cron for real-time notification alerts
 startNotificationScheduler(io);
 
-// Start BullMQ background worker for Push Notifications only if Redis is connected
-if (isRedisConnected) {
-  try {
-    startNotificationWorker();
-    console.log('⚡ [BullMQ] Notification worker running');
-  } catch (e) {
-    console.warn('⚠️ [BullMQ] Failed to start notification worker');
-  }
-}
+// Configure Socket.io Redis Adapter & BullMQ worker as soon as Redis is ready
+let isWorkerStarted = false;
+let isAdapterConfigured = false;
 
+onRedisReady(() => {
+  if (!isAdapterConfigured) {
+    try {
+      const pubClient = redisClient.duplicate();
+      const subClient = redisClient.duplicate();
+      io.adapter(createAdapter(pubClient, subClient));
+      isAdapterConfigured = true;
+      console.log('⚡ [Socket.io] Redis Pub/Sub adapter connected');
+    } catch (e: any) {
+      console.warn('⚠️ [Socket.io] Failed to connect Redis adapter:', e.message);
+    }
+  }
+
+  if (!isWorkerStarted) {
+    try {
+      startNotificationWorker();
+      isWorkerStarted = true;
+      console.log('⚡ [BullMQ] Notification worker running');
+    } catch (e: any) {
+      console.warn('⚠️ [BullMQ] Failed to start notification worker:', e.message);
+    }
+  }
+});
 
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {
   console.log(`🚀 NariCare Core functioning on port ${PORT}`);
 });
+
