@@ -156,8 +156,11 @@ let isAdapterConfigured = false;
 onRedisReady(() => {
   if (!isAdapterConfigured) {
     try {
-      const pubClient = redisClient.duplicate();
-      const subClient = redisClient.duplicate();
+      const pubClient = redisClient.duplicate({ enableOfflineQueue: true });
+      const subClient = redisClient.duplicate({ enableOfflineQueue: true });
+      pubClient.on('error', (err) => console.warn('⚠️ [Socket.io PubClient Warning]:', err.message));
+      subClient.on('error', (err) => console.warn('⚠️ [Socket.io SubClient Warning]:', err.message));
+      
       io.adapter(createAdapter(pubClient, subClient));
       isAdapterConfigured = true;
       console.log('⚡ [Socket.io] Redis Pub/Sub adapter connected');

@@ -6,7 +6,8 @@ const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 export const redisClient = new Redis(redisUrl, {
   maxRetriesPerRequest: null, // Required for BullMQ
   enableReadyCheck: true,
-  enableOfflineQueue: false, // Instantly fails calls when Redis is offline so try/catch fallbacks work immediately
+  enableOfflineQueue: true, // Allows command buffering during TLS handshake and startup
+  connectTimeout: 10000,
   retryStrategy(times) {
     const delay = Math.min(times * 200, 3000);
     return delay;
