@@ -8,7 +8,7 @@ import { processUserMessage } from '../services/geminiService';
  */
 export const getChatHistory = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = (req as any).userId || (req as any).user?.id;
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized user' });
     }
@@ -41,7 +41,7 @@ export const getChatHistory = async (req: Request, res: Response) => {
  */
 export const sendMessage = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = (req as any).userId || (req as any).user?.id;
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized user' });
     }
@@ -100,7 +100,7 @@ export const sendMessage = async (req: Request, res: Response) => {
  */
 export const clearChatHistory = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = (req as any).userId || (req as any).user?.id;
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized user' });
     }

@@ -131,7 +131,6 @@ export const AIChatBot: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessageItem[]>([]);
   const [inputPrompt, setInputPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isFetchingHistory, setIsFetchingHistory] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [activeCycleSnapshot, setActiveCycleSnapshot] = useState<any>(null);
@@ -156,7 +155,6 @@ export const AIChatBot: React.FC = () => {
     let isMounted = true;
     const fetchHistory = async () => {
       try {
-        setIsFetchingHistory(true);
         const res = await api.chat.getHistory();
         if (isMounted && res?.messages) {
           setMessages(res.messages);
@@ -167,8 +165,6 @@ export const AIChatBot: React.FC = () => {
         }
       } catch (err) {
         console.warn('ℹ️ [Nari AI] History check notice:', err);
-      } finally {
-        if (isMounted) setIsFetchingHistory(false);
       }
     };
 
@@ -421,15 +417,8 @@ export const AIChatBot: React.FC = () => {
             {/* ───── Body / Message Stream ───── */}
             {!isMinimized && (
               <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3.5 scroll-smooth custom-scrollbar">
-                {isFetchingHistory && (
-                  <div className="flex items-center justify-center py-6 text-xs text-slate-400 gap-1.5">
-                    <RefreshCw className="w-3 h-3 animate-spin text-primary/70" />
-                    <span>Loading conversation...</span>
-                  </div>
-                )}
-
                 {/* ───── Thoughtful Welcome State ───── */}
-                {!isFetchingHistory && messages.length === 0 && (
+                {messages.length === 0 && (
                   <div className="py-3 px-1 text-left">
                     <h4 className="font-semibold text-slate-800 dark:text-white text-sm mb-1.5">
                       Hello {userFirstName},
