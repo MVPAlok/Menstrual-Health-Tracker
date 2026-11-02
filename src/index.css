@@ -92,6 +92,30 @@ html.lenis body {
 }
 
 /* ─── Scrollbar ─── */
+/* ─── Chat Scroll Container (Isolated from Lenis smooth-scroll) ─── */
+.chat-scroll-container {
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  overscroll-behavior-y: contain !important;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(165, 53, 86, 0.45) rgba(165, 53, 86, 0.05);
+}
+.chat-scroll-container::-webkit-scrollbar {
+  width: 5px;
+  display: block !important;
+}
+.chat-scroll-container::-webkit-scrollbar-track {
+  background: rgba(165, 53, 86, 0.05);  border-radius: 9999px;  margin: 6px 0;}
+.chat-scroll-container::-webkit-scrollbar-thumb {  background: rgba(165, 53, 86, 0.45);
+  border-radius: 9999px;
+}
+.chat-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(165, 53, 86, 0.55);
+}
+
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
