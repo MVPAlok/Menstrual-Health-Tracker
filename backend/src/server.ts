@@ -80,8 +80,15 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow non-browser requests or matching origins
-    if (!origin || process.env.NODE_ENV !== 'production' || allowedOrigins.includes(origin)) {
+    // Allow non-browser requests, local dev origins, Vercel deployments, or matching origins
+    if (
+      !origin ||
+      process.env.NODE_ENV !== 'production' ||
+      allowedOrigins.includes(origin) ||
+      origin.startsWith('http://localhost:') ||
+      origin.startsWith('http://127.0.0.1:') ||
+      origin.endsWith('.vercel.app')
+    ) {
       callback(null, true);
     } else {
       callback(new Error('CORS Policy: Origin blocked for security'));

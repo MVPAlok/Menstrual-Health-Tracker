@@ -218,11 +218,18 @@ export const AIChatBot: React.FC = () => {
     } catch (err: any) {
       console.error('❌ [Nari AI Service Error]:', err);
 
+      let content = 'Nari AI is temporarily unavailable. Please try again shortly.';
+      if (err.status === 401 || err.status === 403 || err.message?.includes('token') || err.message?.includes('signature') || err.message?.includes('Unauthorized')) {
+        content = 'Your session has expired or authentication is needed. Please log out and sign back in to continue.';
+      } else if (err.status === 429) {
+        content = 'Too many requests. Please wait a moment before trying again.';
+      }
+
       // Graceful, calm health assistant error with Retry action
       const errorMsg: ChatMessageItem = {
         id: 'err-' + Date.now(),
         role: 'assistant',
-        content: 'Nari AI is temporarily unavailable. Please try again shortly.',
+        content,
         isError: true,
         failedQuery: query,
         createdAt: new Date().toISOString(),

@@ -202,7 +202,7 @@ If a log action was requested by the user, detectedAction should be:
 
   try {
     let responseText = '';
-    const candidateModels = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-flash'];
+    const candidateModels = ['gemini-3.5-flash-lite', 'gemini-3.5-flash'];
     let lastErr: any = null;
 
     for (const model of candidateModels) {
