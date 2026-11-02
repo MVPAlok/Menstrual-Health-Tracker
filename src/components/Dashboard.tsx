@@ -6,6 +6,7 @@ import { useApp } from '../context/AppContext';
 import { api } from '../utils/api';
 import { NotificationCenter } from './NotificationCenter';
 import { NotificationSettings } from './NotificationSettings';
+import { AIChatBot } from './AIChatBot';
 import { 
   Sparkles, 
   HeartPulse, 
@@ -2841,6 +2842,9 @@ export const Dashboard: React.FC<{ initialTab?: 'home' | 'lab' | 'calendar' | 'l
           })}
         </div>
       </nav>
+
+      {/* ═══════════════ NARI AI ASSISTANT (DASHBOARD ONLY) ═══════════════ */}
+      <AIChatBot />
     </div>
   );
 };

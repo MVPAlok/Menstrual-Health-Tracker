@@ -150,5 +150,21 @@ export const api = {
     getVapidKey: () => request<any>('/notifications/vapid-key'),
     subscribePush: (subscription: any) => request<any>('/notifications/subscribe', { method: 'POST', body: JSON.stringify({ subscription }) }),
     unsubscribePush: (endpoint: string) => request<any>('/notifications/unsubscribe', { method: 'POST', body: JSON.stringify({ endpoint }) }),
-  }
+  },
+  // Nari AI Body Intelligence Chat Assistant
+  chat: {
+    getHistory: () => request<{ messages: any[] }>('/chat/history'),
+    sendMessage: (message: string) => request<{
+      reply: string;
+      suggestedFollowUps: string[];
+      contextSnapshot?: any;
+      loggedData?: any;
+      messageId: string;
+      createdAt: string;
+    }>('/chat/message', {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    }),
+    clearHistory: () => request<{ success: boolean; message: string }>('/chat/history', { method: 'DELETE' }),
+  },
 };

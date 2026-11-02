@@ -26,6 +26,7 @@ model User {
   notificationPreferences NotificationPreference?
   pushSubscriptions       PushSubscription[]
   cycleHistory            CycleHistory[]
+  chatMessages            ChatMessage[]
 
   @@unique([firstName, lastName])
 }
@@ -146,6 +147,20 @@ model CycleHistory {
   cycleLength Int?     // Calculated length of this cycle
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// AI Chatbot Real-time Messages & Memory
+model ChatMessage {
+  id                 String       @id @default(uuid())
+  userId             String
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role               String       // "user" | "assistant"
+  content            String       @db.Text
+  suggestedFollowUps String[]     @default([])
+  contextSnapshot    Json?        // snapshot of cycleDay, phase, etc. at message time
+  createdAt          DateTime     @default(now())
+
+  @@index([userId, createdAt])
 }
 
 // Enums

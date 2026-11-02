@@ -14,6 +14,7 @@ import logRoutes from './routes/logRoutes';
 import partnerRoutes from './routes/partnerRoutes';
 import predictionsRoutes from './routes/predictionsRoutes';
 import notificationRoutes from './routes/notificationRoutes';
+import chatRoutes from './routes/chatRoutes';
 import { getNotificationPreferences, updateNotificationPreferences } from './controllers/notificationController';
 import { authenticateToken } from './middleware/authMiddleware';
 import { registerSocketHandlers } from './sockets/syncSocket';
@@ -125,6 +126,7 @@ app.use('/api/logs', logRoutes);
 app.use('/api/partner', partnerRoutes);
 app.use('/api/predictions', predictionsRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/chat', chatRoutes);
 app.get('/api/notification-preferences', authenticateToken, getNotificationPreferences);
 app.patch('/api/notification-preferences', authenticateToken, updateNotificationPreferences);
 
