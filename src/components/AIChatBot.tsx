@@ -12,7 +12,6 @@ import {
   Maximize2,
   RefreshCw,
   AlertCircle,
-  Zap,
   Sparkles
 } from 'lucide-react';
 import { api } from '../utils/api';
@@ -422,7 +421,7 @@ export const AIChatBot: React.FC = () => {
 
   return (
     <>
-      {/* ═══════════════ ROBOTIC STYLE FLOATING LAUNCHER ═══════════════ */}
+      {/* ═══════════════ CIRCULAR FLOATING CHATBOT BUTTON ═══════════════ */}
       {!isOpen && (
         <div className="fixed bottom-24 right-4 sm:bottom-8 sm:right-8 z-40 select-none">
           <motion.button
@@ -430,37 +429,31 @@ export const AIChatBot: React.FC = () => {
               setIsOpen(true);
               setIsMinimized(false);
             }}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            className="group relative flex items-center gap-3 px-4 py-2.5 rounded-full bg-gradient-to-r from-[#9E2A4B] via-[#85223E] to-[#63142A] text-white shadow-[0_12px_36px_rgba(158,42,75,0.38)] hover:shadow-[0_18px_44px_rgba(158,42,75,0.52)] transition-all duration-300 border border-white/25 cursor-pointer backdrop-blur-md"
-            aria-label="Open NariBot autonomous health companion"
+            whileHover={{ scale: 1.08, y: -2 }}
+            whileTap={{ scale: 0.92 }}
+            className="group relative w-14 h-14 sm:w-15 sm:h-15 rounded-full bg-gradient-to-br from-[#9E2A4B] via-[#85223E] to-[#63142A] text-white shadow-[0_10px_28px_rgba(158,42,75,0.4)] hover:shadow-[0_16px_38px_rgba(158,42,75,0.55)] transition-all duration-300 border-2 border-white/30 dark:border-white/20 flex items-center justify-center cursor-pointer"
+            aria-label="Open NariBot health companion"
           >
             {/* Ambient pulse halo */}
-            <span className="absolute -inset-1 rounded-full bg-primary/20 blur-sm group-hover:bg-primary/30 transition -z-10" />
+            <span className="absolute -inset-1 rounded-full bg-primary/25 blur-md group-hover:bg-primary/40 transition -z-10 animate-pulse" />
 
-            {/* Futuristic Robotic Avatar Badge */}
-            <div className="w-8 h-8 rounded-xl bg-white/15 border border-white/30 flex items-center justify-center shrink-0 shadow-inner group-hover:rotate-6 transition-transform duration-300">
-              <RoboticIcon size="md" animated={true} />
+            {/* Centered Robotic Avatar */}
+            <div className="group-hover:rotate-6 transition-transform duration-300 flex items-center justify-center">
+              <RoboticIcon size="lg" animated={true} />
             </div>
 
-            {/* Label & Status */}
-            <div className="flex flex-col text-left">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[13px] font-bold tracking-tight text-white leading-none">
-                  NariBot AI
-                </span>
-                <span className="px-1.5 py-0.2 rounded-full text-[8.5px] font-extrabold uppercase bg-emerald-500/25 text-emerald-300 border border-emerald-400/40 tracking-wider flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  ONLINE
-                </span>
-              </div>
-              <span className="text-[10px] text-rose-200/90 font-medium leading-none mt-1">
-                Autonomous Health Companion
-              </span>
-            </div>
+            {/* Glowing Emerald Online Dot */}
+            <span 
+              className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 flex items-center justify-center"
+              title="NariBot Online"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            </span>
 
-            {/* High-tech Signal Sparkle */}
-            <Zap className="w-3.5 h-3.5 text-rose-300/80 group-hover:text-yellow-300 group-hover:scale-110 transition shrink-0" />
+            {/* Tooltip on hover */}
+            <span className="absolute right-full mr-3 px-3 py-1.5 rounded-xl bg-slate-900/90 text-white text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-lg border border-white/10 backdrop-blur-sm hidden sm:block">
+              Chat with NariBot
+            </span>
           </motion.button>
         </div>
       )}
@@ -495,15 +488,10 @@ export const AIChatBot: React.FC = () => {
                   <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" title="System Online" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-1.5">
-                    <h3 className="font-bold text-slate-900 dark:text-white text-[13px] leading-none">
-                      NariBot AI
-                    </h3>
-                    <span className="px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase bg-primary/10 text-primary border border-primary/20 tracking-wider">
-                      AUTONOMOUS BOT
-                    </span>
-                  </div>
-                  <p className="text-[10.5px] text-slate-600 dark:text-slate-400 font-medium leading-tight mt-1 flex items-center gap-1">
+                  <h3 className="font-bold text-slate-900 dark:text-white text-[13.5px] leading-tight">
+                    NariBot AI
+                  </h3>
+                  <p className="text-[10.5px] text-slate-600 dark:text-slate-400 font-medium leading-tight mt-0.5 flex items-center gap-1">
                     <span>Clinical Body Intelligence</span>
                     {activeCycleSnapshot?.currentPhase && (
                       <span className="capitalize text-primary font-bold">
@@ -602,7 +590,7 @@ export const AIChatBot: React.FC = () => {
                       </span>
                     </div>
                     <p className="text-[13px] text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
-                      I'm NariBot, your autonomous health companion. I analyze your cycle trends, hormone phases, and daily wellness logs in real-time.
+                      I'm NariBot, your personal health companion. I analyze your cycle trends, hormone phases, and daily wellness logs in real-time.
                     </p>
 
                     {/* Compact High-Visibility Suggested Inquiries */}
@@ -795,9 +783,9 @@ export const AIChatBot: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-between px-1 pt-1.5 text-[10px] text-slate-400">
-                  <span className="flex items-center gap-1 font-medium">
+                  <span className="flex items-center gap-1.5 font-medium">
                     <RoboticIcon size="sm" />
-                    <span>Autonomous health companion</span>
+                    <span>Personal health companion</span>
                   </span>
                   <span>Enter ↵ to send</span>
                 </div>
